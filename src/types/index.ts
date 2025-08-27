@@ -38,7 +38,7 @@ export interface ElementMetadata {
 export interface CaptureOptions {
     browser: 'chromium' | 'firefox' | 'webkit';
     viewport: { width: number; height: number };
-    waitForSelector?: string;
+    waitForSelector?: string | undefined;
     timeout: number;
 }
 
