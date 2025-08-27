@@ -220,7 +220,7 @@ export class PlaywrightCapture {
                     }
 
                     // Generate CSS selector
-                    const selector = this.generateCSSSelector(element);
+                    const selector = generateCSSSelector(element);
                     
                     metadata.push({
                         selector,
