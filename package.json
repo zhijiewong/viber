@@ -1,0 +1,119 @@
+{
+  "name": "dom-agent",
+  "displayName": "DOM Agent",
+  "description": "Interactive DOM inspection with AI-powered code generation for Cursor IDE",
+  "version": "0.1.0",
+  "publisher": "dom-agent",
+  "engines": {
+    "vscode": "^1.73.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "dom",
+    "inspection",
+    "ai",
+    "cursor",
+    "playwright",
+    "automation"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dom-agent.openUrl",
+        "title": "Open URL in DOM Agent",
+        "category": "DOM Agent",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "dom-agent.detectDevServer",
+        "title": "Detect Local Dev Server",
+        "category": "DOM Agent",
+        "icon": "$(server-environment)"
+      },
+      {
+        "command": "dom-agent.generateCode",
+        "title": "Generate Code from Selection",
+        "category": "DOM Agent",
+        "icon": "$(wand)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dom-agent.openUrl"
+        },
+        {
+          "command": "dom-agent.detectDevServer"
+        },
+        {
+          "command": "dom-agent.generateCode",
+          "when": "dom-agent.hasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DOM Agent",
+      "properties": {
+        "domAgent.defaultBrowser": {
+          "type": "string",
+          "default": "chromium",
+          "enum": [
+            "chromium",
+            "firefox",
+            "webkit"
+          ],
+          "description": "Default browser for DOM capture"
+        },
+        "domAgent.aiProvider": {
+          "type": "string",
+          "default": "cursor-native",
+          "enum": [
+            "cursor-native",
+            "openai",
+            "anthropic"
+          ],
+          "description": "AI provider for code generation"
+        },
+        "domAgent.autoDetectDevServer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect running dev servers"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production",
+    "compile-dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "test": "jest",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint"
+  },
+  "dependencies": {
+    "css-tree": "^2.3.1",
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "@types/node": "^18.19.123",
+    "@types/vscode": "^1.103.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.4",
+    "@vscode/vsce": "^2.21.0",
+    "eslint": "^8.42.0",
+    "jest": "^29.7.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.9.2",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
