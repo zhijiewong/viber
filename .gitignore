@@ -17,9 +17,8 @@ dist/
 .env.test.local
 .env.production.local
 
-# IDE
+# IDE (keep launch.json and tasks.json for development)
 .vscode/settings.json
-.vscode/launch.json
 *.code-workspace
 
 # OS
