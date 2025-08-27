@@ -9,6 +9,8 @@ yarn-error.log*
 out/
 dist/
 *.vsix
+lib/
+coverage/
 
 # Environment
 .env
@@ -20,6 +22,24 @@ dist/
 # IDE (keep launch.json and tasks.json for development)
 .vscode/settings.json
 *.code-workspace
+
+# Extension development
+.vscode-test/
+vsc-extension-quickstart.md
+
+# TypeScript
+*.tsbuildinfo
+
+# Playwright browsers and cache
+.playwright/
+test-results/
+
+# Claude Code specific
+.claude/settings.local.json
+
+# Temporary files
+*.tmp
+*.temp
 
 # OS
 .DS_Store
