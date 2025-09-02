@@ -393,13 +393,28 @@ export class WebviewUI {
                 function generateElementInfoHTML(elementInfo) {
                     console.log('Generating HTML for element:', elementInfo);
                     
-                    // Safely extract properties with fallbacks
-                    const tag = elementInfo.tag || 'unknown';
+                    // Safely extract properties with fallbacks (兼容不同数据格式)
+                    const tag = elementInfo.tagName || elementInfo.tag || 'unknown';
                     const id = elementInfo.id || 'none';
-                    const classes = elementInfo.classes && Array.isArray(elementInfo.classes) && elementInfo.classes.length > 0 
-                        ? elementInfo.classes.join(', ') : 'none';
+
+                    // 处理className (字符串) 或 classes (数组)
+                    let classes = 'none';
+                    if (elementInfo.className && elementInfo.className.trim()) {
+                        classes = elementInfo.className.trim();
+                    } else if (elementInfo.classes && Array.isArray(elementInfo.classes) && elementInfo.classes.length > 0) {
+                        classes = elementInfo.classes.join(', ');
+                    }
+
                     const text = elementInfo.textContent ? elementInfo.textContent.substring(0, 100) : 'none';
-                    const selector = elementInfo.cssSelector || 'none';
+
+                    // 简单生成CSS选择器 (如果没有提供)
+                    let selector = elementInfo.cssSelector || 'none';
+                    if (selector === 'none' && tag !== 'unknown') {
+                        selector = tag;
+                        if (id !== 'none') selector += '#' + id;
+                        if (classes !== 'none') selector += '.' + classes.split(', ')[0];
+                    }
+
                     const xpath = elementInfo.xpath || 'none';
                     
                     // Extract bounding box info if available

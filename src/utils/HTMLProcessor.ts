@@ -50,11 +50,12 @@ export class HTMLProcessor {
                     'header', 'footer', 'nav', 'section', 'article', 'aside', 'main',
                     'figure', 'figcaption', 'br', 'hr', 'strong', 'em', 'b', 'i',
                     'code', 'pre', 'blockquote', 'cite', 'small', 'sub', 'sup',
-                    'time', 'address', 'del', 'ins', 'mark', 'canvas', 'svg', 'path'
+                    'time', 'address', 'del', 'ins', 'mark', 'canvas', 'svg', 'path',
+                    'style', 'link'
                 ],
-                // 完全禁止所有脚本相关标签
+                // 完全禁止脚本相关标签，但允许样式标签
                 disallowedTagsMode: 'discard',
-                nonTextTags: ['script', 'noscript', 'style', 'textarea', 'option'],
+                nonTextTags: ['script', 'noscript', 'textarea', 'option'],
                 allowedAttributes: {
                     '*': [
                         'id', 'class', 'title', 'role', 'aria-*', 'data-*', 
@@ -73,11 +74,14 @@ export class HTMLProcessor {
                     'th': ['colspan', 'rowspan', 'scope'],
                     'canvas': ['width', 'height'],
                     'svg': ['width', 'height', 'viewBox', 'xmlns'],
-                    'path': ['d', 'fill', 'stroke', 'stroke-width']
+                    'path': ['d', 'fill', 'stroke', 'stroke-width'],
+                    'link': ['rel', 'href', 'type', 'media'],
+                    'style': ['type', 'media']
                 },
                 allowedSchemes: ['http', 'https', 'mailto', 'tel'],
                 allowedSchemesByTag: {
-                    img: ['http', 'https', 'data']
+                    img: ['http', 'https', 'data'],
+                    link: ['http', 'https', 'data']
                 },
                 // 保留CSS样式属性以确保布局不被破坏
                 allowedStyles: {

@@ -167,7 +167,15 @@ export class ElementSelector {
                 
                 console.log('📊 Element info:', elementInfo);
                 
-                // 发送到VS Code (如果可用)
+                // 直接调用WebviewUI的inspector函数
+                if (typeof window.showElementInspector === 'function') {
+                    window.showElementInspector(elementInfo);
+                    console.log('📋 Inspector updated directly');
+                } else {
+                    console.log('⚠️ Inspector function not available');
+                }
+
+                // 同时发送到VS Code (如果可用)
                 if (typeof acquireVsCodeApi !== 'undefined') {
                     try {
                         const vscode = acquireVsCodeApi();
