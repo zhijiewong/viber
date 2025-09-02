@@ -5,7 +5,7 @@ import { ElementSelector } from './ElementSelector';
 export class WebviewUI {
     private static loadingTemplate: HandlebarsTemplateDelegate;
     private static mainTemplate: HandlebarsTemplateDelegate;
-    
+
     static {
         // Initialize templates
         this.loadingTemplate = Handlebars.compile(`
@@ -53,7 +53,7 @@ export class WebviewUI {
         </body>
         </html>
         `);
-        
+
         this.mainTemplate = Handlebars.compile(`
         <!DOCTYPE html>
         <html lang="en">
@@ -61,47 +61,41 @@ export class WebviewUI {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <meta http-equiv="Content-Security-Policy" content="default-src 'self' vscode-resource: vscode-webview: https:; script-src 'self' 'unsafe-inline' vscode-resource:; style-src 'self' 'unsafe-inline' vscode-resource: https:; img-src 'self' data: https: vscode-resource:; font-src 'self' https: data:;">
-            <title>DOM Agent</title>
-            <!-- URL: {{safeUrl}} -->
+            <title>DOM Agent - DevTools Style</title>
             {{{baseStyles}}}
             {{{headContent}}}
         </head>
         <body>
             {{{toolbar}}}
-            
-            <!-- Main content wrapper -->
+
             <div id="content" class="dom-agent-content" style="margin-top: 60px;">
                 {{{bodyContent}}}
             </div>
-            
+
             {{{inspectorUI}}}
-            
-            <!-- DOM Agent Scripts - Keep at end to avoid conflicts -->
+
             {{{webviewScripts}}}
             {{{interactivityScript}}}
         </body>
         </html>`);
     }
-    
+
     public static generateLoadingContent(message: string = 'Capturing webpage...'): string {
         return this.loadingTemplate({ message });
     }
 
     public static generateInteractiveContent(
-        snapshot: DOMSnapshot, 
-        sanitizedHtml: string, 
-        _interactivityScript?: string // 标记为可选并使用下划线前缀表示未使用
+        snapshot: DOMSnapshot,
+        sanitizedHtml: string,
+        _interactivityScript?: string
     ): string {
         // Extract head and body content
         const headMatch = sanitizedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
         const bodyMatch = sanitizedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-        
+
         let headContent = headMatch ? headMatch[1] : '';
         let bodyContent = bodyMatch ? bodyMatch[1] : sanitizedHtml;
-        
-        // Note: Skip additional cleanup as HTMLProcessor has already sanitized the content
-        // and we don't want to remove our DOM Agent interactivity scripts
-        
+
         // Safely escape the URL
         const safeUrl = snapshot.url
             .replace(/</g, '&lt;')
@@ -109,7 +103,7 @@ export class WebviewUI {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
 
-        // 🎯 使用新的简单选择器替代复杂的交互脚本
+        // Generate scripts
         const simpleSelector = ElementSelector.generateScript();
 
         return this.mainTemplate({
@@ -120,57 +114,80 @@ export class WebviewUI {
             toolbar: this.generateToolbar(snapshot),
             inspectorUI: this.generateInspectorUI(),
             webviewScripts: this.generateWebviewScripts(),
-            interactivityScript: simpleSelector // 使用新的简单选择器
+            interactivityScript: simpleSelector
         });
     }
-
 
     private static generateBaseStyles(): string {
         return `
             <style>
-                /* Base styles */
+                /* Chrome DevTools Style - Base Styles */
                 * {
                     box-sizing: border-box;
                 }
-                
+
                 body {
                     margin: 0;
                     padding: 0;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    background: #f8f9fa;
+                    color: #202124;
+                    line-height: 1.5;
                 }
-                
-                /* Toolbar styles */
+
+                /* Toolbar - DevTools Style */
                 .dom-agent-toolbar {
                     position: fixed;
                     top: 0;
                     left: 0;
                     right: 0;
-                    height: 50px;
-                    background: var(--vscode-titleBar-activeBackground, #007acc);
-                    color: var(--vscode-titleBar-activeForeground, white);
+                    height: 56px;
+                    background: #ffffff;
+                    color: #202124;
                     display: flex;
                     align-items: center;
                     padding: 0 16px;
                     z-index: 10001;
-                    border-bottom: 1px solid var(--vscode-titleBar-border, rgba(255,255,255,0.1));
+                    border-bottom: 1px solid #e8eaed;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                     font-size: 14px;
                     font-weight: 500;
                     gap: 16px;
                 }
-                
+
+                .dom-agent-toolbar.dark {
+                    background: #1a1a1a;
+                    color: #e8eaed;
+                    border-bottom-color: #3c4043;
+                }
+
                 .dom-agent-toolbar .logo {
                     font-weight: 600;
-                    font-size: 16px;
+                    font-size: 18px;
+                    color: #1a73e8;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
                 }
-                
+
                 .dom-agent-toolbar .url {
-                    color: var(--vscode-titleBar-inactiveForeground, rgba(255,255,255,0.8));
-                    font-family: 'Consolas', 'Courier New', monospace;
-                    font-size: 12px;
+                    color: #5f6368;
+                    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+                    font-size: 13px;
                     flex: 1;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
+                    background: #f1f3f4;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    border: 1px solid #dadce0;
+                }
+
+                .dom-agent-toolbar.dark .url {
+                    background: #3c4043;
+                    color: #9aa0a6;
+                    border-color: #5f6368;
                 }
 
                 .dom-agent-toolbar .controls {
@@ -180,57 +197,303 @@ export class WebviewUI {
                 }
 
                 .dom-agent-toolbar button {
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 3px;
-                    font-size: 11px;
+                    background: #f1f3f4;
+                    border: 1px solid #dadce0;
+                    color: #3c4043;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-size: 13px;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-weight: 500;
+                }
+
+                .dom-agent-toolbar.dark button {
+                    background: #3c4043;
+                    border-color: #5f6368;
+                    color: #e8eaed;
                 }
 
                 .dom-agent-toolbar button:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-color: rgba(255, 255, 255, 0.3);
+                    background: #e8eaed;
+                    border-color: #c4c7c5;
                 }
-                
-                /* Inspector styles */
+
+                .dom-agent-toolbar.dark button:hover {
+                    background: #5f6368;
+                    border-color: #9aa0a6;
+                }
+
+                .dom-agent-toolbar button.active {
+                    background: #1a73e8;
+                    color: white;
+                    border-color: #1a73e8;
+                }
+
+                /* Inspector Panel - DevTools Style */
                 .dom-agent-inspector {
                     position: fixed;
                     bottom: 0;
                     left: 0;
                     right: 0;
-                    background: var(--vscode-panel-background, #1e1e1e);
-                    border-top: 3px solid var(--vscode-panel-border, #007acc);
-                    max-height: 40vh;
-                    display: none;
+                    background: #ffffff;
+                    border-top: 2px solid #1a73e8;
+                    height: 300px;
+                    display: flex;
                     flex-direction: column;
                     z-index: 10000;
-                    font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+                    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
                     pointer-events: auto;
-                    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
+                    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
                 }
-                
-                .dom-agent-inspector.active {
-                    display: flex;
+
+                .dom-agent-inspector.dark {
+                    background: #1a1a1a;
+                    color: #e8eaed;
+                    border-top-color: #8ab4f8;
                 }
-                
+
+                .dom-agent-inspector.collapsed {
+                    height: 40px;
+                }
+
+                .dom-agent-inspector.hidden {
+                    display: none;
+                }
+
                 .dom-agent-inspector-header {
                     padding: 8px 16px;
-                    background: var(--vscode-titleBar-activeBackground, #007acc);
-                    color: var(--vscode-titleBar-activeForeground, white);
-                    font-weight: 500;
+                    background: #f8f9fa;
+                    color: #202124;
+                    font-weight: 600;
                     font-size: 13px;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                    border-bottom: 1px solid #e8eaed;
+                    min-height: 40px;
                 }
-                
+
+                .dom-agent-inspector.dark .dom-agent-inspector-header {
+                    background: #2d2e30;
+                    color: #e8eaed;
+                    border-bottom-color: #5f6368;
+                }
+
+                .dom-agent-inspector-header .title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-weight: 600;
+                }
+
+                .dom-agent-inspector-header .controls {
+                    display: flex;
+                    gap: 4px;
+                }
+
                 .dom-agent-inspector-close {
                     background: none;
                     border: none;
-                    color: inherit;
+                    color: #5f6368;
+                    cursor: pointer;
+                    font-size: 18px;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    transition: all 0.2s ease;
+                }
+
+                .dom-agent-inspector.dark .dom-agent-inspector-close {
+                    color: #9aa0a6;
+                }
+
+                .dom-agent-inspector-close:hover {
+                    background: #e8eaed;
+                }
+
+                .dom-agent-inspector.dark .dom-agent-inspector-close:hover {
+                    background: #5f6368;
+                }
+
+                .dom-agent-inspector-content {
+                    padding: 16px;
+                    overflow-y: auto;
+                    flex: 1;
+                    font-size: 12px;
+                    line-height: 1.5;
+                    color: #202124;
+                }
+
+                .dom-agent-inspector.dark .dom-agent-inspector-content {
+                    color: #e8eaed;
+                }
+
+                .dom-agent-inspector-content::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                .dom-agent-inspector-content::-webkit-scrollbar-track {
+                    background: #f1f3f4;
+                }
+
+                .dom-agent-inspector.dark .dom-agent-inspector-content::-webkit-scrollbar-track {
+                    background: #3c4043;
+                }
+
+                .dom-agent-inspector-content::-webkit-scrollbar-thumb {
+                    background: #dadce0;
+                    border-radius: 4px;
+                }
+
+                .dom-agent-inspector.dark .dom-agent-inspector-content::-webkit-scrollbar-thumb {
+                    background: #5f6368;
+                }
+
+                /* Element Information Display */
+                .element-info {
+                    background: #f8f9fa;
+                    border: 1px solid #e8eaed;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                }
+
+                .dom-agent-inspector.dark .element-info {
+                    background: #2d2e30;
+                    border-color: #5f6368;
+                }
+
+                .element-tag {
+                    font-weight: 700;
+                    color: #1a73e8;
+                    font-size: 14px;
+                    margin-bottom: 12px;
+                }
+
+                .dom-agent-inspector.dark .element-tag {
+                    color: #8ab4f8;
+                }
+
+                .element-property {
+                    margin-bottom: 8px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                }
+
+                .property-label {
+                    font-weight: 600;
+                    color: #5f6368;
+                    min-width: 80px;
+                    flex-shrink: 0;
+                }
+
+                .dom-agent-inspector.dark .property-label {
+                    color: #9aa0a6;
+                }
+
+                .property-value {
+                    color: #202124;
+                    word-break: break-all;
+                }
+
+                .dom-agent-inspector.dark .property-value {
+                    color: #e8eaed;
+                }
+
+                .property-value.code {
+                    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+                    background: #ffffff;
+                    border: 1px solid #dadce0;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 11px;
+                }
+
+                .dom-agent-inspector.dark .property-value.code {
+                    background: #3c4043;
+                    border-color: #5f6368;
+                }
+
+                .action-buttons {
+                    display: flex;
+                    gap: 8px;
+                    margin-top: 16px;
+                    flex-wrap: wrap;
+                }
+
+                .action-button {
+                    background: #1a73e8;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-weight: 500;
+                }
+
+                .action-button:hover {
+                    background: #1557b0;
+                }
+
+                .action-button.secondary {
+                    background: #f1f3f4;
+                    color: #3c4043;
+                }
+
+                .dom-agent-inspector.dark .action-button.secondary {
+                    background: #5f6368;
+                    color: #e8eaed;
+                }
+
+                .action-button.secondary:hover {
+                    background: #e8eaed;
+                }
+
+                .dom-agent-inspector.dark .action-button.secondary:hover {
+                    background: #9aa0a6;
+                }
+
+                /* Element highlighting styles */
+                .dom-agent-highlight {
+                    background-color: rgba(26, 115, 232, 0.1) !important;
+                    outline: 2px solid #1a73e8 !important;
+                    outline-offset: -2px !important;
+                    cursor: pointer !important;
+                    position: relative !important;
+                    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;
+                    transition: all 0.1s ease !important;
+                }
+
+                .dom-agent-selected {
+                    background-color: rgba(234, 67, 53, 0.1) !important;
+                    outline: 3px solid #ea4335 !important;
+                    outline-offset: -3px !important;
+                    position: relative !important;
+                    box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2) !important;
+                }
+
+                /* Ensure DOM content stays interactive */
+                .dom-agent-content {
+                    position: relative;
+                    z-index: 1;
+                }
+
+                /* Theme toggle */
+                .theme-toggle {
+                    background: none;
+                    border: none;
+                    color: #5f6368;
                     cursor: pointer;
                     font-size: 16px;
                     width: 24px;
@@ -238,88 +501,41 @@ export class WebviewUI {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-radius: 3px;
-                }
-                
-                .dom-agent-inspector-close:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                
-                .dom-agent-inspector-content {
-                    padding: 16px;
-                    overflow-y: auto;
-                    max-height: calc(40vh - 40px);
-                    font-size: 12px;
-                    line-height: 1.4;
-                    color: var(--vscode-editor-foreground, #cccccc);
-                }
-
-                /* Hide scrollbars but keep functionality */
-                .dom-agent-inspector-content::-webkit-scrollbar {
-                    width: 8px;
-                }
-                
-                .dom-agent-inspector-content::-webkit-scrollbar-track {
-                    background: var(--vscode-scrollbarSlider-background, rgba(255, 255, 255, 0.1));
-                }
-                
-                .dom-agent-inspector-content::-webkit-scrollbar-thumb {
-                    background: var(--vscode-scrollbarSlider-activeBackground, rgba(255, 255, 255, 0.3));
                     border-radius: 4px;
                 }
-                
-                /* Element highlighting styles */
-                .dom-agent-highlight {
-                    background-color: rgba(0, 123, 255, 0.2) !important;
-                    outline: 2px solid #007acc !important;
-                    outline-offset: -2px !important;
-                    cursor: pointer !important;
-                    position: relative !important;
-                    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4) !important;
-                    transition: all 0.1s ease !important;
+
+                .dom-agent-inspector.dark .theme-toggle {
+                    color: #9aa0a6;
                 }
-                
-                .dom-agent-selected {
-                    background-color: rgba(255, 0, 0, 0.2) !important;
-                    outline: 3px solid #ff0000 !important;
-                    outline-offset: -3px !important;
-                    position: relative !important;
-                    box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.3) !important;
+
+                .theme-toggle:hover {
+                    background: #e8eaed;
                 }
-                
-                /* Ensure DOM content stays interactive */
-                .dom-agent-content {
-                    position: relative;
-                    z-index: 1;
-                }
-                
-                /* Ensure Inspector doesn't block DOM interactions */
-                .dom-agent-inspector {
-                    z-index: 10000 !important;
-                }
-                
-                .dom-agent-toolbar {
-                    z-index: 10001 !important;
+
+                .dom-agent-inspector.dark .theme-toggle:hover {
+                    background: #5f6368;
                 }
             </style>
         `;
     }
 
     private static generateToolbar(snapshot: DOMSnapshot): string {
-        // Safely escape the URL to prevent HTML injection
         const safeUrl = snapshot.url
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-            
+
         return `
             <div class="dom-agent-toolbar">
-                <div class="logo">🔍 DOM Agent</div>
-                <div class="url">${safeUrl}</div>
+                <div class="logo">
+                    🔍 <span>DOM Agent</span>
+                </div>
+                <div class="url" title="${safeUrl}">${safeUrl}</div>
                 <div class="controls">
                     <button onclick="refreshCapture()" title="Refresh capture">🔄</button>
-                    <button onclick="toggleInspector()" title="Toggle inspector">🔧</button>
+                    <button onclick="toggleInspector()" title="Toggle inspector" id="inspector-toggle">🔧</button>
+                    <button onclick="toggleTheme()" title="Toggle theme" class="theme-toggle">🌙</button>
                 </div>
             </div>
         `;
@@ -327,14 +543,23 @@ export class WebviewUI {
 
     private static generateInspectorUI(): string {
         return `
-            <!-- Inspector Panel -->
             <div id="inspector" class="dom-agent-inspector">
                 <div class="dom-agent-inspector-header">
-                    <span>Element Inspector</span>
-                    <button class="dom-agent-inspector-close" onclick="hideInspector()" title="Close Inspector">×</button>
+                    <div class="title">
+                        <span>📋</span>
+                        <span>Element Inspector</span>
+                    </div>
+                    <div class="controls">
+                        <button onclick="toggleInspector()" title="Minimize" class="dom-agent-inspector-close">−</button>
+                        <button onclick="hideInspector()" title="Close" class="dom-agent-inspector-close">×</button>
+                    </div>
                 </div>
                 <div id="inspector-content" class="dom-agent-inspector-content">
-                    <p>Click on any element to inspect it</p>
+                    <div style="text-align: center; color: #5f6368; padding: 20px;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">🎯</div>
+                        <div style="font-weight: 500;">Ready to inspect</div>
+                        <div style="font-size: 13px; margin-top: 4px;">Click on any element to inspect it</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -342,8 +567,8 @@ export class WebviewUI {
 
     private static generateWebviewScripts(): string {
         return `
-            <script>
-                // Basic webview functionality - only acquire if not already available
+            <script data-dom-agent="true">
+                // Basic webview functionality
                 if (!window.vscode) {
                     window.vscode = acquireVsCodeApi();
                     console.log('VS Code API acquired in WebviewUI');
@@ -351,32 +576,58 @@ export class WebviewUI {
                     console.log('VS Code API already available');
                 }
                 const vscode = window.vscode;
-                
+
+                // Theme management
+                let isDarkTheme = false;
+
+                function toggleTheme() {
+                    isDarkTheme = !isDarkTheme;
+                    document.body.classList.toggle('dark-theme', isDarkTheme);
+                    document.querySelector('.dom-agent-toolbar').classList.toggle('dark', isDarkTheme);
+                    document.querySelector('.dom-agent-inspector').classList.toggle('dark', isDarkTheme);
+                    const themeBtn = document.querySelector('.theme-toggle');
+                    themeBtn.textContent = isDarkTheme ? '☀️' : '🌙';
+                    themeBtn.title = isDarkTheme ? 'Switch to light theme' : 'Switch to dark theme';
+                }
+
                 function refreshCapture() {
                     vscode.postMessage({ type: 'refresh-capture' });
                 }
-                
+
                 function toggleInspector() {
                     const inspector = document.getElementById('inspector');
+                    const toggleBtn = document.getElementById('inspector-toggle');
                     if (inspector) {
-                        inspector.classList.toggle('active');
+                        const isCollapsed = inspector.classList.contains('collapsed');
+                        if (isCollapsed) {
+                            inspector.classList.remove('collapsed');
+                            toggleBtn.classList.add('active');
+                        } else {
+                            inspector.classList.add('collapsed');
+                            toggleBtn.classList.remove('active');
+                        }
                     }
                 }
-                
+
                 function hideInspector() {
                     const inspector = document.getElementById('inspector');
+                    const toggleBtn = document.getElementById('inspector-toggle');
                     if (inspector) {
-                        inspector.classList.remove('active');
+                        inspector.classList.add('hidden');
+                        toggleBtn.classList.remove('active');
                     }
                 }
-                
+
                 function showInspector() {
                     const inspector = document.getElementById('inspector');
+                    const toggleBtn = document.getElementById('inspector-toggle');
                     if (inspector) {
-                        inspector.classList.add('active');
+                        inspector.classList.remove('hidden');
+                        inspector.classList.remove('collapsed');
+                        toggleBtn.classList.add('active');
                     }
                 }
-                
+
                 // Element selection functionality
                 window.showElementInspector = function(elementInfo, context = {}) {
                     console.log('showElementInspector called with:', elementInfo);
@@ -389,15 +640,13 @@ export class WebviewUI {
                         console.warn('Inspector content element not found');
                     }
                 }
-                
+
                 function generateElementInfoHTML(elementInfo) {
                     console.log('Generating HTML for element:', elementInfo);
-                    
-                    // Safely extract properties with fallbacks (兼容不同数据格式)
+
                     const tag = elementInfo.tagName || elementInfo.tag || 'unknown';
                     const id = elementInfo.id || 'none';
 
-                    // 处理className (字符串) 或 classes (数组)
                     let classes = 'none';
                     if (elementInfo.className && elementInfo.className.trim()) {
                         classes = elementInfo.className.trim();
@@ -407,7 +656,6 @@ export class WebviewUI {
 
                     const text = elementInfo.textContent ? elementInfo.textContent.substring(0, 100) : 'none';
 
-                    // 简单生成CSS选择器 (如果没有提供)
                     let selector = elementInfo.cssSelector || 'none';
                     if (selector === 'none' && tag !== 'unknown') {
                         selector = tag;
@@ -416,59 +664,73 @@ export class WebviewUI {
                     }
 
                     const xpath = elementInfo.xpath || 'none';
-                    
-                    // Extract bounding box info if available
+
                     const bbox = elementInfo.boundingBox;
-                    const dimensions = bbox ? \`\${Math.round(bbox.width)}px x \${Math.round(bbox.height)}px\` : 'unknown';
-                    
+                    const dimensions = bbox ? \`\${Math.round(bbox.width)}px × \${Math.round(bbox.height)}px\` : 'unknown';
+
                     return \`
-                        <div style="font-family: 'Consolas', 'Courier New', monospace; color: var(--vscode-editor-foreground);">
-                            <h3 style="margin: 0 0 12px 0; color: var(--vscode-textLink-foreground, #4fc3f7);">
-                                &lt;\${tag}&gt;
-                            </h3>
-                            
-                            <p><strong>ID:</strong> \${id}</p>
-                            <p><strong>Classes:</strong> \${classes}</p>
-                            <p><strong>Dimensions:</strong> \${dimensions}</p>
-                            <p><strong>Text:</strong> \${text}</p>
-                            <p><strong>CSS Selector:</strong> <code>\${selector}</code></p>
-                            <p><strong>XPath:</strong> <code>\${xpath}</code></p>
-                            
-                            <div style="margin-top: 16px;">
-                                <button onclick="copyToClipboard('\${selector}', 'CSS Selector')" 
-                                        style="margin-right: 8px; padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer;">
-                                    Copy CSS Selector
+                        <div class="element-info">
+                            <div class="element-tag">&lt;\${tag}&gt;</div>
+
+                            <div class="element-property">
+                                <span class="property-label">ID:</span>
+                                <span class="property-value">\${id}</span>
+                            </div>
+
+                            <div class="element-property">
+                                <span class="property-label">Classes:</span>
+                                <span class="property-value">\${classes}</span>
+                            </div>
+
+                            <div class="element-property">
+                                <span class="property-label">Dimensions:</span>
+                                <span class="property-value">\${dimensions}</span>
+                            </div>
+
+                            <div class="element-property">
+                                <span class="property-label">Text:</span>
+                                <span class="property-value">\${text}</span>
+                            </div>
+
+                            <div class="element-property">
+                                <span class="property-label">CSS Selector:</span>
+                                <span class="property-value code">\${selector}</span>
+                            </div>
+
+                            <div class="element-property">
+                                <span class="property-label">XPath:</span>
+                                <span class="property-value code">\${xpath}</span>
+                            </div>
+
+                            <div class="action-buttons">
+                                <button class="action-button" onclick="copyToClipboard('\${selector}', 'CSS Selector')">
+                                    📋 Copy CSS
                                 </button>
-                                <button onclick="copyToClipboard('\${xpath}', 'XPath')" 
-                                        style="margin-right: 8px; padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 3px; cursor: pointer;">
-                                    Copy XPath
+                                <button class="action-button" onclick="copyToClipboard('\${xpath}', 'XPath')">
+                                    📋 Copy XPath
                                 </button>
-                                <button onclick="hideInspector()" 
-                                        style="padding: 6px 12px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 3px; cursor: pointer;">
-                                    Close
+                                <button class="action-button secondary" onclick="hideInspector()">
+                                    ✕ Close
                                 </button>
                             </div>
                         </div>
                     \`;
-                    console.log('Generated inspector HTML for element:', tag);
                 }
-                
+
                 function copyToClipboard(text, type) {
-                    // Try navigator.clipboard first
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(text).then(() => {
                             console.log(\`\${type} copied to clipboard: \${text}\`);
+                            showNotification(\`\${type} copied!\`, 'success');
                         }).catch(err => {
                             console.error('Failed to copy to clipboard:', err);
-                            // Fallback to VS Code API
                             fallbackCopy(text, type);
                         });
                     } else {
-                        // Use VS Code API
                         fallbackCopy(text, type);
                     }
                 }
-                
+
                 function fallbackCopy(text, type) {
                     if (window.vscode) {
                         vscode.postMessage({
@@ -476,24 +738,50 @@ export class WebviewUI {
                             payload: { text: text, type: type }
                         });
                         console.log(\`Sent copy request to VS Code: \${type}\`);
+                        showNotification(\`\${type} copied!\`, 'success');
                     }
                 }
-                
+
+                function showNotification(message, type = 'info') {
+                    // Simple notification system
+                    const notification = document.createElement('div');
+                    notification.style.cssText = \`
+                        position: fixed;
+                        top: 70px;
+                        right: 20px;
+                        background: \${type === 'success' ? '#1e8e3e' : '#1a73e8'};
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        z-index: 10001;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    \`;
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => notification.style.opacity = '1', 10);
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 2000);
+                }
+
                 // Listen for messages from extension
                 window.addEventListener('message', event => {
                     const message = event.data;
                     switch (message.type) {
                         case 'element-selected':
                             if (message.payload && message.payload.element) {
-                                showElementInspector(message.payload.element);
+                                window.showElementInspector(message.payload.element);
                             }
                             break;
                         case 'refresh-capture':
-                            // Handle refresh if needed
                             break;
                     }
                 });
-                
+
                 // Listen for custom DOM events from the injected script
                 document.addEventListener('dom-agent-element-selected', function(event) {
                     console.log('Custom event received:', event.detail);
@@ -501,8 +789,8 @@ export class WebviewUI {
                         window.showElementInspector(event.detail.element);
                     }
                 });
-                
-                console.log('Event listeners set up successfully');
+
+                console.log('DOM Agent WebviewUI scripts loaded successfully');
             </script>
         `;
     }

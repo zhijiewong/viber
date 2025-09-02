@@ -8,8 +8,7 @@ export class ElementSelector {
      * 生成简单可靠的选择器脚本
      */
     public static generateScript(): string {
-        return `
-        <script>
+        return `<script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
             console.log('🎯 DOM Agent Element Selector Loading...');
             
@@ -21,22 +20,41 @@ export class ElementSelector {
             // 注入CSS样式
             const style = document.createElement('style');
             style.id = 'dom-agent-selector-styles';
+            style.setAttribute('data-dom-agent', 'true');
             style.textContent = \`
                 .dom-agent-highlight {
-                    outline: 2px solid #00aaff !important;
-                    outline-offset: 1px !important;
-                    background: rgba(0, 170, 255, 0.1) !important;
+                    outline: 2px solid #1a73e8 !important;
+                    outline-offset: -2px !important;
+                    background: rgba(26, 115, 232, 0.1) !important;
                     cursor: crosshair !important;
                     position: relative !important;
                     z-index: 999999 !important;
+                    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;
+                    transition: all 0.1s ease !important;
                 }
-                
+
                 .dom-agent-selected {
-                    outline: 3px solid #ff4444 !important;
-                    outline-offset: 1px !important;
-                    background: rgba(255, 68, 68, 0.15) !important;
+                    outline: 3px solid #ea4335 !important;
+                    outline-offset: -3px !important;
+                    background: rgba(234, 67, 53, 0.1) !important;
                     position: relative !important;
                     z-index: 999999 !important;
+                    box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2) !important;
+                }
+
+                .dom-agent-hover-info {
+                    position: fixed !important;
+                    background: #1a73e8 !important;
+                    color: white !important;
+                    padding: 4px 8px !important;
+                    border-radius: 4px !important;
+                    font-size: 11px !important;
+                    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
+                    z-index: 1000000 !important;
+                    pointer-events: none !important;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+                    max-width: 300px !important;
+                    word-break: break-all !important;
                 }
                 
                 /* 测试元素样式 */
@@ -80,70 +98,119 @@ export class ElementSelector {
             
             // 简单的事件处理
             let currentHighlight = null;
+            let hoverInfo = null;
             let isEnabled = true;
-            
+
+            // 创建悬停信息元素
+            function createHoverInfo() {
+                hoverInfo = document.createElement('div');
+                hoverInfo.className = 'dom-agent-hover-info';
+                document.body.appendChild(hoverInfo);
+            }
+
+            // 更新悬停信息
+            function updateHoverInfo(element) {
+                if (!hoverInfo) createHoverInfo();
+
+                const rect = element.getBoundingClientRect();
+                const tagName = element.tagName.toLowerCase();
+                const id = element.id ? '#' + element.id : '';
+                const classes = element.className ? '.' + element.className.split(' ').slice(0, 2).join('.') : '';
+
+                hoverInfo.textContent = '<' + tagName + id + classes + '>';
+                hoverInfo.style.left = (rect.left + window.scrollX) + 'px';
+                hoverInfo.style.top = (rect.top + window.scrollY - 30) + 'px';
+                hoverInfo.style.display = 'block';
+            }
+
+            // 隐藏悬停信息
+            function hideHoverInfo() {
+                if (hoverInfo) {
+                    hoverInfo.style.display = 'none';
+                }
+            }
+
             // 鼠标悬停事件
             document.addEventListener('mouseover', function(e) {
                 if (!isEnabled) return;
-                
+
                 const target = e.target;
-                
+
                 // 跳过我们自己的元素
-                if (target.id === 'dom-agent-test' || 
-                    target.classList.contains('dom-agent-test-element')) {
+                if (target.id === 'dom-agent-test' ||
+                    target.classList.contains('dom-agent-test-element') ||
+                    target.classList.contains('dom-agent-hover-info') ||
+                    target.closest('.dom-agent-inspector') ||
+                    target.closest('.dom-agent-toolbar')) {
+                    hideHoverInfo();
                     return;
                 }
-                
+
                 console.log('👆 Mouse over:', target.tagName, target.className);
-                
+
                 // 移除之前的高亮
                 if (currentHighlight && currentHighlight !== target) {
                     currentHighlight.classList.remove('dom-agent-highlight');
                 }
-                
+
                 // 添加新高亮
                 target.classList.add('dom-agent-highlight');
                 currentHighlight = target;
-                
+
+                // 显示悬停信息
+                updateHoverInfo(target);
+
                 e.stopPropagation();
             }, true);
             
             // 鼠标离开事件
             document.addEventListener('mouseout', function(e) {
                 if (!isEnabled) return;
-                
+
                 const target = e.target;
-                
+
                 // 只移除非选中元素的高亮
                 if (!target.classList.contains('dom-agent-selected')) {
                     target.classList.remove('dom-agent-highlight');
                 }
-                
+
                 if (currentHighlight === target) {
                     currentHighlight = null;
                 }
+
+                // 隐藏悬停信息
+                hideHoverInfo();
             }, true);
             
             // 点击选择事件
             document.addEventListener('click', function(e) {
                 if (!isEnabled) return;
-                
+
                 const target = e.target;
-                
-                // 跳过测试元素
-                if (target.id === 'dom-agent-test') return;
-                
+
+                // 跳过测试元素和DOM Agent UI
+                if (target.id === 'dom-agent-test' ||
+                    target.closest('.dom-agent-inspector') ||
+                    target.closest('.dom-agent-toolbar') ||
+                    target.classList.contains('dom-agent-hover-info')) {
+                    return;
+                }
+
                 console.log('🎯 Element selected:', target.tagName, target.className);
-                
+
+                // 隐藏悬停信息
+                hideHoverInfo();
+
                 // 清除所有选中状态
                 document.querySelectorAll('.dom-agent-selected').forEach(el => {
                     el.classList.remove('dom-agent-selected');
+                    el.classList.remove('dom-agent-highlight');
                 });
-                
+
                 // 添加选中状态
                 target.classList.remove('dom-agent-highlight');
                 target.classList.add('dom-agent-selected');
-                
+
                 // 获取元素信息
                 const rect = target.getBoundingClientRect();
                 const elementInfo = {
@@ -159,14 +226,14 @@ export class ElementSelector {
                     },
                     attributes: {}
                 };
-                
+
                 // 获取属性
                 Array.from(target.attributes).forEach(attr => {
                     elementInfo.attributes[attr.name] = attr.value;
                 });
-                
+
                 console.log('📊 Element info:', elementInfo);
-                
+
                 // 直接调用WebviewUI的inspector函数
                 if (typeof window.showElementInspector === 'function') {
                     window.showElementInspector(elementInfo);
@@ -188,16 +255,15 @@ export class ElementSelector {
                         console.log('⚠️ VS Code API not available:', err);
                     }
                 }
-                
+
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }, true);
             
             console.log('🎯 DOM Agent Element Selector Ready!');
-            
+
         })();
-        </script>
-        `;
+        </script>`;
     }
 }

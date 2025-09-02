@@ -53,7 +53,7 @@ export class HTMLProcessor {
                     'time', 'address', 'del', 'ins', 'mark', 'canvas', 'svg', 'path',
                     'style', 'link'
                 ],
-                // 完全禁止脚本相关标签，但允许样式标签
+                // 允许DOM Agent脚本标签通过，但禁止其他脚本
                 disallowedTagsMode: 'discard',
                 nonTextTags: ['script', 'noscript', 'textarea', 'option'],
                 allowedAttributes: {
@@ -136,6 +136,18 @@ export class HTMLProcessor {
                 allowedIframeHostnames: [], // 完全禁止iframe
                 // 自定义转换器 - 加强安全检查
                 transformTags: {
+                    // 允许DOM Agent脚本通过
+                    'script': (tagName: string, attribs: any) => {
+                        // 检查是否是DOM Agent脚本
+                        if (attribs.id === 'dom-agent-selector-styles' ||
+                            attribs.id === 'dom-agent-interactivity-script' ||
+                            attribs['data-dom-agent'] === 'true') {
+                            // 允许DOM Agent脚本通过
+                            return { tagName, attribs };
+                        }
+                        // 移除其他脚本
+                        return { tagName: 'div', attribs: { style: 'display:none;', 'data-removed-script': 'true' } };
+                    },
                     // 清理链接但保留结构
                     'a': (tagName: string, attribs: any) => {
                         if (attribs.href && (
