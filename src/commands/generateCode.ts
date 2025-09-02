@@ -6,7 +6,7 @@ const logger = new Logger();
 
 export async function generateCodeCommand(webviewProvider: WebviewProvider): Promise<void> {
     try {
-        const selectedElement = webviewProvider.getSelectedElement();
+        const selectedElement = webviewProvider.currentSelectedElement;
         
         if (!selectedElement) {
             vscode.window.showWarningMessage('No element selected. Please select an element first. Use the webview to capture a webpage and click on elements to select them.');

@@ -20,12 +20,45 @@ export class WebviewProvider {
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
         this.logger = new Logger();
-        this.playwrightCapture = new PlaywrightCapture();
-        this.domSerializer = new DomSerializer();
-        this.contentGenerator = new ContentGenerator(this.domSerializer);
-        this.messageHandler = new MessageHandler();
-        
+
+        try {
+            this.logger.info('Initializing PlaywrightCapture...');
+            this.playwrightCapture = new PlaywrightCapture();
+            this.logger.info('PlaywrightCapture initialized successfully');
+        } catch (error) {
+            this.logger.error('Failed to initialize PlaywrightCapture', error);
+            throw error;
+        }
+
+        try {
+            this.logger.info('Initializing DOMSerializer...');
+            this.domSerializer = new DomSerializer();
+            this.logger.info('DOMSerializer initialized successfully');
+        } catch (error) {
+            this.logger.error('Failed to initialize DOMSerializer', error);
+            throw error;
+        }
+
+        try {
+            this.logger.info('Initializing ContentGenerator...');
+            this.contentGenerator = new ContentGenerator(this.domSerializer);
+            this.logger.info('ContentGenerator initialized successfully');
+        } catch (error) {
+            this.logger.error('Failed to initialize ContentGenerator', error);
+            throw error;
+        }
+
+        try {
+            this.logger.info('Initializing MessageHandler...');
+            this.messageHandler = new MessageHandler();
+            this.logger.info('MessageHandler initialized successfully');
+        } catch (error) {
+            this.logger.error('Failed to initialize MessageHandler', error);
+            throw error;
+        }
+
         this.setupMessageHandlers();
+        this.logger.info('WebviewProvider constructor completed');
     }
 
     private setupMessageHandlers(): void {
@@ -58,8 +91,8 @@ export class WebviewProvider {
             const snapshot = await this.captureWebpage(url);
             this.currentSnapshot = snapshot;
             
-            // Generate and display interactive content
-            const interactiveContent = this.contentGenerator.generateInteractiveContent(snapshot);
+            // Generate and display interactive content using professional HTML processor
+            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot);
             this.updateWebviewContent(interactiveContent);
             
             this.logger.info('Webpage capture completed successfully');
@@ -120,7 +153,9 @@ export class WebviewProvider {
     }
 
     private setupPanelEventHandlers(): void {
-        if (!this.panel) return;
+        if (!this.panel) {
+            return;
+        }
 
         // Setup message handling
         this.messageHandler.setPanel(this.panel);
@@ -167,8 +202,8 @@ export class WebviewProvider {
             const snapshot = await this.captureWebpage(this.currentSnapshot.url);
             this.currentSnapshot = snapshot;
             
-            // Update content
-            const interactiveContent = this.contentGenerator.generateInteractiveContent(snapshot);
+            // Update content using professional HTML processor
+            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot);
             this.updateWebviewContent(interactiveContent);
             
             this.logger.info('Refresh completed successfully');
@@ -247,5 +282,11 @@ export class WebviewProvider {
 
     public get snapshot(): DOMSnapshot | undefined {
         return this.currentSnapshot;
+    }
+
+    public focus(): void {
+        if (this.panel) {
+            this.panel.reveal();
+        }
     }
 }

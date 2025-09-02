@@ -1,21 +1,20 @@
-import { chromium, firefox, webkit, Browser, BrowserContext, Page, ElementHandle } from 'playwright';
-import { DOMSnapshot, CaptureOptions, ElementMetadata, BoundingBox } from '../types';
+import { chromium, firefox, webkit, Browser, BrowserContext, Page } from 'playwright';
+import { DOMSnapshot, CaptureOptions, ElementMetadata } from '../types';
 import { Logger } from '../utils/logger';
-import { DomSerializer } from './DomSerializer';
+import { eventBus } from '../utils/EventBus';
 
 export class PlaywrightCapture {
     private browser: Browser | null = null;
     private context: BrowserContext | null = null;
     private readonly logger: Logger;
-    private readonly domSerializer: DomSerializer;
 
     constructor() {
         this.logger = new Logger();
-        this.domSerializer = new DomSerializer();
     }
 
     public async captureWebpage(url: string, options: CaptureOptions): Promise<DOMSnapshot> {
         this.logger.info('Starting webpage capture', { url, browser: options.browser });
+        eventBus.emitCaptureRequested(url);
 
         try {
             await this.initializeBrowser(options.browser);
@@ -51,10 +50,12 @@ export class PlaywrightCapture {
                 htmlSize: snapshot.html.length 
             });
 
+            eventBus.emitCaptureCompleted(snapshot);
             return snapshot;
 
         } catch (error) {
             this.logger.error('Failed to capture webpage', error);
+            eventBus.emitCaptureFailed(error instanceof Error ? error : new Error(String(error)));
             throw error;
         } finally {
             await this.cleanup();
@@ -175,7 +176,7 @@ export class PlaywrightCapture {
                 });
 
                 // Get inline styles
-                Array.from(document.querySelectorAll('style')).forEach(style => {
+                Array.from(document.querySelectorAll('style')).forEach((style: HTMLStyleElement) => {
                     if (style.textContent) {
                         styleSheets.push(style.textContent);
                     }
@@ -184,6 +185,7 @@ export class PlaywrightCapture {
                 return styleSheets.join('\n\n');
             });
 
+            // CSS 将由HTML处理器统一处理，这里只提取原始样式
             return styles;
         } catch (error) {
             this.logger.warn('Failed to extract styles', error);
@@ -280,6 +282,10 @@ export class PlaywrightCapture {
             this.logger.error('Failed to extract element metadata', error);
             return [];
         }
+    }
+
+    public async captureDOM(url: string, options: CaptureOptions): Promise<DOMSnapshot> {
+        return this.captureWebpage(url, options);
     }
 
     public async cleanup(): Promise<void> {

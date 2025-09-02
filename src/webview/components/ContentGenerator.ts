@@ -16,24 +16,32 @@ export class ContentGenerator {
         return WebviewUI.generateLoadingContent();
     }
 
-    public generateInteractiveContent(snapshot: DOMSnapshot): string {
+    public async generateInteractiveContent(snapshot: DOMSnapshot): Promise<string> {
         this.logger.info('Generating interactive webview content');
         
         try {
-            // Sanitize and process HTML
-            const sanitizedHtml = this.domSerializer.sanitizeHTML(snapshot.html);
-            const interactivityScript = this.domSerializer.injectInteractivityScript();
+            // 🎯 简化流程：只做基本的安全清理
+            const sanitizedHtml = await this.domSerializer.sanitizeHTML(snapshot.html);
             
-            this.logger.info('Injected interactivity script', { 
-                scriptLength: interactivityScript.length 
+            this.logger.info('🎯 Simplified HTML processing completed', { 
+                originalLength: snapshot.html.length,
+                sanitizedLength: sanitizedHtml.length
             });
             
-            // Generate the complete interactive content
-            return WebviewUI.generateInteractiveContent(
+            // 🎯 使用新的简单选择器架构，不依赖复杂的interactivity script
+            const finalContent = WebviewUI.generateInteractiveContent(
                 snapshot,
                 sanitizedHtml,
-                interactivityScript
+                '' // 传入空字符串，新架构不依赖这个参数
             );
+            
+            // Log the first few characters to check for issues
+            this.logger.info('Generated content preview:', { 
+                preview: finalContent.substring(0, 200),
+                length: finalContent.length
+            });
+            
+            return finalContent;
             
         } catch (error) {
             this.logger.error('Failed to generate interactive content', { error });
@@ -123,8 +131,11 @@ export class ContentGenerator {
     }
 
     private escapeHtml(text: string): string {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 }

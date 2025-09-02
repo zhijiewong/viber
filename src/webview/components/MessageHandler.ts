@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Logger } from '../../utils/logger';
 import { ElementInfo } from '../../types';
+import { EventBus } from '../../utils/EventBus';
 
 export interface WebviewMessage {
     type: string;
@@ -9,13 +10,16 @@ export interface WebviewMessage {
 
 export class MessageHandler {
     private readonly logger: Logger;
+    private readonly eventBus: EventBus;
     private panel: vscode.WebviewPanel | undefined;
     private onRefreshCapture?: () => Promise<void>;
     private onElementSelected?: (element: ElementInfo) => void;
 
     constructor(panel?: vscode.WebviewPanel) {
         this.logger = new Logger();
+        this.eventBus = EventBus.getInstance();
         this.panel = panel;
+        this.setupEventListeners();
     }
 
     public setPanel(panel: vscode.WebviewPanel): void {
@@ -30,6 +34,32 @@ export class MessageHandler {
         this.onElementSelected = handler;
     }
 
+    private setupEventListeners(): void {
+        // Listen to EventBus events
+        this.eventBus.on('element:selected', (element: ElementInfo) => {
+            this.sendMessage({
+                type: 'element-selected',
+                payload: { element }
+            });
+        });
+
+        this.eventBus.on('capture:started', () => {
+            this.logger.info('Capture started via EventBus');
+        });
+
+        this.eventBus.on('capture:completed', (data: any) => {
+            this.logger.info('Capture completed via EventBus', data);
+        });
+
+        this.eventBus.on('error:occurred', (error: Error) => {
+            this.logger.error('Error occurred via EventBus', { error: error.message });
+            this.sendMessage({
+                type: 'error',
+                payload: { error: error.message }
+            });
+        });
+    }
+
     public setupMessageHandling(): void {
         if (!this.panel) {
             this.logger.warn('Cannot setup message handling - no panel available');
@@ -40,11 +70,14 @@ export class MessageHandler {
             async (message: WebviewMessage) => {
                 try {
                     await this.handleMessage(message);
+                    // Emit event to EventBus for other components to listen
+                    this.eventBus.emit('webview:message', message);
                 } catch (error) {
                     this.logger.error('Error handling webview message', { 
                         messageType: message.type, 
                         error: error instanceof Error ? error.message : String(error)
                     });
+                    this.eventBus.emit('error:occurred', error instanceof Error ? error : new Error(String(error)));
                 }
             }
         );
@@ -77,6 +110,7 @@ export class MessageHandler {
 
     private async handleRefreshCapture(): Promise<void> {
         this.logger.info('Refresh capture requested');
+        this.eventBus.emit('capture:refresh-requested');
         if (this.onRefreshCapture) {
             await this.onRefreshCapture();
         }
@@ -89,6 +123,9 @@ export class MessageHandler {
                 id: payload.element.id,
                 classes: payload.element.classes
             });
+            
+            // Emit to EventBus for other components
+            this.eventBus.emit('element:selected', payload.element);
             
             if (this.onElementSelected) {
                 this.onElementSelected(payload.element);
@@ -107,6 +144,9 @@ export class MessageHandler {
             const framework = payload.framework || 'react';
             const type = payload.type || 'component';
             
+            // Emit cursor chat request to EventBus
+            this.eventBus.emit('cursor:chat-requested', { element, framework, type });
+            
             // Generate prompt based on element
             const prompt = this.generateCursorPrompt(element, framework, type);
             
@@ -119,8 +159,14 @@ export class MessageHandler {
                 payload: { element, framework, type }
             });
             
+            // Emit success to EventBus
+            this.eventBus.emit('cursor:chat-opened', { element, framework, type, prompt });
+            
         } catch (error) {
             this.logger.error('Failed to open Cursor Chat', { error });
+            
+            // Emit error to EventBus
+            this.eventBus.emit('error:occurred', error instanceof Error ? error : new Error(String(error)));
             
             // Send error message back to webview
             this.sendMessage({
@@ -132,13 +178,22 @@ export class MessageHandler {
 
     private handleCopyToClipboard(payload: any): void {
         if (payload && payload.text) {
+            // Emit clipboard request to EventBus
+            this.eventBus.emit('clipboard:copy-requested', { text: payload.text, type: payload.type });
+            
             // Copy to clipboard using VS Code API
-            vscode.env.clipboard.writeText(payload.text).then(() => {
+            Promise.resolve(vscode.env.clipboard.writeText(payload.text)).then(() => {
                 this.logger.info('Copied to clipboard', { text: payload.text.substring(0, 100) });
                 vscode.window.showInformationMessage(`Copied ${payload.type || 'text'} to clipboard`);
-            }).catch(error => {
+                
+                // Emit success to EventBus
+                this.eventBus.emit('clipboard:copy-completed', { text: payload.text, type: payload.type });
+            }).catch((error: Error) => {
                 this.logger.error('Failed to copy to clipboard', { error });
                 vscode.window.showErrorMessage('Failed to copy to clipboard');
+                
+                // Emit error to EventBus
+                this.eventBus.emit('error:occurred', error);
             });
         }
     }
