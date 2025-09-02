@@ -45,211 +45,112 @@ export class DomSerializer {
     public injectInteractivityScript(): string {
         return `
             <script>
-                (function() {
-                    let selectedElement = null;
-                    let highlightedElement = null;
-                    let overlayDiv = null;
-
-                    // Create highlight overlay
-                    function createOverlay() {
-                        if (overlayDiv) return;
+                console.log('=== [DOM Agent New Script] Starting simple DOM Agent selection script ===');
+                console.log('[DOM Agent New Script] Script is executing now!');
+                
+                // Prevent multiple initializations
+                if (window.domAgentInitialized) {
+                    console.log('[DOM Agent New Script] Already initialized, skipping...');
+                    return;
+                }
+                window.domAgentInitialized = true;
+                console.log('[DOM Agent New Script] Set domAgentInitialized = true');
+                
+                // Wait for DOM to be ready
+                function initDOMAgent() {
+                    console.log('[DOM Agent New Script] Initializing DOM Agent...');
+                    console.log('[DOM Agent New Script] Document ready state:', document.readyState);
+                    
+                    let currentHighlight = null;
+                    
+                    // Simple click handler
+                    document.addEventListener('click', function(e) {
+                        console.log('[DOM Agent New Script] CLICK DETECTED on:', e.target.tagName, e.target.className || 'no-class');
+                        e.preventDefault();
+                        e.stopPropagation();
                         
-                        overlayDiv = document.createElement('div');
-                        overlayDiv.style.cssText = \`
-                            position: absolute;
-                            pointer-events: none;
-                            border: 2px solid #007ACC;
-                            background: rgba(0, 122, 204, 0.1);
-                            z-index: 10000;
-                            transition: all 0.1s ease;
-                            box-sizing: border-box;
-                        \`;
-                        document.body.appendChild(overlayDiv);
-                    }
-
-                    // Update overlay position
-                    function updateOverlay(element) {
-                        if (!overlayDiv || !element) return;
-                        
-                        const rect = element.getBoundingClientRect();
-                        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-                        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-                        
-                        overlayDiv.style.left = (rect.left + scrollX) + 'px';
-                        overlayDiv.style.top = (rect.top + scrollY) + 'px';
-                        overlayDiv.style.width = rect.width + 'px';
-                        overlayDiv.style.height = rect.height + 'px';
-                        overlayDiv.style.display = 'block';
-                    }
-
-                    // Hide overlay
-                    function hideOverlay() {
-                        if (overlayDiv) {
-                            overlayDiv.style.display = 'none';
+                        // Simple visual feedback
+                        const target = e.target;
+                        if (target && target.style) {
+                            const originalBorder = target.style.border;
+                            target.style.border = '3px solid red';
+                            console.log('[DOM Agent New Script] Applied red border to element');
+                            
+                            setTimeout(() => {
+                                target.style.border = originalBorder;
+                                console.log('[DOM Agent New Script] Restored original border');
+                            }, 2000);
                         }
-                    }
-
-                    // Element hover handler
-                    function handleMouseOver(event) {
-                        const element = event.target;
-                        if (element === overlayDiv) return;
                         
-                        highlightedElement = element;
-                        updateOverlay(element);
-                    }
-
-                    // Element click handler
-                    function handleClick(event) {
-                        event.preventDefault();
-                        event.stopPropagation();
+                        // Extract element info
+                        const elementInfo = {
+                            tag: target.tagName.toLowerCase(),
+                            id: target.id || undefined,
+                            classes: Array.from(target.classList || []),
+                            textContent: target.textContent ? target.textContent.trim().substring(0, 100) : '',
+                            attributes: {}
+                        };
                         
-                        const element = event.target;
-                        if (element === overlayDiv) return;
-                        
-                        selectedElement = element;
-                        
-                        // Change overlay style for selection
-                        if (overlayDiv) {
-                            overlayDiv.style.border = '2px solid #FF6B35';
-                            overlayDiv.style.background = 'rgba(255, 107, 53, 0.1)';
+                        // Get attributes
+                        for (let i = 0; i < target.attributes.length; i++) {
+                            const attr = target.attributes[i];
+                            elementInfo.attributes[attr.name] = attr.value;
                         }
-
-                        // Extract element information
-                        const elementInfo = extractElementInfo(element);
                         
-                        // Send to parent (VS Code webview)
+                        console.log('[DOM Agent New Script] Element info:', elementInfo);
+                        
+                        // Send to parent window
                         if (window.parent && window.parent.postMessage) {
+                            console.log('[DOM Agent New Script] Sending element info to parent');
                             window.parent.postMessage({
                                 type: 'element-selected',
-                                payload: {
-                                    element: elementInfo,
-                                    position: {
-                                        x: event.clientX,
-                                        y: event.clientY
-                                    }
-                                }
+                                payload: { element: elementInfo }
                             }, '*');
                         }
-                    }
-
-                    // Extract element information
-                    function extractElementInfo(element) {
-                        const rect = element.getBoundingClientRect();
-                        const computedStyle = window.getComputedStyle(element);
                         
-                        return {
-                            tag: element.tagName.toLowerCase(),
-                            id: element.id || undefined,
-                            classes: Array.from(element.classList),
-                            textContent: element.textContent ? element.textContent.trim().substring(0, 200) : '',
-                            attributes: extractAttributes(element),
-                            cssSelector: generateCSSSelector(element),
-                            xpath: generateXPath(element),
-                            boundingBox: {
-                                x: Math.round(rect.x),
-                                y: Math.round(rect.y),
-                                width: Math.round(rect.width),
-                                height: Math.round(rect.height)
-                            },
-                            computedStyles: extractComputedStyles(computedStyle)
-                        };
-                    }
-
-                    // Extract attributes
-                    function extractAttributes(element) {
-                        const attributes = {};
-                        for (let i = 0; i < element.attributes.length; i++) {
-                            const attr = element.attributes[i];
-                            attributes[attr.name] = attr.value;
-                        }
-                        return attributes;
-                    }
-
-                    // Generate CSS selector
-                    function generateCSSSelector(element) {
-                        if (element.id) {
-                            return '#' + element.id;
-                        }
-
-                        const path = [];
-                        let current = element;
-
-                        while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body) {
-                            let selector = current.tagName.toLowerCase();
-                            
-                            if (current.classList.length > 0) {
-                                selector += '.' + Array.from(current.classList).join('.');
-                            }
-                            
-                            const parent = current.parentElement;
-                            if (parent) {
-                                const siblings = Array.from(parent.children).filter(
-                                    child => child.tagName === current.tagName
-                                );
-                                if (siblings.length > 1) {
-                                    const index = siblings.indexOf(current) + 1;
-                                    selector += ':nth-child(' + index + ')';
-                                }
-                            }
-                            
-                            path.unshift(selector);
-                            current = current.parentElement;
-                        }
-
-                        return path.join(' > ');
-                    }
-
-                    // Generate XPath
-                    function generateXPath(element) {
-                        const path = [];
-                        let current = element;
-
-                        while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body) {
-                            let index = 1;
-                            let sibling = current.previousElementSibling;
-                            
-                            while (sibling) {
-                                if (sibling.tagName === current.tagName) {
-                                    index++;
-                                }
-                                sibling = sibling.previousElementSibling;
-                            }
-                            
-                            const tagName = current.tagName.toLowerCase();
-                            path.unshift(tagName + '[' + index + ']');
-                            current = current.parentElement;
-                        }
-
-                        return '//' + path.join('/');
-                    }
-
-                    // Extract computed styles
-                    function extractComputedStyles(computedStyle) {
-                        const importantStyles = [
-                            'display', 'position', 'width', 'height', 'margin', 'padding',
-                            'border', 'background', 'color', 'font-size', 'font-family',
-                            'text-align', 'vertical-align', 'line-height', 'z-index'
-                        ];
-                        
-                        const styles = {};
-                        importantStyles.forEach(prop => {
-                            styles[prop] = computedStyle.getPropertyValue(prop);
-                        });
-                        
-                        return styles;
-                    }
-
-                    // Initialize interactivity
-                    createOverlay();
-                    document.addEventListener('mouseover', handleMouseOver);
-                    document.addEventListener('click', handleClick);
-                    
-                    // Cleanup on page unload
-                    window.addEventListener('beforeunload', () => {
-                        document.removeEventListener('mouseover', handleMouseOver);
-                        document.removeEventListener('click', handleClick);
+                        return false;
                     });
-                })();
+                    
+                    // Simple mouseover handler
+                    document.addEventListener('mouseover', function(e) {
+                        const target = e.target;
+                        if (target && target.style && target.tagName !== 'SCRIPT' && target.tagName !== 'STYLE' && target !== currentHighlight) {
+                            // Remove previous highlight
+                            if (currentHighlight && currentHighlight.style) {
+                                currentHighlight.style.backgroundColor = '';
+                                currentHighlight.style.outline = '';
+                            }
+                            
+                            // Add new highlight
+                            target.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                            target.style.outline = '2px solid rgba(0, 123, 255, 0.5)';
+                            currentHighlight = target;
+                            
+                            console.log('[DOM Agent New Script] Highlighted:', target.tagName, target.className || 'no-class');
+                        }
+                    });
+                    
+                    document.addEventListener('mouseout', function(e) {
+                        const target = e.target;
+                        if (target && target.style && target === currentHighlight) {
+                            target.style.backgroundColor = '';
+                            target.style.outline = '';
+                            currentHighlight = null;
+                        }
+                    });
+                    
+                    console.log('[DOM Agent New Script] All event handlers added successfully');
+                }
+                
+                // Initialize immediately if DOM is ready, otherwise wait
+                if (document.readyState === 'loading') {
+                    console.log('[DOM Agent New Script] DOM still loading, waiting...');
+                    document.addEventListener('DOMContentLoaded', initDOMAgent);
+                } else {
+                    console.log('[DOM Agent New Script] DOM already ready, initializing now...');
+                    initDOMAgent();
+                }
+                
             </script>
         `;
     }
