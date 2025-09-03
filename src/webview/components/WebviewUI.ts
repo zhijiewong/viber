@@ -487,6 +487,171 @@ export class WebviewUI {
                     background: #9aa0a6;
                 }
 
+                /* Playwright Locator Styles */
+                .playwright-section {
+                    background: #e8f0fe;
+                    border: 1px solid #dadce0;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 16px;
+                }
+
+                .dom-agent-inspector.dark .playwright-section {
+                    background: #1e3a5f;
+                    border-color: #5f6368;
+                }
+
+                .playwright-title {
+                    color: #1a73e8;
+                    font-size: 14px;
+                    font-weight: 700;
+                    margin: 0 0 12px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .dom-agent-inspector.dark .playwright-title {
+                    color: #8ab4f8;
+                }
+
+                .playwright-primary {
+                    background: #1a73e8 !important;
+                    color: white !important;
+                    font-weight: 600 !important;
+                }
+
+                .dom-agent-inspector.dark .playwright-primary {
+                    background: #8ab4f8 !important;
+                    color: #1a1a1a !important;
+                }
+
+                .alternatives-section {
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 1px solid #dadce0;
+                }
+
+                .dom-agent-inspector.dark .alternatives-section {
+                    border-top-color: #5f6368;
+                }
+
+                .alternatives-title {
+                    color: #5f6368;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin: 0 0 8px 0;
+                }
+
+                .dom-agent-inspector.dark .alternatives-title {
+                    color: #9aa0a6;
+                }
+
+                .alternative-locator {
+                    margin-bottom: 8px;
+                    padding: 8px;
+                    background: rgba(255, 255, 255, 0.5);
+                    border-radius: 4px;
+                    border: 1px solid #e8eaed;
+                }
+
+                .dom-agent-inspector.dark .alternative-locator {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-color: #5f6368;
+                }
+
+                .locator-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 4px;
+                }
+
+                .locator-type {
+                    background: #f1f3f4;
+                    color: #3c4043;
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-size: 10px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                }
+
+                .dom-agent-inspector.dark .locator-type {
+                    background: #5f6368;
+                    color: #e8eaed;
+                }
+
+                .locator-description {
+                    font-size: 11px;
+                    color: #5f6368;
+                    font-style: italic;
+                }
+
+                .dom-agent-inspector.dark .locator-description {
+                    color: #9aa0a6;
+                }
+
+                .locator-value {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .copy-btn {
+                    background: #f1f3f4;
+                    border: 1px solid #dadce0;
+                    color: #5f6368;
+                    padding: 4px 6px;
+                    border-radius: 3px;
+                    font-size: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    flex-shrink: 0;
+                }
+
+                .dom-agent-inspector.dark .copy-btn {
+                    background: #5f6368;
+                    border-color: #9aa0a6;
+                    color: #e8eaed;
+                }
+
+                .copy-btn:hover {
+                    background: #1a73e8;
+                    color: white;
+                    border-color: #1a73e8;
+                }
+
+                .section-title {
+                    color: #5f6368;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin: 0 0 8px 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .dom-agent-inspector.dark .section-title {
+                    color: #9aa0a6;
+                }
+
+                .basic-info-section {
+                    padding-top: 8px;
+                }
+
+                .action-button.primary {
+                    background: #1a73e8;
+                    color: white;
+                    border-color: #1a73e8;
+                    font-weight: 600;
+                }
+
+                .action-button.primary:hover {
+                    background: #1557b0;
+                    border-color: #1557b0;
+                }
+
                 /* Element highlighting styles */
                 .dom-agent-highlight {
                     background-color: rgba(26, 115, 232, 0.1) !important;
@@ -681,59 +846,85 @@ export class WebviewUI {
                     }
 
                     const text = elementInfo.textContent ? elementInfo.textContent.substring(0, 100) : 'none';
-
-                    let selector = elementInfo.cssSelector || 'none';
-                    if (selector === 'none' && tag !== 'unknown') {
-                        selector = tag;
-                        if (id !== 'none') selector += '#' + id;
-                        if (classes !== 'none') selector += '.' + classes.split(', ')[0];
-                    }
-
-                    const xpath = elementInfo.xpath || 'none';
-
                     const bbox = elementInfo.boundingBox;
                     const dimensions = bbox ? \`\${Math.round(bbox.width)}px × \${Math.round(bbox.height)}px\` : 'unknown';
+
+                    // Playwright locators section
+                    let playwrightSection = '';
+                    if (elementInfo.playwrightLocators) {
+                        const locators = elementInfo.playwrightLocators;
+                        
+                        playwrightSection = \`
+                            <div class="playwright-section">
+                                <h4 class="playwright-title">🎭 Playwright Locators</h4>
+                                
+                                <div class="element-property">
+                                    <span class="property-label">Primary:</span>
+                                    <span class="property-value code playwright-primary">\${locators.primary}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('\${locators.primary}', 'Primary Locator')" title="Copy primary locator">📋</button>
+                                </div>
+                        \`;
+
+                        // Add alternative locators
+                        if (locators.alternatives && locators.alternatives.length > 1) {
+                            playwrightSection += '<div class="alternatives-section"><h5 class="alternatives-title">Alternative Locators:</h5>';
+                            
+                            locators.alternatives.forEach((alt, index) => {
+                                if (alt.locator !== locators.primary) {
+                                    playwrightSection += \`
+                                        <div class="alternative-locator">
+                                            <div class="locator-header">
+                                                <span class="locator-type">\${alt.type}</span>
+                                                <span class="locator-description">\${alt.description}</span>
+                                            </div>
+                                            <div class="locator-value">
+                                                <span class="property-value code">\${alt.locator}</span>
+                                                <button class="copy-btn" onclick="copyToClipboard('\${alt.locator}', '\${alt.type} locator')" title="Copy \${alt.type} locator">📋</button>
+                                            </div>
+                                        </div>
+                                    \`;
+                                }
+                            });
+                            
+                            playwrightSection += '</div>';
+                        }
+                        
+                        playwrightSection += '</div>';
+                    }
 
                     return \`
                         <div class="element-info">
                             <div class="element-tag">&lt;\${tag}&gt;</div>
 
-                            <div class="element-property">
-                                <span class="property-label">ID:</span>
-                                <span class="property-value">\${id}</span>
-                            </div>
+                            \${playwrightSection}
 
-                            <div class="element-property">
-                                <span class="property-label">Classes:</span>
-                                <span class="property-value">\${classes}</span>
-                            </div>
+                            <div class="basic-info-section">
+                                <h4 class="section-title">🏷️ Basic Information</h4>
+                                
+                                <div class="element-property">
+                                    <span class="property-label">ID:</span>
+                                    <span class="property-value">\${id}</span>
+                                </div>
 
-                            <div class="element-property">
-                                <span class="property-label">Dimensions:</span>
-                                <span class="property-value">\${dimensions}</span>
-                            </div>
+                                <div class="element-property">
+                                    <span class="property-label">Classes:</span>
+                                    <span class="property-value">\${classes}</span>
+                                </div>
 
-                            <div class="element-property">
-                                <span class="property-label">Text:</span>
-                                <span class="property-value">\${text}</span>
-                            </div>
+                                <div class="element-property">
+                                    <span class="property-label">Dimensions:</span>
+                                    <span class="property-value">\${dimensions}</span>
+                                </div>
 
-                            <div class="element-property">
-                                <span class="property-label">CSS Selector:</span>
-                                <span class="property-value code">\${selector}</span>
-                            </div>
-
-                            <div class="element-property">
-                                <span class="property-label">XPath:</span>
-                                <span class="property-value code">\${xpath}</span>
+                                <div class="element-property">
+                                    <span class="property-label">Text:</span>
+                                    <span class="property-value">\${text}</span>
+                                </div>
                             </div>
 
                             <div class="action-buttons">
-                                <button class="action-button" onclick="copyToClipboard('\${selector}', 'CSS Selector')">
-                                    📋 Copy CSS
-                                </button>
-                                <button class="action-button" onclick="copyToClipboard('\${xpath}', 'XPath')">
-                                    📋 Copy XPath
+                                <button class="action-button primary" onclick="copyToClipboard('\${elementInfo.playwrightLocators ? elementInfo.playwrightLocators.primary : 'N/A'}', 'Primary Playwright Locator')">
+                                    🎭 Copy Primary
                                 </button>
                                 <button class="action-button secondary" onclick="hideInspector()">
                                     ✕ Close
