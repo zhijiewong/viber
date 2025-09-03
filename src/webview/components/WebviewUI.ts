@@ -96,13 +96,35 @@ export class WebviewUI {
         const bodyMatch = sanitizedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
 
         let headContent = headMatch ? headMatch[1] : '';
-        let bodyContent = bodyMatch ? bodyMatch[1] : sanitizedHtml;
+        let bodyContent = bodyMatch ? bodyMatch[1] : '';
+
+        // If no body tag found, try to extract content between </head> and end of document
+        if (!bodyContent && headMatch) {
+            const afterHeadMatch = sanitizedHtml.match(/<\/head>([\s\S]*)$/i);
+            if (afterHeadMatch) {
+                bodyContent = afterHeadMatch[1];
+            }
+        }
+
+        // If still no body content, use the whole document but try to exclude head
+        if (!bodyContent) {
+            if (headMatch) {
+                // Remove head content from sanitizedHtml to get body
+                const headIndex = sanitizedHtml.indexOf(headMatch[0]);
+                const endHeadIndex = headIndex + headMatch[0].length;
+                bodyContent = sanitizedHtml.substring(endHeadIndex);
+            } else {
+                bodyContent = sanitizedHtml;
+            }
+        }
 
         // Ensure essential styles are preserved in head content
-        if (headContent && !headContent.includes('<style') && sanitizedHtml.includes('<style')) {
+        if (!headContent.includes('<style') && sanitizedHtml.includes('<style')) {
             // Extract all style tags from sanitized HTML if not in head
             const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
-            headContent = styleMatches.join('\n') + '\n' + headContent;
+            if (styleMatches.length > 0) {
+                headContent = styleMatches.join('\n') + '\n' + headContent;
+            }
         }
 
         // Safely escape the URL

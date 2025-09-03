@@ -10,18 +10,9 @@ export class ElementSelector {
     public static generateScript(): string {
         return `<script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
-            // Load Floating UI
-            var floatingUIScript = document.createElement('script');
-            floatingUIScript.src = 'https://unpkg.com/@floating-ui/dom@1.6.12/dist/floating-ui.dom.umd.min.js';
-            floatingUIScript.onload = function() {
-                console.log('✅ Floating UI loaded successfully');
-                initElementSelector();
-            };
-            floatingUIScript.onerror = function() {
-                console.warn('⚠️ Failed to load Floating UI, using fallback positioning');
-                initElementSelector();
-            };
-            document.head.appendChild(floatingUIScript);
+            // Skip Floating UI loading - using fallback positioning
+            console.log('ℹ️ Using fallback positioning (no external dependencies)');
+            initElementSelector();
 
             function initElementSelector() {
             // Inject CSS styles for highlighting
@@ -413,9 +404,22 @@ export class ElementSelector {
 
             // Update hover info with Playwright locator
             function updateHoverInfo(element) {
-                if (!hoverInfo) createHoverInfo();
+                console.log('🔄 Updating hover info for element:', element.tagName, element.id || 'no-id');
+
+                // Clear any existing hide timeout to prevent premature hiding
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                    console.log('⏸️ Cleared existing hide timeout during tooltip update');
+                }
+
+                if (!hoverInfo) {
+                    console.log('📦 Creating new hover info element');
+                    createHoverInfo();
+                }
 
                 var rect = element.getBoundingClientRect();
+                console.log('📐 Element rect:', rect);
                 var locators = PlaywrightLocatorGenerator.generateLocators(element);
                 
                 // Get element details
@@ -462,87 +466,117 @@ export class ElementSelector {
 
                 hoverInfo.innerHTML = html;
 
-                // Use Floating UI for smart positioning
-                if (typeof window.FloatingUIDOM !== 'undefined' && window.FloatingUIDOM.computePosition) {
-                    // Use Floating UI
-                    window.FloatingUIDOM.computePosition(element, hoverInfo, {
-                        placement: 'top-start',
-                        middleware: [
-                            window.FloatingUIDOM.offset(8),
-                            window.FloatingUIDOM.flip({
-                                fallbackPlacements: ['bottom-start', 'top-end', 'bottom-end', 'right-start', 'left-start']
-                            }),
-                            window.FloatingUIDOM.shift({ padding: 8 }),
-                            window.FloatingUIDOM.size({
-                                apply: function({ availableWidth, availableHeight }) {
-                                    Object.assign(hoverInfo.style, {
-                                        maxWidth: Math.min(320, availableWidth) + 'px',
-                                        maxHeight: Math.min(400, availableHeight) + 'px'
-                                    });
-                                }
-                            })
-                        ]
-                    }).then(({ x, y }) => {
-                        // Apply smooth positioning with animation
-                        hoverInfo.style.left = x + 'px';
-                        hoverInfo.style.top = y + 'px';
-                        hoverInfo.style.display = 'block';
-                        hoverInfo.style.opacity = '0';
-                        hoverInfo.style.transform = 'scale(0.95)';
+                // Use fallback positioning (no external dependencies)
+                const margin = 8;
+                const tooltipWidth = 320;
+                const tooltipHeight = 200;
 
-                        // Trigger animation
-                        setTimeout(() => {
-                            hoverInfo.style.opacity = '1';
-                            hoverInfo.style.transform = 'scale(1)';
-                            hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
-                        }, 10);
-                    });
-                } else {
-                    // Fallback positioning when Floating UI is not available
-                    const margin = 8;
-                    const tooltipWidth = 320;
-                    const tooltipHeight = 180;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
 
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
+                console.log('📍 Viewport:', { width: viewportWidth, height: viewportHeight, scrollX, scrollY });
 
-                    let left = Math.max(margin, Math.min(rect.left + window.scrollX, viewportWidth - tooltipWidth - margin));
-                    let top = rect.top + window.scrollY - tooltipHeight - margin;
+                let left = Math.max(margin, Math.min(rect.left + scrollX, viewportWidth - tooltipWidth - margin));
+                let top = rect.top + scrollY - tooltipHeight - margin;
 
-                    // If above doesn't fit, try below
-                    if (top < margin) {
-                        top = rect.bottom + window.scrollY + margin;
-                    }
-
-                    // Ensure tooltip stays in viewport
-                    left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
-                    top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
-
-                    // Apply smooth positioning with animation
-                    hoverInfo.style.left = left + 'px';
-                    hoverInfo.style.top = top + 'px';
-                    hoverInfo.style.display = 'block';
-                    hoverInfo.style.opacity = '0';
-                    hoverInfo.style.transform = 'scale(0.95)';
-
-                    // Trigger animation
-                    setTimeout(() => {
-                        hoverInfo.style.opacity = '1';
-                        hoverInfo.style.transform = 'scale(1)';
-                        hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
-                    }, 10);
+                // If above doesn't fit, try below
+                if (top < margin) {
+                    top = rect.bottom + scrollY + margin;
+                    console.log('🔄 Switched to below positioning');
                 }
+
+                // Ensure tooltip stays in viewport
+                left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
+                top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
+
+                console.log('🎯 Final position:', { left, top });
+
+                // Apply smooth positioning with animation
+                hoverInfo.style.left = left + 'px';
+                hoverInfo.style.top = top + 'px';
+                hoverInfo.style.display = 'block';
+                hoverInfo.style.opacity = '0';
+                hoverInfo.style.transform = 'scale(0.95)';
+
+                console.log('✨ Showing hover tooltip at:', left + 'px', top + 'px');
+
+                // Trigger animation with proper timing
+                setTimeout(() => {
+                    isTooltipAnimating = true; // Set animation flag
+                    hoverInfo.style.opacity = '1';
+                    hoverInfo.style.transform = 'scale(1)';
+                    hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
+
+                    console.log('✅ Hover tooltip animation started');
+
+                    // Record show time after animation completes
+                    setTimeout(() => {
+                        tooltipShowTime = Date.now(); // Record when tooltip is fully visible
+                        isTooltipVisible = true;
+                        isTooltipAnimating = false; // Clear animation flag
+                        tooltipProtectionUntil = Date.now() + PROTECTION_BUFFER; // Set protection period
+                        console.log('🎯 Tooltip fully visible, show time recorded:', tooltipShowTime);
+                        console.log('🛡️ Protection period until:', tooltipProtectionUntil);
+                    }, ANIMATION_DURATION); // Animation duration
+                }, 10);
             }
 
             function hideHoverInfo() {
-                if (hoverInfo && hoverInfo.style.display !== 'none') {
-                    hoverInfo.style.opacity = '0';
-                    hoverInfo.style.transform = 'scale(0.95)';
-                    setTimeout(() => {
-                        if (hoverInfo) {
-                            hoverInfo.style.display = 'none';
+                // Don't hide if tooltip is currently animating or not fully visible yet
+                if (isTooltipAnimating) {
+                    console.log('🚫 Hide blocked: tooltip is animating');
+                    return;
+                }
+
+                // Don't hide if we're still in the protection period
+                if (Date.now() < tooltipProtectionUntil) {
+                    console.log('🚫 Hide blocked: in protection period, remaining:', tooltipProtectionUntil - Date.now(), 'ms');
+                    return;
+                }
+
+                if (hoverInfo && hoverInfo.style.display !== 'none' && !isHoveringOnTooltip && isTooltipVisible) {
+                    const timeSinceShown = Date.now() - tooltipShowTime;
+                    const remainingTime = Math.max(0, MIN_DISPLAY_TIME - timeSinceShown);
+
+                    console.log('🙈 Hiding hover tooltip (shown for', timeSinceShown, 'ms, remaining:', remainingTime, 'ms)');
+
+                    // Clear any existing hide timeout to prevent duplicates
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        console.log('🧹 Cleared previous hide timeout');
+                    }
+
+                    // Delay hiding to ensure minimum display time
+                    hideTimeout = setTimeout(() => {
+                        // Double-check conditions before hiding
+                        if (hoverInfo && !isHoveringOnTooltip && isTooltipVisible &&
+                            hoverInfo.style.display !== 'none') {
+                            console.log('🚫 Executing hide after delay');
+                            isTooltipVisible = false; // Reset visibility state
+                            hoverInfo.style.opacity = '0';
+                            hoverInfo.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                                if (hoverInfo && !isHoveringOnTooltip && hoverInfo.style.display !== 'none') {
+                                    hoverInfo.style.display = 'none';
+                                    isTooltipVisible = false; // Reset visibility state
+                                    isTooltipAnimating = false; // Reset animation state
+                                    tooltipShowTime = 0; // Reset show time
+                                    tooltipProtectionUntil = 0; // Reset protection period
+                                    console.log('✅ Hover tooltip hidden and state reset');
+                                } else {
+                                    console.log('⏸️ Hover tooltip hide cancelled (hovering on tooltip)');
+                                }
+                            }, 150);
+                        } else {
+                            console.log('⏸️ Hover tooltip hide cancelled (conditions changed)');
                         }
-                    }, 150);
+                    }, remainingTime);
+                } else if (isTooltipAnimating) {
+                    console.log('🚫 Hide skipped: tooltip is animating');
+                } else if (!isTooltipVisible) {
+                    console.log('🚫 Hide skipped: tooltip not fully visible yet');
                 }
             }
 
@@ -577,7 +611,7 @@ export class ElementSelector {
                         document.body.removeChild(textarea);
                         showNotification(type + ' copied!');
                     }
-                    } catch (error) {
+                } catch (error) {
                     console.error('❌ Failed to copy to clipboard:', error);
                     showNotification('Copy failed', 'error');
                 }
@@ -605,62 +639,209 @@ export class ElementSelector {
                 }, 2000);
             }
 
-            // Mouse over event
+            // Improved mouse over event with better stability
+            let hoverTimeout = null;
+            let hideTimeout = null;
+            let isHoveringOnTooltip = false;
+            let tooltipShowTime = 0; // Track when tooltip was fully shown (after animation)
+            let isTooltipVisible = false; // Track tooltip visibility state
+            let isTooltipAnimating = false; // Track if tooltip is currently animating
+            let tooltipProtectionUntil = 0; // Track protection period end time
+            const MIN_DISPLAY_TIME = 300; // Minimum display time in milliseconds
+            const ANIMATION_DURATION = 150; // Animation duration in milliseconds
+            const PROTECTION_BUFFER = 200; // Additional protection time after animation
+            const HOVER_DEBOUNCE_DELAY = 50; // Reduced hover debounce delay for better responsiveness
+
             document.addEventListener('mouseover', function(e) {
+                if (!isEnabled) return;
+
+                var target = e.target;
+
+                // Clear any existing timeout
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                }
+
+                // Skip if hovering over our own elements - but don't skip toolbar
+                if (
+                    target.closest('.dom-agent-hover-info') ||
+                    target.classList.contains('dom-agent-copied-notification') ||
+                    target.closest('.dom-agent-copied-notification')
+                ) {
+                    isHoveringOnTooltip = true;
+                    return;
+                }
+
+                isHoveringOnTooltip = false;
+
+                // Skip if target is not a valid element (less restrictive filtering)
+                if (!target || target.nodeType !== Node.ELEMENT_NODE ||
+                    target.tagName === 'SCRIPT' || target.tagName === 'STYLE' ||
+                    target.tagName === 'LINK' || target.tagName === 'META' ||
+                    target.tagName === 'TITLE' || target.tagName === 'HEAD' ||
+                    target.tagName === 'HTML') {
+                    return;
+                }
+
+                // Skip very small elements that are hard to hover
+                const rect = target.getBoundingClientRect();
+                if (rect.width < 3 || rect.height < 3) {
+                    return;
+                }
+
+                // Remove previous highlight
+                if (currentHighlight && currentHighlight !== target) {
+                    currentHighlight.classList.remove('dom-agent-highlight');
+                }
+
+                // Add new highlight
+                target.classList.add('dom-agent-highlight');
+                currentHighlight = target;
+
+                // Update hover info with optimized delay for better performance and stability
+                hoverTimeout = setTimeout(() => {
+                    // Double-check we're still hovering on the same element and not on tooltip
+                    if (currentHighlight === target && !isHoveringOnTooltip) {
+                        // Additional check: ensure mouse is still over the element
+                        const currentRect = target.getBoundingClientRect();
+                        const mouseX = e.clientX;
+                        const mouseY = e.clientY;
+
+                        // Only show tooltip if mouse is still within element bounds
+                        if (mouseX >= currentRect.left && mouseX <= currentRect.right &&
+                            mouseY >= currentRect.top && mouseY <= currentRect.bottom) {
+                            console.log('🎯 Mouse hover detected on element:', target.tagName, target.id || 'no-id');
+                            updateHoverInfo(target);
+                        } else {
+                            console.log('🚫 Mouse moved outside element bounds, skipping tooltip update');
+                        }
+                    }
+                }, HOVER_DEBOUNCE_DELAY); // Reduced delay for better responsiveness
+
+                e.stopPropagation();
+            }, true);
+
+            // Add mouseenter as backup for better hover detection
+            document.addEventListener('mouseenter', function(e) {
                 if (!isEnabled) return;
 
                 var target = e.target;
 
                 // Skip if hovering over our own elements
                 if (
-                    target.closest('.dom-agent-toolbar') ||
                     target.closest('.dom-agent-hover-info') ||
                     target.classList.contains('dom-agent-copied-notification') ||
                     target.closest('.dom-agent-copied-notification')
                 ) {
+                    isHoveringOnTooltip = true;
                     return;
                 }
 
+                isHoveringOnTooltip = false;
 
+                // Skip if target is not a valid element
+                if (!target || target.nodeType !== Node.ELEMENT_NODE ||
+                    target.tagName === 'SCRIPT' || target.tagName === 'STYLE' ||
+                    target.tagName === 'LINK' || target.tagName === 'META' ||
+                    target.tagName === 'TITLE' || target.tagName === 'HEAD' ||
+                    target.tagName === 'HTML') {
+                    return;
+                }
 
+                // Add highlight immediately for mouseenter
                 if (currentHighlight && currentHighlight !== target) {
                     currentHighlight.classList.remove('dom-agent-highlight');
                 }
-
                 target.classList.add('dom-agent-highlight');
                 currentHighlight = target;
 
+                // Trigger tooltip immediately for mouseenter (no debounce)
+                console.log('🎯 Mouse enter detected on element:', target.tagName, target.id || 'no-id');
                 updateHoverInfo(target);
+
                 e.stopPropagation();
             }, true);
-            
-            // Mouse out event
+
+            // Improved mouse out event with better stability and debouncing
+            let mouseoutDebounce = null;
+            const MOUSEOUT_DEBOUNCE_DELAY = 100; // 100ms debounce for mouseout
+
             document.addEventListener('mouseout', function(e) {
                 if (!isEnabled) return;
 
                 var target = e.target;
                 var relatedTarget = e.relatedTarget;
 
-                // Don't hide if moving to the hover info itself or its children
-                if (relatedTarget && (
-                    relatedTarget.classList.contains('dom-agent-hover-info') ||
-                    relatedTarget.closest('.dom-agent-hover-info')
-                )) {
-                    return;
+                // Clear existing debounce timeout
+                if (mouseoutDebounce) {
+                    clearTimeout(mouseoutDebounce);
                 }
 
-                if (!target.classList.contains('dom-agent-selected')) {
-                    target.classList.remove('dom-agent-highlight');
-                }
+                // Debounce mouseout to prevent rapid firing during fast mouse movement
+                // Only process mouseout if we're not currently showing a tooltip
+                mouseoutDebounce = setTimeout(() => {
+                    // Don't process mouseout if tooltip is animating or visible
+                    if (isTooltipAnimating || isTooltipVisible) {
+                        console.log('🚫 Mouseout skipped: tooltip is active');
+                        return;
+                    }
+                    console.log('👆 Mouseout event processed for:', target.tagName, target.id || 'no-id');
 
-                if (currentHighlight === target) {
-                    currentHighlight = null;
-                }
+                    // Clear hover timeout if leaving the element
+                    if (hoverTimeout) {
+                        clearTimeout(hoverTimeout);
+                        hoverTimeout = null;
+                    }
 
-                // Only hide hover info if not moving to it
-                if (!relatedTarget || !relatedTarget.closest || !relatedTarget.closest('.dom-agent-hover-info')) {
-                    hideHoverInfo();
-                }
+                    // Clear hide timeout if mouse is moving to another element
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        hideTimeout = null;
+                        console.log('⏸️ Hide timeout cleared due to mouse movement');
+                    }
+
+                    // Don't hide if moving to the hover info itself or its children
+                    if (relatedTarget && (
+                        relatedTarget.classList.contains('dom-agent-hover-info') ||
+                        relatedTarget.closest('.dom-agent-hover-info') ||
+                        relatedTarget.classList.contains('dom-agent-copied-notification') ||
+                        relatedTarget.closest('.dom-agent-copied-notification')
+                    )) {
+                        isHoveringOnTooltip = true;
+                        console.log('🎯 Mouse moved to tooltip, keeping visible');
+                        return;
+                    }
+
+                    isHoveringOnTooltip = false;
+
+                    // Remove highlight only if not selected and not moving to a valid element
+                    if (!target.classList.contains('dom-agent-selected')) {
+                        target.classList.remove('dom-agent-highlight');
+                    }
+
+                    if (currentHighlight === target) {
+                        currentHighlight = null;
+                    }
+
+                    // Only hide if mouse has actually left the element area (not just moving between elements)
+                    if (!relatedTarget || (!relatedTarget.closest || !relatedTarget.closest('.dom-agent-hover-info'))) {
+                        console.log('🏃 Mouse left element area, scheduling hide');
+                        // Small delay to allow for element transitions, but respect animation and protection state
+                        setTimeout(() => {
+                            const now = Date.now();
+                            if (!isHoveringOnTooltip && !isTooltipAnimating && now >= tooltipProtectionUntil) {
+                                hideHoverInfo();
+                            } else {
+                                if (isTooltipAnimating) {
+                                    console.log('⏸️ Hide delayed: waiting for animation to complete');
+                                } else if (now < tooltipProtectionUntil) {
+                                    console.log('⏸️ Hide delayed: in protection period, remaining:', tooltipProtectionUntil - now, 'ms');
+                                }
+                            }
+                        }, 50);
+                    }
+
+                }, MOUSEOUT_DEBOUNCE_DELAY);
             }, true);
             
             // Click event - copy locator to clipboard
@@ -745,7 +926,6 @@ export class ElementSelector {
                 e.stopPropagation();
                 return false;
             }, true);
-            }
 
             console.log('🎯 DOM Agent Playwright Selector Ready!');
 

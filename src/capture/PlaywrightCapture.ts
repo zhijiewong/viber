@@ -154,31 +154,41 @@ export class PlaywrightCapture {
             // Get all stylesheets and computed styles
             const styles = await page.evaluate(() => {
                 const styleSheets: string[] = [];
-                
-                // Get external stylesheets
-                Array.from(document.styleSheets).forEach(sheet => {
-                    try {
-                        if (sheet.href) {
-                            // For external sheets, we'll capture the href
-                            styleSheets.push(`/* External: ${sheet.href} */`);
-                        }
-                        
-                        // Get rules from accessible sheets
-                        if (sheet.cssRules) {
-                            Array.from(sheet.cssRules).forEach(rule => {
-                                styleSheets.push(rule.cssText);
-                            });
-                        }
-                    } catch (e) {
-                        // Cross-origin restrictions
-                        styleSheets.push(`/* Blocked by CORS: ${sheet.href || 'inline'} */`);
+
+                // Get external stylesheets - preserve link elements
+                Array.from(document.querySelectorAll('link[rel="stylesheet"]')).forEach((linkElement: Element) => {
+                    const link = linkElement as HTMLLinkElement;
+                    if (link.href) {
+                        // Keep the original link element for proper CSS loading
+                        styleSheets.push(`<link rel="stylesheet" href="${link.href}" type="${link.type || 'text/css'}" media="${link.media || 'all'}">`);
                     }
                 });
 
-                // Get inline styles
+                // Get rules from accessible sheets (both external and internal)
+                Array.from(document.styleSheets).forEach(sheet => {
+                    try {
+                        if (sheet.cssRules) {
+                            const rules = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+                            if (rules.trim()) {
+                                if (sheet.href) {
+                                    styleSheets.push(`/* Styles from: ${sheet.href} */\n${rules}`);
+                                } else {
+                                    styleSheets.push(`/* Inline styles */\n${rules}`);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Cross-origin restrictions
+                        if (sheet.href) {
+                            styleSheets.push(`/* Blocked by CORS: ${sheet.href} */`);
+                        }
+                    }
+                });
+
+                // Get inline styles from style tags
                 Array.from(document.querySelectorAll('style')).forEach((style: HTMLStyleElement) => {
-                    if (style.textContent) {
-                        styleSheets.push(style.textContent);
+                    if (style.textContent && style.textContent.trim()) {
+                        styleSheets.push(style.textContent.trim());
                     }
                 });
 

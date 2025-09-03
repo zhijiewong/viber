@@ -51,7 +51,7 @@ export class HTMLProcessor {
                     'figure', 'figcaption', 'br', 'hr', 'strong', 'em', 'b', 'i',
                     'code', 'pre', 'blockquote', 'cite', 'small', 'sub', 'sup',
                     'time', 'address', 'del', 'ins', 'mark', 'canvas', 'svg', 'path',
-                    'style', 'link'
+                    'link', 'style'
                 ],
                 // 允许DOM Agent脚本标签通过，但禁止其他脚本
                 disallowedTagsMode: 'discard',

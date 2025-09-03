@@ -145,7 +145,10 @@ export class WebviewProvider {
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [this.context.extensionUri]
+                localResourceRoots: [this.context.extensionUri],
+                portMapping: [],
+                enableForms: false,
+                enableCommandUris: false
             }
         );
 
