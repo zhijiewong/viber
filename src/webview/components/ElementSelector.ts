@@ -10,75 +10,83 @@ export class ElementSelector {
     public static generateScript(): string {
         return `<script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
-            console.log('🎯 DOM Agent Playwright Selector Loading...');
-            
-            // Check environment
-            console.log('✓ Document ready:', document.readyState);
-            console.log('✓ Body exists:', !!document.body);
-            console.log('✓ Head exists:', !!document.head);
-            
+            // Load Floating UI
+            var floatingUIScript = document.createElement('script');
+            floatingUIScript.src = 'https://unpkg.com/@floating-ui/dom@1.6.12/dist/floating-ui.dom.umd.min.js';
+            floatingUIScript.onload = function() {
+                console.log('✅ Floating UI loaded successfully');
+                initElementSelector();
+            };
+            floatingUIScript.onerror = function() {
+                console.warn('⚠️ Failed to load Floating UI, using fallback positioning');
+                initElementSelector();
+            };
+            document.head.appendChild(floatingUIScript);
+
+            function initElementSelector() {
             // Inject CSS styles for highlighting
-            var style = document.createElement('style');
+                var style = document.createElement('style');
             style.id = 'dom-agent-selector-styles';
-            style.setAttribute('data-dom-agent', 'true');
-            style.textContent = 
-                '.dom-agent-highlight {' +
-                    'outline: 2px solid #1a73e8 !important;' +
-                    'outline-offset: -2px !important;' +
+                style.setAttribute('data-dom-agent', 'true');
+                style.textContent =
+                    '.dom-agent-highlight {' +
+                        'outline: 2px solid #1a73e8 !important;' +
+                        'outline-offset: -2px !important;' +
                     'background: rgba(26, 115, 232, 0.1) !important;' +
-                    'cursor: crosshair !important;' +
-                    'position: relative !important;' +
-                    'z-index: 999999 !important;' +
+                        'cursor: crosshair !important;' +
+                        'position: relative !important;' +
+                        'z-index: 999999 !important;' +
                     'box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;' +
-                    'transition: all 0.1s ease !important;' +
-                '}' +
-                '.dom-agent-selected {' +
-                    'outline: 3px solid #ea4335 !important;' +
-                    'outline-offset: -3px !important;' +
+                        'transition: all 0.1s ease !important;' +
+                    '}' +
+                    '.dom-agent-selected {' +
+                        'outline: 3px solid #ea4335 !important;' +
+                        'outline-offset: -3px !important;' +
                     'background: rgba(234, 67, 53, 0.1) !important;' +
-                    'position: relative !important;' +
-                    'z-index: 999999 !important;' +
+                        'position: relative !important;' +
+                        'z-index: 999999 !important;' +
                     'box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2) !important;' +
-                '}' +
-                '.dom-agent-hover-info {' +
-                    'position: fixed !important;' +
-                    'background: #1a73e8 !important;' +
-                    'color: white !important;' +
-                    'padding: 6px 12px !important;' +
-                    'border-radius: 4px !important;' +
-                    'font-size: 11px !important;' +
-                    'font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace !important;' +
-                    'z-index: 1000000 !important;' +
-                    'pointer-events: none !important;' +
-                    'box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;' +
-                    'max-width: 400px !important;' +
-                    'word-break: break-all !important;' +
-                    'line-height: 1.2 !important;' +
-                '}' +
-                '.dom-agent-copied-notification {' +
-                    'position: fixed !important;' +
-                    'top: 70px !important;' +
-                    'right: 20px !important;' +
-                    'background: #1e8e3e !important;' +
-                    'color: white !important;' +
+                    '}' +
+                    '.dom-agent-hover-info {' +
+                        'position: fixed !important;' +
+                        'background: white !important;' +
+                        'color: #202124 !important;' +
+                        'border: 1px solid #e0e0e0 !important;' +
+                        'padding: 8px !important;' +
+                        'border-radius: 8px !important;' +
+                        'font-size: 12px !important;' +
+                        'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;' +
+                        'z-index: 1000000 !important;' +
+                        'pointer-events: none !important;' +
+                        'box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;' +
+                        'max-width: 320px !important;' +
+                        'min-width: 280px !important;' +
+                        'line-height: 1.4 !important;' +
+                    '}' +
+                    '.dom-agent-copied-notification {' +
+                        'position: fixed !important;' +
+                        'top: 70px !important;' +
+                        'right: 20px !important;' +
+                        'background: #1e8e3e !important;' +
+                        'color: white !important;' +
                     'padding: 8px 16px !important;' +
                     'border-radius: 4px !important;' +
                     'font-size: 12px !important;' +
-                    'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;' +
-                    'z-index: 10001 !important;' +
-                    'opacity: 0 !important;' +
-                    'transition: opacity 0.3s ease !important;' +
+                        'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;' +
+                        'z-index: 10001 !important;' +
+                        'opacity: 0 !important;' +
+                        'transition: opacity 0.3s ease !important;' +
                     'box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;' +
-                '}';
-            
+                    '}';
+
             // Remove existing styles first
             var existingStyle = document.getElementById('dom-agent-selector-styles');
-            if (existingStyle) {
-                existingStyle.remove();
-            }
-            
-            document.head.appendChild(style);
-            console.log('✅ Playwright selector styles injected');
+                if (existingStyle) {
+                    existingStyle.remove();
+                }
+
+                document.head.appendChild(style);
+
             
             // Playwright-style locator generators
             var PlaywrightLocatorGenerator = {
@@ -392,9 +400,9 @@ export class ElementSelector {
             };
             
             // Event handling
-            var currentHighlight = null;
-            var hoverInfo = null;
-            var isEnabled = true;
+                var currentHighlight = null;
+                var hoverInfo = null;
+                var isEnabled = true;
 
             // Create hover info element
             function createHoverInfo() {
@@ -410,18 +418,131 @@ export class ElementSelector {
                 var rect = element.getBoundingClientRect();
                 var locators = PlaywrightLocatorGenerator.generateLocators(element);
                 
-                hoverInfo.innerHTML = 
-                    '<div style="font-weight: bold; margin-bottom: 2px;">' + locators.primary + '</div>' +
-                    '<div style="font-size: 10px; opacity: 0.8;">Click to copy to clipboard</div>';
+                // Get element details
+                var tag = element.tagName.toLowerCase();
+                var id = element.id || 'none';
+                var classes = Array.from(element.classList).filter(function(cls) {
+                    return !cls.startsWith('dom-agent-');
+                });
+                var className = classes.length > 0 ? classes.join(', ') : 'none';
+                var text = element.textContent ? element.textContent.trim().substring(0, 50) + '...' : 'none';
+                var dimensions = Math.round(rect.width) + 'px × ' + Math.round(rect.height) + 'px';
                 
-                hoverInfo.style.left = (rect.left + window.scrollX) + 'px';
-                hoverInfo.style.top = (rect.top + window.scrollY - 35) + 'px';
-                hoverInfo.style.display = 'block';
+                // Build rich hover info HTML
+                var html = '<div style="padding: 8px; max-width: 300px;">';
+
+                // Element tag and primary locator
+                html += '<div style="font-weight: bold; color: #1a73e8; margin-bottom: 6px; font-size: 12px;">&lt;' + tag + '&gt;</div>';
+                html += '<div style="font-family: monospace; font-size: 11px; background: rgba(26, 115, 232, 0.1); padding: 4px 6px; border-radius: 3px; margin-bottom: 8px; word-break: break-all;">' + locators.primary + '</div>';
+
+                // Alternative locators
+                if (locators.alternatives && locators.alternatives.length > 1) {
+                    html += '<div style="font-size: 10px; color: #5f6368; margin-bottom: 4px;">Alternatives:</div>';
+                    var altCount = 0;
+                    locators.alternatives.forEach(function(alt) {
+                        if (alt.locator !== locators.primary && altCount < 2) {
+                            html += '<div style="font-size: 9px; color: #5f6368; margin-bottom: 2px;">• ' + alt.type + '</div>';
+                            altCount++;
+                        }
+                    });
+                }
+
+                // Basic info section
+                html += '<div style="border-top: 1px solid #e0e0e0; padding-top: 6px; margin-top: 6px;">';
+                if (id !== 'none') html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">ID:</span> ' + id + '</div>';
+                if (className !== 'none') html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">Classes:</span> ' + className + '</div>';
+                html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">Size:</span> ' + dimensions + '</div>';
+                if (text !== 'none') html += '<div style="font-size: 10px;"><span style="color: #5f6368;">Text:</span> ' + text + '</div>';
+                html += '</div>';
+
+                // Action hint
+                html += '<div style="font-size: 9px; color: #5f6368; margin-top: 6px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 4px;">🎯 Click to copy locator</div>';
+
+                html += '</div>';
+
+                hoverInfo.innerHTML = html;
+
+                // Use Floating UI for smart positioning
+                if (typeof window.FloatingUIDOM !== 'undefined' && window.FloatingUIDOM.computePosition) {
+                    // Use Floating UI
+                    window.FloatingUIDOM.computePosition(element, hoverInfo, {
+                        placement: 'top-start',
+                        middleware: [
+                            window.FloatingUIDOM.offset(8),
+                            window.FloatingUIDOM.flip({
+                                fallbackPlacements: ['bottom-start', 'top-end', 'bottom-end', 'right-start', 'left-start']
+                            }),
+                            window.FloatingUIDOM.shift({ padding: 8 }),
+                            window.FloatingUIDOM.size({
+                                apply: function({ availableWidth, availableHeight }) {
+                                    Object.assign(hoverInfo.style, {
+                                        maxWidth: Math.min(320, availableWidth) + 'px',
+                                        maxHeight: Math.min(400, availableHeight) + 'px'
+                                    });
+                                }
+                            })
+                        ]
+                    }).then(({ x, y }) => {
+                        // Apply smooth positioning with animation
+                        hoverInfo.style.left = x + 'px';
+                        hoverInfo.style.top = y + 'px';
+                        hoverInfo.style.display = 'block';
+                        hoverInfo.style.opacity = '0';
+                        hoverInfo.style.transform = 'scale(0.95)';
+
+                        // Trigger animation
+                        setTimeout(() => {
+                            hoverInfo.style.opacity = '1';
+                            hoverInfo.style.transform = 'scale(1)';
+                            hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
+                        }, 10);
+                    });
+                } else {
+                    // Fallback positioning when Floating UI is not available
+                    const margin = 8;
+                    const tooltipWidth = 320;
+                    const tooltipHeight = 180;
+
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+
+                    let left = Math.max(margin, Math.min(rect.left + window.scrollX, viewportWidth - tooltipWidth - margin));
+                    let top = rect.top + window.scrollY - tooltipHeight - margin;
+
+                    // If above doesn't fit, try below
+                    if (top < margin) {
+                        top = rect.bottom + window.scrollY + margin;
+                    }
+
+                    // Ensure tooltip stays in viewport
+                    left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
+                    top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
+
+                    // Apply smooth positioning with animation
+                    hoverInfo.style.left = left + 'px';
+                    hoverInfo.style.top = top + 'px';
+                    hoverInfo.style.display = 'block';
+                    hoverInfo.style.opacity = '0';
+                    hoverInfo.style.transform = 'scale(0.95)';
+
+                    // Trigger animation
+                    setTimeout(() => {
+                        hoverInfo.style.opacity = '1';
+                        hoverInfo.style.transform = 'scale(1)';
+                        hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
+                    }, 10);
+                }
             }
 
             function hideHoverInfo() {
-                if (hoverInfo) {
-                    hoverInfo.style.display = 'none';
+                if (hoverInfo && hoverInfo.style.display !== 'none') {
+                    hoverInfo.style.opacity = '0';
+                    hoverInfo.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        if (hoverInfo) {
+                            hoverInfo.style.display = 'none';
+                        }
+                    }, 150);
                 }
             }
 
@@ -445,7 +566,7 @@ export class ElementSelector {
                             payload: { text: text, type: type }
                         });
                         showNotification(type + ' copied!');
-                        console.log('✅ Copied via VS Code API:', text);
+
                     } else {
                         // Fallback: create temporary textarea
                         var textarea = document.createElement('textarea');
@@ -455,9 +576,8 @@ export class ElementSelector {
                         document.execCommand('copy');
                         document.body.removeChild(textarea);
                         showNotification(type + ' copied!');
-                        console.log('✅ Copied via fallback:', text);
                     }
-                } catch (error) {
+                    } catch (error) {
                     console.error('❌ Failed to copy to clipboard:', error);
                     showNotification('Copy failed', 'error');
                 }
@@ -491,15 +611,17 @@ export class ElementSelector {
 
                 var target = e.target;
 
-                if (target.closest('.dom-agent-inspector') ||
+                // Skip if hovering over our own elements
+                if (
                     target.closest('.dom-agent-toolbar') ||
-                    target.classList.contains('dom-agent-hover-info') ||
-                    target.classList.contains('dom-agent-copied-notification')) {
-                    hideHoverInfo();
+                    target.closest('.dom-agent-hover-info') ||
+                    target.classList.contains('dom-agent-copied-notification') ||
+                    target.closest('.dom-agent-copied-notification')
+                ) {
                     return;
                 }
 
-                console.log('👆 Mouse over:', target.tagName, target.className);
+
 
                 if (currentHighlight && currentHighlight !== target) {
                     currentHighlight.classList.remove('dom-agent-highlight');
@@ -517,6 +639,15 @@ export class ElementSelector {
                 if (!isEnabled) return;
 
                 var target = e.target;
+                var relatedTarget = e.relatedTarget;
+
+                // Don't hide if moving to the hover info itself or its children
+                if (relatedTarget && (
+                    relatedTarget.classList.contains('dom-agent-hover-info') ||
+                    relatedTarget.closest('.dom-agent-hover-info')
+                )) {
+                    return;
+                }
 
                 if (!target.classList.contains('dom-agent-selected')) {
                     target.classList.remove('dom-agent-highlight');
@@ -526,7 +657,10 @@ export class ElementSelector {
                     currentHighlight = null;
                 }
 
-                hideHoverInfo();
+                // Only hide hover info if not moving to it
+                if (!relatedTarget || !relatedTarget.closest || !relatedTarget.closest('.dom-agent-hover-info')) {
+                    hideHoverInfo();
+                }
             }, true);
             
             // Click event - copy locator to clipboard
@@ -535,7 +669,7 @@ export class ElementSelector {
 
                 var target = e.target;
 
-                if (target.closest('.dom-agent-inspector') ||
+                if (
                     target.closest('.dom-agent-toolbar') ||
                     target.classList.contains('dom-agent-hover-info') ||
                     target.classList.contains('dom-agent-copied-notification')) {
@@ -564,7 +698,7 @@ export class ElementSelector {
                 // Copy primary locator to clipboard
                 copyToClipboard(locators.primary, 'Playwright Locator');
 
-                // Create element info for inspector
+                // Create element info for selection
                 var rect = target.getBoundingClientRect();
                 var classes = [];
                 for (var j = 0; j < target.classList.length; j++) {
@@ -600,24 +734,23 @@ export class ElementSelector {
                 // Send to VS Code
                 if (window.vscode && window.vscode.postMessage) {
                     window.vscode.postMessage({
-                        type: 'element-selected',
+                        type: 'element-selected', 
                         payload: { element: elementInfo }
                     });
                 }
 
-                // Show in inspector
-                if (window.showElementInspector) {
-                    window.showElementInspector(elementInfo);
-                }
+                // Element selected - locator copied to clipboard
 
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }, true);
-            
+            }
+
             console.log('🎯 DOM Agent Playwright Selector Ready!');
 
-        })();
+            } // Close initElementSelector
+        })(); // Close main function
         </script>`;
     }
 }

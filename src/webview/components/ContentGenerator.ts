@@ -1,6 +1,7 @@
 import { DOMSnapshot } from '../../types';
 import { DomSerializer } from '../../capture/DomSerializer';
 import { WebviewUI } from './WebviewUI';
+import { ElementSelector } from './ElementSelector';
 import { Logger } from '../../utils/logger';
 
 export class ContentGenerator {
@@ -28,11 +29,12 @@ export class ContentGenerator {
                 sanitizedLength: sanitizedHtml.length
             });
             
-            // 🎯 使用新的简单选择器架构，不依赖复杂的interactivity script
+            // 🎯 使用新的简单选择器架构，传入选择器脚本
+            const selectorScript = ElementSelector.generateScript();
             const finalContent = WebviewUI.generateInteractiveContent(
                 snapshot,
                 sanitizedHtml,
-                '' // 传入空字符串，新架构不依赖这个参数
+                selectorScript
             );
             
             // Log the first few characters to check for issues

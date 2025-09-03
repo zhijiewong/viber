@@ -10,7 +10,6 @@ let webviewProvider: WebviewProvider | undefined;
 export function activate(context: vscode.ExtensionContext) {
     const logger = new Logger();
     logger.info('🚀 DOM Agent extension is activating...');
-    console.log('🚀 DOM Agent extension is activating...'); // Also log to console
 
     try {
         // Initialize webview provider with error handling
@@ -76,7 +75,6 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(...disposables);
 
         logger.info('✅ DOM Agent extension activated successfully');
-        console.log('✅ DOM Agent extension activated successfully');
 
         // Show success message only if at least one command was registered
         if (disposables.length > 0) {

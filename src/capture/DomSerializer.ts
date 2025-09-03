@@ -82,15 +82,9 @@ export class DomSerializer {
     public injectInteractivityScript(): string {
         return `
             <script id="dom-agent-interactivity-script">
-                console.log('🚀 === DOM Agent Script Loading === 🚀');
-                console.log('📍 Script Location: DOM Agent Interactivity');
-                console.log('📄 Document ready state:', document.readyState);
-                console.log('🌐 Current URL:', window.location.href);
-                console.log('⏰ Script load time:', new Date().toISOString());
                 
                 // 🛡️ JavaScript Runtime Interceptor - 彻底阻止危险函数执行
                 (function() {
-                    console.log('🛡️ Installing JavaScript security interceptors...');
                     
                     // 1. 完全禁用 document.write 和 document.writeln
                     if (document.write) {
@@ -192,7 +186,7 @@ export class DomSerializer {
                         }
                         
                         /* 确保DOM Agent UI保持最高层级 */
-                        .dom-agent-toolbar, .dom-agent-inspector {
+                        .dom-agent-toolbar {
                             z-index: 2147483647 !important;
                             position: fixed !important;
                         }
@@ -232,7 +226,7 @@ export class DomSerializer {
                         console.log('🖱️ Mouse over:', target.tagName, target.className);
                         
                         // 检查是否应该跳过这个元素
-                        if (target.closest('.dom-agent-inspector') || 
+                        if ( 
                             target.closest('.dom-agent-toolbar') ||
                             target.classList.contains('dom-agent-selected')) {
                             console.log('⏭️ Skipping DOM Agent UI element');
@@ -304,7 +298,7 @@ export class DomSerializer {
                         const target = e.target;
                         
                         // Skip DOM Agent UI elements
-                        if (target.closest('.dom-agent-inspector') || 
+                        if ( 
                             target.closest('.dom-agent-toolbar')) {
                             return;
                         }
@@ -376,7 +370,7 @@ export class DomSerializer {
                         const target = e.target;
                         
                         // Skip DOM Agent UI elements
-                        if (target.closest('.dom-agent-inspector') || 
+                        if ( 
                             target.closest('.dom-agent-toolbar') ||
                             target.classList.contains('dom-agent-selected') ||
                             target.tagName === 'SCRIPT' || 
