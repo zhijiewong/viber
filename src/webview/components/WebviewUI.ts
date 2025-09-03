@@ -60,7 +60,7 @@ export class WebviewUI {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'self' vscode-resource: vscode-webview: https:; script-src 'self' 'unsafe-inline' vscode-resource:; style-src 'self' 'unsafe-inline' vscode-resource: https:; img-src 'self' data: https: vscode-resource:; font-src 'self' https: data:;">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'self' vscode-resource: vscode-webview: https: data:; script-src 'self' 'unsafe-inline' vscode-resource: vscode-webview:; style-src 'self' 'unsafe-inline' vscode-resource: vscode-webview: https: data:; img-src 'self' data: https: vscode-resource: vscode-webview:; font-src 'self' https: data: vscode-resource:; connect-src 'self' https: vscode-resource: vscode-webview:;">
             <title>DOM Agent - DevTools Style</title>
             {{{baseStyles}}}
             {{{headContent}}}
@@ -68,7 +68,7 @@ export class WebviewUI {
         <body>
             {{{toolbar}}}
 
-            <div id="content" class="dom-agent-content" style="margin-top: 60px;">
+            <div id="content" class="dom-agent-content">
                 {{{bodyContent}}}
             </div>
 
@@ -89,12 +89,19 @@ export class WebviewUI {
         sanitizedHtml: string,
         _interactivityScript?: string
     ): string {
-        // Extract head and body content
+        // Extract head and body content more safely
         const headMatch = sanitizedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
         const bodyMatch = sanitizedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
 
         let headContent = headMatch ? headMatch[1] : '';
         let bodyContent = bodyMatch ? bodyMatch[1] : sanitizedHtml;
+
+        // Ensure essential styles are preserved in head content
+        if (headContent && !headContent.includes('<style') && sanitizedHtml.includes('<style')) {
+            // Extract all style tags from sanitized HTML if not in head
+            const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+            headContent = styleMatches.join('\n') + '\n' + headContent;
+        }
 
         // Safely escape the URL
         const safeUrl = snapshot.url
@@ -133,6 +140,22 @@ export class WebviewUI {
                     background: #f8f9fa;
                     color: #202124;
                     line-height: 1.5;
+                    overflow-x: hidden;
+                }
+
+                /* Reset styles for captured content */
+                .dom-agent-content * {
+                    max-width: 100% !important;
+                }
+
+                .dom-agent-content img {
+                    height: auto !important;
+                }
+
+                /* Preserve original styles but prevent breaking layout */
+                .dom-agent-content {
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
                 }
 
                 /* Toolbar - DevTools Style */
@@ -487,6 +510,9 @@ export class WebviewUI {
                 .dom-agent-content {
                     position: relative;
                     z-index: 1;
+                    margin-top: 56px;
+                    min-height: calc(100vh - 56px);
+                    background: transparent;
                 }
 
                 /* Theme toggle */
@@ -543,7 +569,7 @@ export class WebviewUI {
 
     private static generateInspectorUI(): string {
         return `
-            <div id="inspector" class="dom-agent-inspector">
+            <div id="inspector" class="dom-agent-inspector collapsed">
                 <div class="dom-agent-inspector-header">
                     <div class="title">
                         <span>📋</span>
