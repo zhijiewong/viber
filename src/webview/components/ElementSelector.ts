@@ -153,6 +153,16 @@ export class ElementSelector {
                     '.dom-agent-hover-info {' +
                         'display: none !important;' + /* 隐藏旧的悬浮框 */
                     '}' +
+                    '.dom-agent-click-hint {' +
+                        'font-size: 11px !important;' +
+                        'color: #5f6368 !important;' +
+                        'text-align: center !important;' +
+                        'font-style: italic !important;' +
+                        'padding: 4px 8px !important;' +
+                        'background: rgba(26, 115, 232, 0.05) !important;' +
+                        'border-radius: 4px !important;' +
+                        'border: 1px solid rgba(26, 115, 232, 0.1) !important;' +
+                    '}' +
                     '.dom-agent-copied-notification {' +
                         'position: fixed !important;' +
                         'top: 70px !important;' +
@@ -209,7 +219,19 @@ export class ElementSelector {
                         });
                     }
 
-                    // Priority 3: getByPlaceholder
+                    // Priority 3: getByText (用户可见文本更重要)
+                    var text = this.generateTextLocator(element);
+                    if (text) {
+                        locators.text = text;
+                        locators.alternatives.push({
+                            type: 'text',
+                            locator: text,
+                            description: 'By visible text (most user-friendly)',
+                            priority: 3
+                        });
+                    }
+
+                    // Priority 4: getByPlaceholder
                     var placeholder = this.generatePlaceholderLocator(element);
                     if (placeholder) {
                         locators.placeholder = placeholder;
@@ -217,18 +239,6 @@ export class ElementSelector {
                             type: 'placeholder',
                             locator: placeholder,
                             description: 'By placeholder text',
-                            priority: 3
-                        });
-                    }
-
-                    // Priority 4: getByText
-                    var text = this.generateTextLocator(element);
-                    if (text) {
-                        locators.text = text;
-                        locators.alternatives.push({
-                            type: 'text',
-                            locator: text,
-                            description: 'By visible text',
                             priority: 4
                         });
                     }
@@ -517,7 +527,7 @@ export class ElementSelector {
                         '</div>' +
                     '</div>' +
                     '<div class="dom-agent-panel-actions" id="panel-actions" style="display: none;">' +
-                        '<button class="dom-agent-panel-btn" onclick="copyLocator()">📋 Copy Locator</button>' +
+                        '<div class="dom-agent-click-hint">💡 Click element to copy locator</div>' +
                     '</div>';
                 document.body.appendChild(unifiedPanel);
 
@@ -529,13 +539,8 @@ export class ElementSelector {
                     }
                 });
 
-                // Add global functions for button clicks
-                window.copyLocator = function() {
-                    if (currentTargetElement) {
-                        var locators = PlaywrightLocatorGenerator.generateLocators(currentTargetElement);
-                        copyToClipboard(locators.primary, 'Playwright Locator');
-                    }
-                };
+                // Global functions for element interaction (simplified)
+                // Element clicking now automatically copies locator
 
             }
 
@@ -640,7 +645,7 @@ export class ElementSelector {
                 var rect = element.getBoundingClientRect();
                 console.log('📐 Element rect:', rect);
                 var locators = PlaywrightLocatorGenerator.generateLocators(element);
-
+                
                 // Get element details
                 var tag = element.tagName.toLowerCase();
                 var id = element.id || 'none';
@@ -650,7 +655,7 @@ export class ElementSelector {
                 var className = classes.length > 0 ? classes.join(', ') : 'none';
                 var text = element.textContent ? element.textContent.trim().substring(0, 50) + '...' : 'none';
                 var dimensions = Math.round(rect.width) + 'px × ' + Math.round(rect.height) + 'px';
-
+                
                 // Update panel status
                 var statusElement = document.getElementById('panel-status');
                 if (statusElement) {
@@ -692,10 +697,10 @@ export class ElementSelector {
                     contentElement.innerHTML = contentHtml;
                 }
 
-                // Show actions
+                // Show click hint
                 var actionsElement = document.getElementById('panel-actions');
                 if (actionsElement) {
-                    actionsElement.style.display = 'flex';
+                    actionsElement.style.display = 'block';
                 }
 
                 // Position panel relative to element using Floating UI
@@ -749,8 +754,8 @@ export class ElementSelector {
 
                                         // Ensure panel stays within viewport with comfortable margins
                                         const margin = 16;
-                                        const viewportWidth = window.innerWidth;
-                                        const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
 
                                         let finalX = Math.max(margin, Math.min(x, viewportWidth - panelWidth - margin));
                                         let finalY = Math.max(margin, Math.min(y, viewportHeight - panelHeight - margin));
@@ -850,7 +855,7 @@ export class ElementSelector {
                         contentElement.innerHTML = '<div style="color: #5f6368; font-size: 12px; text-align: center; padding: 20px;">Hover over an element to inspect</div>';
                     }
 
-                    // Hide actions
+                    // Hide click hint
                     var actionsElement = document.getElementById('panel-actions');
                     if (actionsElement) {
                         actionsElement.style.display = 'none';
@@ -1172,25 +1177,44 @@ export class ElementSelector {
                     return;
                 }
 
-                console.log('🎯 Element clicked for locator generation:', target.tagName);
+                console.log('🎯 Element clicked - copying locator:', target.tagName);
 
-                // Clear all selected states
+                // Clear previous selection
                 var selectedElements = document.querySelectorAll('.dom-agent-selected');
                 for (var i = 0; i < selectedElements.length; i++) {
                     selectedElements[i].classList.remove('dom-agent-selected');
-                    selectedElements[i].classList.remove('dom-agent-highlight');
                 }
 
-                // Add selected state
+                // Add selected state to clicked element
                 target.classList.remove('dom-agent-highlight');
                 target.classList.add('dom-agent-selected');
                 
-                // Generate Playwright locators
+                // Generate and copy locator immediately
                 var locators = PlaywrightLocatorGenerator.generateLocators(target);
-                console.log('📊 Generated Playwright locators:', locators);
-
-                // Copy primary locator to clipboard
+                console.log('📊 Copying locator:', locators.primary);
                 copyToClipboard(locators.primary, 'Playwright Locator');
+
+                // Update panel with success feedback
+                var statusElement = document.getElementById('panel-status');
+                if (statusElement) {
+                    statusElement.textContent = 'Copied';
+                    statusElement.style.setProperty('color', '#ffffff', 'important');
+                    statusElement.style.setProperty('font-weight', '600', 'important');
+                    statusElement.style.setProperty('background-color', '#22c55e', 'important');
+                    statusElement.style.setProperty('padding', '2px 8px', 'important');
+                    statusElement.style.setProperty('border-radius', '12px', 'important');
+                    statusElement.style.setProperty('transition', 'all 0.3s ease', 'important');
+                    setTimeout(() => {
+                        if (statusElement) {
+                            statusElement.textContent = 'Inspecting';
+                            statusElement.style.setProperty('color', '#5f6368', 'important');
+                            statusElement.style.setProperty('font-weight', '400', 'important');
+                            statusElement.style.setProperty('background-color', '#f1f3f4', 'important');
+                            statusElement.style.setProperty('padding', '2px 6px', 'important');
+                            statusElement.style.setProperty('border-radius', '3px', 'important');
+                        }
+                    }, 1500);
+                }
 
                 // Create element info for selection
                 var rect = target.getBoundingClientRect();
