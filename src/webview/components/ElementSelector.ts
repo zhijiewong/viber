@@ -7,10 +7,13 @@ export class ElementSelector {
     /**
      * Generate Playwright-style element selector with clipboard integration
      */
-    public static generateScript(): string {
+    public static generateScript(logoUrl?: string): string {
         return `<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
         <script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
+            // Store logo URL for panel icon
+            var panelLogoUrl = ${logoUrl ? `'${logoUrl}'` : 'null'};
+
             // Load Floating UI library dynamically
             console.log('🎯 Loading Floating UI for tooltip positioning');
 
@@ -87,14 +90,18 @@ export class ElementSelector {
                         'width: 20px !important;' +
                         'height: 20px !important;' +
                         'margin-right: 8px !important;' +
-                        'background: #1a73e8 !important;' +
-                        'border-radius: 4px !important;' +
                         'display: flex !important;' +
                         'align-items: center !important;' +
                         'justify-content: center !important;' +
-                        'color: white !important;' +
+                        'color: #1a73e8 !important;' +
                         'font-weight: bold !important;' +
                         'font-size: 12px !important;' +
+                    '}' +
+                    '.panel-icon-img {' +
+                        'width: 100% !important;' +
+                        'height: 100% !important;' +
+                        'object-fit: contain !important;' +
+                        'border-radius: 3px !important;' +
                     '}' +
                     '.dom-agent-panel-title {' +
                         'font-weight: 600 !important;' +
@@ -219,7 +226,7 @@ export class ElementSelector {
                         });
                     }
 
-                    // Priority 3: getByText (用户可见文本更重要)
+                    // Priority 3: getByText (User-visible text is more important)
                     var text = this.generateTextLocator(element);
                     if (text) {
                         locators.text = text;
@@ -517,7 +524,9 @@ export class ElementSelector {
                 unifiedPanel.id = 'dom-agent-unified-panel';
                 unifiedPanel.innerHTML =
                     '<div class="dom-agent-panel-header">' +
-                        '<div class="dom-agent-panel-icon">🎯</div>' +
+                        '<div class="dom-agent-panel-icon">' +
+                            (panelLogoUrl ? '<img src="' + panelLogoUrl + '" alt="DOM Agent" class="panel-icon-img" />' : '🎯') +
+                        '</div>' +
                         '<div class="dom-agent-panel-title">Element Inspector</div>' +
                         '<div class="dom-agent-panel-status" id="panel-status">Ready</div>' +
                     '</div>' +

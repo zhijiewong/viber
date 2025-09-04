@@ -29,7 +29,7 @@ export class EventBus extends EventEmitter<DOMAgentEvents> {
 
     private constructor() {
         super();
-        this.logger = new Logger();
+        this.logger = Logger.getInstance();
         this.setupEventLogging();
     }
 

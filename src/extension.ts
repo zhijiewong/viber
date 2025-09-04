@@ -8,7 +8,7 @@ import { Logger } from './utils/logger';
 let webviewProvider: WebviewProvider | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-    const logger = new Logger();
+    const logger = Logger.getInstance();
     logger.info('🚀 DOM Agent extension is activating...');
 
     try {
@@ -17,53 +17,37 @@ export function activate(context: vscode.ExtensionContext) {
         webviewProvider = new WebviewProvider(context);
         logger.info('WebviewProvider initialized successfully');
 
-        // Register commands with individual error handling
-        const disposables = [];
-
-        try {
-            const openUrlDisposable = vscode.commands.registerCommand('dom-agent.openUrl', async () => {
+        // Register commands
+        const disposables = [
+            vscode.commands.registerCommand('dom-agent.openUrl', async () => {
                 try {
                     await openUrlCommand(webviewProvider!);
                 } catch (error) {
                     logger.error('Error in openUrl command', error);
                     vscode.window.showErrorMessage('Failed to open URL');
                 }
-            });
-            disposables.push(openUrlDisposable);
-            logger.info('Registered dom-agent.openUrl command');
-        } catch (error) {
-            logger.error('Failed to register openUrl command', error);
-        }
+            }),
 
-        try {
-            const detectDevServerDisposable = vscode.commands.registerCommand('dom-agent.detectDevServer', async () => {
+            vscode.commands.registerCommand('dom-agent.detectDevServer', async () => {
                 try {
                     await detectDevServerCommand(webviewProvider!);
                 } catch (error) {
                     logger.error('Error in detectDevServer command', error);
                     vscode.window.showErrorMessage('Failed to detect dev server');
                 }
-            });
-            disposables.push(detectDevServerDisposable);
-            logger.info('Registered dom-agent.detectDevServer command');
-        } catch (error) {
-            logger.error('Failed to register detectDevServer command', error);
-        }
+            }),
 
-        try {
-            const generateCodeDisposable = vscode.commands.registerCommand('dom-agent.generateCode', async () => {
+            vscode.commands.registerCommand('dom-agent.generateCode', async () => {
                 try {
                     await generateCodeCommand(webviewProvider!);
                 } catch (error) {
                     logger.error('Error in generateCode command', error);
                     vscode.window.showErrorMessage('Failed to generate code');
                 }
-            });
-            disposables.push(generateCodeDisposable);
-            logger.info('Registered dom-agent.generateCode command');
-        } catch (error) {
-            logger.error('Failed to register generateCode command', error);
-        }
+            })
+        ];
+
+        logger.info(`Registered ${disposables.length} commands successfully`);
 
         // Set up context for conditional commands
         try {
@@ -101,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    const logger = new Logger();
+    const logger = Logger.getInstance();
     logger.info('DOM Agent extension is deactivating...');
     
     if (webviewProvider) {

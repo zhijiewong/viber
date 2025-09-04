@@ -3,7 +3,7 @@ import { WebviewProvider } from '../webview/WebviewProvider';
 import { Logger } from '../utils/logger';
 import * as net from 'net';
 
-const logger = new Logger();
+const logger = Logger.getInstance();
 
 const COMMON_DEV_PORTS = [3000, 3001, 4200, 5000, 5173, 8000, 8080, 8100, 9000];
 

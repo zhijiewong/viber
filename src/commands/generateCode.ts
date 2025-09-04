@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { WebviewProvider } from '../webview/WebviewProvider';
 import { Logger } from '../utils/logger';
 
-const logger = new Logger();
+const logger = Logger.getInstance();
 
 export async function generateCodeCommand(webviewProvider: WebviewProvider): Promise<void> {
     try {

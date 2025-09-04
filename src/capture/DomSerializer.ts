@@ -9,7 +9,7 @@ export class DomSerializer {
     private readonly htmlProcessor: HTMLProcessor;
 
     constructor() {
-        this.logger = new Logger();
+        this.logger = Logger.getInstance();
         this.htmlProcessor = new HTMLProcessor();
     }
 
@@ -46,16 +46,16 @@ export class DomSerializer {
         this.logger.debug('Starting HTML sanitization', { inputLength: html.length });
         
         try {
-            // 使用HTML处理器清理内容
+            // Use HTML processor to clean content
             const cleanedHTML = this.htmlProcessor.sanitize(html);
-            
-            // 验证处理结果质量
+
+            // Validate processing result quality
             const validation = this.htmlProcessor.validate(cleanedHTML);
-            
+
             if (validation.warnings.length > 0) {
                 this.logger.warn('HTML processing warnings', validation.warnings);
             }
-            
+
             this.logger.info('HTML sanitization completed successfully', {
                 hasInteractiveElements: validation.hasInteractiveElements,
                 hasStyles: validation.hasStyles,
@@ -63,15 +63,15 @@ export class DomSerializer {
                 originalLength: html.length,
                 cleanedLength: cleanedHTML.length
             });
-            
+
             return cleanedHTML;
-            
+
         } catch (error) {
-            this.logger.error('HTML sanitization failed, using fallback method', { 
-                error: error instanceof Error ? error.message : String(error) 
+            this.logger.error('HTML sanitization failed, using fallback method', {
+                error: error instanceof Error ? error.message : String(error)
             });
-            
-            // 最小化fallback - 只移除最危险的内容
+
+            // Minimal fallback - only remove the most dangerous content
             return html
                 .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
                 .replace(/javascript\s*:/gi, 'removed:')
@@ -83,41 +83,41 @@ export class DomSerializer {
         return `
             <script id="dom-agent-interactivity-script">
                 
-                // 🛡️ JavaScript Runtime Interceptor - 彻底阻止危险函数执行
+                // 🛡️ JavaScript Runtime Interceptor - Completely block dangerous function execution
                 (function() {
-                    
-                    // 1. 完全禁用 document.write 和 document.writeln
+
+                    // 1. Completely disable document.write and document.writeln
                     if (document.write) {
-                        document.write = function() { 
-                            console.warn('🚫 document.write blocked by DOM Agent security'); 
-                            return false; 
+                        document.write = function() {
+                            console.warn('🚫 document.write blocked by DOM Agent security');
+                            return false;
                         };
                     }
                     if (document.writeln) {
-                        document.writeln = function() { 
-                            console.warn('🚫 document.writeln blocked by DOM Agent security'); 
-                            return false; 
+                        document.writeln = function() {
+                            console.warn('🚫 document.writeln blocked by DOM Agent security');
+                            return false;
                         };
                     }
-                    
-                    // 2. 拦截 eval
+
+                    // 2. Intercept eval
                     const originalEval = window.eval;
                     window.eval = function(code) {
                         console.warn('🚫 eval() blocked by DOM Agent security:', code);
                         return undefined;
                     };
-                    
-                    // 3. 拦截 Function 构造器
+
+                    // 3. Intercept Function constructor
                     const OriginalFunction = window.Function;
                     window.Function = function() {
                         console.warn('🚫 Function constructor blocked by DOM Agent security');
                         return function() {};
                     };
-                    
-                    // 4. 拦截 setTimeout/setInterval 的字符串参数
+
+                    // 4. Intercept setTimeout/setInterval with string parameters
                     const originalSetTimeout = window.setTimeout;
                     const originalSetInterval = window.setInterval;
-                    
+
                     window.setTimeout = function(callback, delay) {
                         if (typeof callback === 'string') {
                             console.warn('🚫 setTimeout with string blocked by DOM Agent security');
@@ -125,7 +125,7 @@ export class DomSerializer {
                         }
                         return originalSetTimeout.apply(this, arguments);
                     };
-                    
+
                     window.setInterval = function(callback, delay) {
                         if (typeof callback === 'string') {
                             console.warn('🚫 setInterval with string blocked by DOM Agent security');
@@ -165,7 +165,7 @@ export class DomSerializer {
                     const style = document.createElement('style');
                     style.id = 'dom-agent-styles';
                     style.textContent = \`
-                        /* DOM Agent 选择框样式 - 超高优先级 */
+                        /* DOM Agent selection box styles - Ultra high priority */
                         .dom-agent-highlight {
                             background: rgba(0, 150, 255, 0.15) !important;
                             outline: 2px solid #0096ff !important;
@@ -185,13 +185,13 @@ export class DomSerializer {
                             z-index: 2147483647 !important;
                         }
                         
-                        /* 确保DOM Agent UI保持最高层级 */
+                        /* Ensure DOM Agent UI maintains highest z-index */
                         .dom-agent-toolbar {
                             z-index: 2147483647 !important;
                             position: fixed !important;
                         }
                         
-                        /* 测试样式 - 添加一个明显的测试类 */
+                        /* Test styles - Add an obvious test class */
                         .dom-agent-test {
                             background: yellow !important;
                             border: 5px solid red !important;
@@ -211,42 +211,42 @@ export class DomSerializer {
                     console.log('✅ DOM Agent styles injected successfully');
                     console.log('Style element added to head:', !!document.getElementById('dom-agent-styles'));
                     
-                    // 添加测试样式到body以验证CSS工作正常
+                    // Add test styles to body to verify CSS works properly
                     document.body.style.setProperty('--dom-agent-test', 'working', 'important');
                     console.log('✅ CSS injection test completed');
-                    
-                    // 更简单直接的hover处理
+
+                    // Simpler and more direct hover handling
                     let isMouseOverHandlerActive = false;
-                    
+
                     document.addEventListener('mouseover', function(e) {
                         if (isMouseOverHandlerActive) return;
                         isMouseOverHandlerActive = true;
-                        
+
                         const target = e.target;
                         console.log('🖱️ Mouse over:', target.tagName, target.className);
-                        
-                        // 检查是否应该跳过这个元素
-                        if ( 
+
+                        // Check if this element should be skipped
+                        if (
                             target.closest('.dom-agent-toolbar') ||
                             target.classList.contains('dom-agent-selected')) {
                             console.log('⏭️ Skipping DOM Agent UI element');
                             isMouseOverHandlerActive = false;
                             return;
                         }
-                        
-                        // 移除之前的高亮
+
+                        // Remove previous highlight
                         const prevHighlighted = document.querySelector('.dom-agent-highlight');
                         if (prevHighlighted && prevHighlighted !== target) {
                             prevHighlighted.classList.remove('dom-agent-highlight');
                             console.log('🔄 Removed previous highlight');
                         }
                         
-                        // 添加高亮到当前元素
+                        // Add highlight to current element
                         if (!target.classList.contains('dom-agent-highlight')) {
                             target.classList.add('dom-agent-highlight');
                             console.log('✨ Added highlight to:', target.tagName, target.id || 'no-id');
-                            
-                            // 验证样式是否应用
+
+                            // Verify if styles are applied
                             const computedStyle = window.getComputedStyle(target);
                             console.log('🎨 Applied outline:', computedStyle.outline);
                         }
@@ -260,7 +260,7 @@ export class DomSerializer {
                         const target = e.target;
                         console.log('🖱️ Mouse out:', target.tagName);
                         
-                        // 只有在离开当前高亮元素且不是选中状态时才移除高亮
+                        // Only remove highlight when leaving current highlighted element and not in selection state
                         if (target === currentHighlight && !target.classList.contains('dom-agent-selected')) {
                             target.classList.remove('dom-agent-highlight');
                             console.log('🔄 Removed highlight on mouseout');
@@ -270,27 +270,27 @@ export class DomSerializer {
                     
                     console.log('✅ Hover event listeners added');
                     
-                    // 🔬 测试事件监听器是否工作
+                    // 🔬 Test if event listeners are working
                     console.log('🧪 Testing event listeners...');
-                    
-                    // 添加一个测试事件到body
+
+                    // Add a test event to body
                     document.body.addEventListener('mousemove', function(e) {
                         console.log('🖱️ Mouse move detected at:', e.clientX, e.clientY);
-                    }, { once: true }); // 只执行一次
-                    
-                    // 测试样式是否能被应用
+                    }, { once: true }); // Execute only once
+
+                    // Test if styles can be applied
                     const testElement = document.createElement('div');
                     testElement.className = 'dom-agent-test';
                     testElement.textContent = 'DOM Agent Test Element';
                     testElement.style.cssText = 'position: fixed; top: 10px; left: 10px; z-index: 999999;';
                     document.body.appendChild(testElement);
-                    
+
                     setTimeout(() => {
                         if (testElement.parentNode) {
                             testElement.remove();
                         }
                     }, 3000);
-                    
+
                     console.log('🧪 Test element added for 3 seconds');
                     
                     // Click handler
@@ -308,19 +308,19 @@ export class DomSerializer {
                         
                         console.log('🖱️ Element clicked:', target.tagName, target.id || 'no-id');
                         
-                        // 移除之前的选择
+                        // Remove previous selection
                         const prevSelected = document.querySelector('.dom-agent-selected');
                         if (prevSelected) {
                             prevSelected.classList.remove('dom-agent-selected');
                             console.log('🔄 Removed previous selection');
                         }
-                        
-                        // 移除高亮并添加选中样式
+
+                        // Remove highlight and add selection style
                         target.classList.remove('dom-agent-highlight');
                         target.classList.add('dom-agent-selected');
                         console.log('✅ Element selected:', target.tagName);
-                        
-                        // 验证选中样式
+
+                        // Verify selection style
                         const computedStyle = window.getComputedStyle(target);
                         console.log('🎨 Selection outline:', computedStyle.outline);
                         

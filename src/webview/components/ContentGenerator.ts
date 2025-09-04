@@ -1,36 +1,36 @@
 import { DOMSnapshot } from '../../types';
-import { DomSerializer } from '../../capture/DomSerializer';
+import { HTMLProcessor } from '../../utils/HTMLProcessor';
 import { WebviewUI } from './WebviewUI';
 import { ElementSelector } from './ElementSelector';
 import { Logger } from '../../utils/logger';
 
 export class ContentGenerator {
-    private readonly domSerializer: DomSerializer;
+    private readonly htmlProcessor: HTMLProcessor;
     private readonly logger: Logger;
 
-    constructor(domSerializer: DomSerializer) {
-        this.domSerializer = domSerializer;
-        this.logger = new Logger();
+    constructor() {
+        this.htmlProcessor = new HTMLProcessor();
+        this.logger = Logger.getInstance();
     }
 
-    public generateLoadingContent(): string {
-        return WebviewUI.generateLoadingContent();
+    public generateLoadingContent(logoUrl?: string): string {
+        return WebviewUI.generateLoadingContent('Capturing webpage...', logoUrl);
     }
 
-    public async generateInteractiveContent(snapshot: DOMSnapshot): Promise<string> {
+    public async generateInteractiveContent(snapshot: DOMSnapshot, logoUrl?: string): Promise<string> {
         this.logger.info('Generating interactive webview content');
         
         try {
-            // 🎯 简化流程：只做基本的安全清理
-            const sanitizedHtml = await this.domSerializer.sanitizeHTML(snapshot.html);
-            
-            this.logger.info('🎯 Simplified HTML processing completed', { 
+            // 🎯 Use HTML processor directly for secure sanitization
+            const sanitizedHtml = this.htmlProcessor.sanitize(snapshot.html);
+
+            this.logger.info('🎯 HTML processing completed', {
                 originalLength: snapshot.html.length,
                 sanitizedLength: sanitizedHtml.length
             });
-            
-            // 🎯 使用新的简单选择器架构，传入选择器脚本
-            const selectorScript = ElementSelector.generateScript();
+
+            // 🎯 Use new simplified selector architecture with selector script
+            const selectorScript = ElementSelector.generateScript(logoUrl);
             const finalContent = WebviewUI.generateInteractiveContent(
                 snapshot,
                 sanitizedHtml,

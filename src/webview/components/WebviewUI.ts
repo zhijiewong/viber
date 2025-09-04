@@ -33,15 +33,63 @@ export class WebviewUI {
                     flex-direction: column;
                 }
                 .loading-spinner {
-                    width: 40px;
-                    height: 40px;
-                    border: 4px solid var(--vscode-progressBar-background);
-                    border-top: 4px solid var(--vscode-progressBar-foreground);
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
+                    width: 80px;
+                    height: 80px;
+                    position: relative;
                     margin-bottom: 20px;
+                    animation: logoPulse 2s ease-in-out infinite;
                 }
-                @keyframes spin {
+
+                .loading-logo {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                    animation: logoSpin 3s linear infinite;
+                }
+
+                .loading-text-logo {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: var(--vscode-progressBar-foreground);
+                    animation: logoSpin 3s linear infinite;
+                }
+
+                .loading-spinner::after {
+                    content: '';
+                    position: absolute;
+                    top: -5px;
+                    left: -5px;
+                    right: -5px;
+                    bottom: -5px;
+                    border: 2px solid transparent;
+                    border-top: 2px solid var(--vscode-progressBar-foreground);
+                    border-radius: 8px;
+                    animation: borderSpin 1.5s ease-in-out infinite;
+                    opacity: 0.6;
+                }
+
+                @keyframes logoPulse {
+                    0%, 100% {
+                        opacity: 0.7;
+                        transform: scale(1);
+                    }
+                    50% {
+                        opacity: 1;
+                        transform: scale(1.05);
+                    }
+                }
+
+                @keyframes logoSpin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                @keyframes borderSpin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
@@ -52,8 +100,14 @@ export class WebviewUI {
             </style>
         </head>
         <body>
-            <div class="loading-spinner"></div>
-            <div class="loading-text>{{message}}</div>
+            <div class="loading-spinner">
+                {{#if logoUrl}}
+                    <img src="{{logoUrl}}" alt="DOM Agent Logo" class="loading-logo" />
+                {{else}}
+                    <div class="loading-text-logo">🔍 DOM Agent</div>
+                {{/if}}
+            </div>
+            <div class="loading-text">{{message}}</div>
         </body>
         </html>
         `);
@@ -82,8 +136,8 @@ export class WebviewUI {
         </html>`);
     }
 
-    public static generateLoadingContent(message: string = 'Capturing webpage...'): string {
-        return this.loadingTemplate({ message });
+    public static generateLoadingContent(message: string = 'Capturing webpage...', logoUrl?: string): string {
+        return this.loadingTemplate({ message, logoUrl });
     }
 
     public static generateInteractiveContent(

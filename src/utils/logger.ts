@@ -2,12 +2,13 @@ import * as vscode from 'vscode';
 import * as winston from 'winston';
 
 export class Logger {
+    private static instance: Logger;
     private readonly outputChannel: vscode.OutputChannel;
     private readonly winstonLogger: winston.Logger;
 
-    constructor() {
+    private constructor() {
         this.outputChannel = vscode.window.createOutputChannel('DOM Agent');
-        
+
         // Create winston logger with custom transport for VS Code
         this.winstonLogger = winston.createLogger({
             level: 'debug',
@@ -26,6 +27,13 @@ export class Logger {
                 })
             ]
         });
+    }
+
+    public static getInstance(): Logger {
+        if (!Logger.instance) {
+            Logger.instance = new Logger();
+        }
+        return Logger.instance;
     }
 
     public info(message: string, meta?: any): void {

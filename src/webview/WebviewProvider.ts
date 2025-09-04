@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { ElementInfo, DOMSnapshot, CaptureOptions } from '../types';
 import { Logger } from '../utils/logger';
 import { PlaywrightCapture } from '../capture/PlaywrightCapture';
-import { DomSerializer } from '../capture/DomSerializer';
 import { ContentGenerator } from './components/ContentGenerator';
 import { MessageHandler } from './components/MessageHandler';
 
@@ -11,7 +10,6 @@ export class WebviewProvider {
     private readonly context: vscode.ExtensionContext;
     private readonly logger: Logger;
     private readonly playwrightCapture: PlaywrightCapture;
-    private readonly domSerializer: DomSerializer;
     private readonly contentGenerator: ContentGenerator;
     private readonly messageHandler: MessageHandler;
     private selectedElement: ElementInfo | undefined;
@@ -19,7 +17,7 @@ export class WebviewProvider {
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
-        this.logger = new Logger();
+        this.logger = Logger.getInstance();
 
         try {
             this.logger.info('Initializing PlaywrightCapture...');
@@ -30,18 +28,10 @@ export class WebviewProvider {
             throw error;
         }
 
-        try {
-            this.logger.info('Initializing DOMSerializer...');
-            this.domSerializer = new DomSerializer();
-            this.logger.info('DOMSerializer initialized successfully');
-        } catch (error) {
-            this.logger.error('Failed to initialize DOMSerializer', error);
-            throw error;
-        }
 
         try {
             this.logger.info('Initializing ContentGenerator...');
-            this.contentGenerator = new ContentGenerator(this.domSerializer);
+            this.contentGenerator = new ContentGenerator();
             this.logger.info('ContentGenerator initialized successfully');
         } catch (error) {
             this.logger.error('Failed to initialize ContentGenerator', error);
@@ -83,16 +73,24 @@ export class WebviewProvider {
         try {
             // Create webview panel first
             this.createWebviewPanel();
-            
-            // Show loading state
-            this.updateWebviewContent(this.contentGenerator.generateLoadingContent());
+
+            // Show loading state with logo
+            const loadingLogoUri = this.panel?.webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+            );
+            const loadingLogoUrl = loadingLogoUri?.toString();
+            this.updateWebviewContent(this.contentGenerator.generateLoadingContent(loadingLogoUrl));
             
             // Capture the webpage
             const snapshot = await this.captureWebpage(url);
             this.currentSnapshot = snapshot;
             
             // Generate and display interactive content using professional HTML processor
-            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot);
+            const panelLogoUri = this.panel?.webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+            );
+            const panelLogoUrl = panelLogoUri?.toString();
+            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot, panelLogoUrl);
             this.updateWebviewContent(interactiveContent);
             
             this.logger.info('Webpage capture completed successfully');
@@ -198,15 +196,23 @@ export class WebviewProvider {
         this.logger.info('Refreshing webpage capture');
         
         try {
-            // Show loading state
-            this.updateWebviewContent(this.contentGenerator.generateLoadingContent());
+            // Show loading state with logo
+            const refreshLoadingLogoUri = this.panel?.webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+            );
+            const refreshLoadingLogoUrl = refreshLoadingLogoUri?.toString();
+            this.updateWebviewContent(this.contentGenerator.generateLoadingContent(refreshLoadingLogoUrl));
             
             // Re-capture the same URL
             const snapshot = await this.captureWebpage(this.currentSnapshot.url);
             this.currentSnapshot = snapshot;
             
             // Update content using professional HTML processor
-            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot);
+            const refreshLogoUri = this.panel?.webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+            );
+            const refreshLogoUrl = refreshLogoUri?.toString();
+            const interactiveContent = await this.contentGenerator.generateInteractiveContent(snapshot, refreshLogoUrl);
             this.updateWebviewContent(interactiveContent);
             
             this.logger.info('Refresh completed successfully');

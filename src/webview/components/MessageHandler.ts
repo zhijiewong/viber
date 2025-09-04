@@ -16,7 +16,7 @@ export class MessageHandler {
     private onElementSelected?: (element: ElementInfo) => void;
 
     constructor(panel?: vscode.WebviewPanel) {
-        this.logger = new Logger();
+        this.logger = Logger.getInstance();
         this.eventBus = EventBus.getInstance();
         this.panel = panel;
         this.setupEventListeners();

@@ -9,7 +9,7 @@ export class PlaywrightCapture {
     private readonly logger: Logger;
 
     constructor() {
-        this.logger = new Logger();
+        this.logger = Logger.getInstance();
     }
 
     public async captureWebpage(url: string, options: CaptureOptions): Promise<DOMSnapshot> {
@@ -195,7 +195,7 @@ export class PlaywrightCapture {
                 return styleSheets.join('\n\n');
             });
 
-            // CSS 将由HTML处理器统一处理，这里只提取原始样式
+            // CSS will be handled by HTML processor uniformly, only extract raw styles here
             return styles;
         } catch (error) {
             this.logger.warn('Failed to extract styles', error);

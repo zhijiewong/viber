@@ -3,7 +3,7 @@ import { WebviewProvider } from '../webview/WebviewProvider';
 import { isValidUrl, normalizeUrl } from '../utils/validation';
 import { Logger } from '../utils/logger';
 
-const logger = new Logger();
+const logger = Logger.getInstance();
 
 export async function openUrlCommand(webviewProvider: WebviewProvider): Promise<void> {
     try {
