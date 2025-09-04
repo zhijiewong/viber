@@ -5,36 +5,39 @@ import { Logger } from '../utils/logger';
 const logger = Logger.getInstance();
 
 export async function generateCodeCommand(webviewProvider: WebviewProvider): Promise<void> {
-    try {
-        const selectedElement = webviewProvider.currentSelectedElement;
-        
-        if (!selectedElement) {
-            vscode.window.showWarningMessage('No element selected. Please select an element first. Use the webview to capture a webpage and click on elements to select them.');
-            return;
-        }
+  try {
+    const selectedElement = webviewProvider.currentSelectedElement;
 
-        logger.info('Opening Cursor Chat with element context', { 
-            tag: selectedElement.tag, 
-            selector: selectedElement.cssSelector 
-        });
+    if (!selectedElement) {
+      void vscode.window.showWarningMessage(
+        'No element selected. Please select an element first. Use the webview to capture a webpage and click on elements to select them.'
+      );
+      return;
+    }
 
-        // Show info about Cursor Chat integration
-        const action = await vscode.window.showInformationMessage(
-            'Cursor Chat Integration is available! Use the Element Inspector panel to open Cursor Chat with element context.',
-            'Open WebView', 'Continue Here'
-        );
+    logger.info('Opening Cursor Chat with element context', {
+      tag: selectedElement.tag,
+      selector: selectedElement.cssSelector,
+    });
 
-        if (action === 'Open WebView') {
-            // Focus on the webview panel
-            webviewProvider.focus();
-            return;
-        }
+    // Show info about Cursor Chat integration
+    const action = await vscode.window.showInformationMessage(
+      'Cursor Chat Integration is available! Use the Element Inspector panel to open Cursor Chat with element context.',
+      'Open WebView',
+      'Continue Here'
+    );
 
-        // Legacy command palette interface - directly copy element info and open Cursor Chat
-        const elementContext = `
+    if (action === 'Open WebView') {
+      // Focus on the webview panel
+      webviewProvider.focus();
+      return;
+    }
+
+    // Legacy command palette interface - directly copy element info and open Cursor Chat
+    const elementContext = `
 Element Information:
 - Tag: <${selectedElement.tag}>
-- ID: ${selectedElement.id || 'none'}
+- ID: ${selectedElement.id ?? 'none'}
 - Classes: ${selectedElement.classes.length > 0 ? selectedElement.classes.join(', ') : 'none'}
 - CSS Selector: ${selectedElement.cssSelector}
 - XPath: ${selectedElement.xpath}
@@ -44,27 +47,28 @@ Element Information:
 Request: Generate code based on this element.
         `;
 
-        // Copy to clipboard
-        await vscode.env.clipboard.writeText(elementContext);
+    // Copy to clipboard
+    await vscode.env.clipboard.writeText(elementContext);
 
-        // Try to open Cursor Chat
-        try {
-            await vscode.commands.executeCommand('cursor.chat.open');
-            vscode.window.showInformationMessage(
-                'Cursor Chat opened! Element context has been copied to clipboard - paste it in the chat.',
-                'Got it'
-            );
-        } catch (error) {
-            vscode.window.showInformationMessage(
-                'Element context copied to clipboard. Open Cursor Chat manually and paste the context.',
-                'OK'
-            );
-        }
-
+    // Try to open Cursor Chat
+    try {
+      await vscode.commands.executeCommand('cursor.chat.open');
+      void vscode.window.showInformationMessage(
+        'Cursor Chat opened! Element context has been copied to clipboard - paste it in the chat.',
+        'Got it'
+      );
     } catch (error) {
-        logger.error('Error in generateCode command', error);
-        vscode.window.showErrorMessage(`Failed to generate code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      void vscode.window.showInformationMessage(
+        'Element context copied to clipboard. Open Cursor Chat manually and paste the context.',
+        'OK'
+      );
     }
+  } catch (error) {
+    logger.error('Error in generateCode command', error);
+    void vscode.window.showErrorMessage(
+      `Failed to generate code: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
 }
 
 // Note: Code generation logic has been moved to the AI provider system

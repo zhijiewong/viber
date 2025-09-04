@@ -5,54 +5,56 @@ import { ElementSelector } from './ElementSelector';
 import { Logger } from '../../utils/logger';
 
 export class ContentGenerator {
-    private readonly htmlProcessor: HTMLProcessor;
-    private readonly logger: Logger;
+  private readonly htmlProcessor: HTMLProcessor;
+  private readonly logger: Logger;
 
-    constructor() {
-        this.htmlProcessor = new HTMLProcessor();
-        this.logger = Logger.getInstance();
+  constructor() {
+    this.htmlProcessor = new HTMLProcessor();
+    this.logger = Logger.getInstance();
+  }
+
+  public generateLoadingContent(logoUrl?: string): string {
+    return WebviewUI.generateLoadingContent('Capturing webpage...', logoUrl);
+  }
+
+  public async generateInteractiveContent(
+    snapshot: DOMSnapshot,
+    logoUrl?: string
+  ): Promise<string> {
+    this.logger.info('Generating interactive webview content');
+
+    try {
+      // 🎯 Use HTML processor directly for secure sanitization
+      const sanitizedHtml = this.htmlProcessor.sanitize(snapshot.html);
+
+      this.logger.info('🎯 HTML processing completed', {
+        originalLength: snapshot.html.length,
+        sanitizedLength: sanitizedHtml.length,
+      });
+
+      // 🎯 Use new simplified selector architecture with selector script
+      const selectorScript = ElementSelector.generateScript(logoUrl);
+      const finalContent = WebviewUI.generateInteractiveContent(
+        snapshot,
+        sanitizedHtml,
+        selectorScript
+      );
+
+      // Log the first few characters to check for issues
+      this.logger.info('Generated content preview:', {
+        preview: finalContent.substring(0, 200),
+        length: finalContent.length,
+      });
+
+      return finalContent;
+    } catch (error) {
+      this.logger.error('Failed to generate interactive content', { error });
+      return this.generateErrorContent(error instanceof Error ? error.message : String(error));
     }
+  }
 
-    public generateLoadingContent(logoUrl?: string): string {
-        return WebviewUI.generateLoadingContent('Capturing webpage...', logoUrl);
-    }
-
-    public async generateInteractiveContent(snapshot: DOMSnapshot, logoUrl?: string): Promise<string> {
-        this.logger.info('Generating interactive webview content');
-        
-        try {
-            // 🎯 Use HTML processor directly for secure sanitization
-            const sanitizedHtml = this.htmlProcessor.sanitize(snapshot.html);
-
-            this.logger.info('🎯 HTML processing completed', {
-                originalLength: snapshot.html.length,
-                sanitizedLength: sanitizedHtml.length
-            });
-
-            // 🎯 Use new simplified selector architecture with selector script
-            const selectorScript = ElementSelector.generateScript(logoUrl);
-            const finalContent = WebviewUI.generateInteractiveContent(
-                snapshot,
-                sanitizedHtml,
-                selectorScript
-            );
-            
-            // Log the first few characters to check for issues
-            this.logger.info('Generated content preview:', { 
-                preview: finalContent.substring(0, 200),
-                length: finalContent.length
-            });
-            
-            return finalContent;
-            
-        } catch (error) {
-            this.logger.error('Failed to generate interactive content', { error });
-            return this.generateErrorContent(error instanceof Error ? error.message : String(error));
-        }
-    }
-
-    private generateErrorContent(errorMessage: string): string {
-        return `
+  private generateErrorContent(errorMessage: string): string {
+    return `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -130,14 +132,14 @@ export class ContentGenerator {
         </body>
         </html>
         `;
-    }
+  }
 
-    private escapeHtml(text: string): string {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 }

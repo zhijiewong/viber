@@ -7,12 +7,12 @@ import * as Handlebars from 'handlebars';
  */
 
 export class WebviewUI {
-    private static loadingTemplate: HandlebarsTemplateDelegate;
-    private static mainTemplate: HandlebarsTemplateDelegate;
+  private static loadingTemplate: HandlebarsTemplateDelegate;
+  private static mainTemplate: HandlebarsTemplateDelegate;
 
-    static {
-        // Initialize templates
-        this.loadingTemplate = Handlebars.compile(`
+  static {
+    // Initialize templates
+    this.loadingTemplate = Handlebars.compile(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -112,7 +112,7 @@ export class WebviewUI {
         </html>
         `);
 
-        this.mainTemplate = Handlebars.compile(`
+    this.mainTemplate = Handlebars.compile(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -134,73 +134,76 @@ export class WebviewUI {
             {{{interactivityScript}}}
         </body>
         </html>`);
+  }
+
+  public static generateLoadingContent(
+    message: string = 'Capturing webpage...',
+    logoUrl?: string
+  ): string {
+    return this.loadingTemplate({ message, logoUrl });
+  }
+
+  public static generateInteractiveContent(
+    snapshot: DOMSnapshot,
+    sanitizedHtml: string,
+    interactivityScript?: string
+  ): string {
+    // Extract head and body content more safely
+    const headMatch = sanitizedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    const bodyMatch = sanitizedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+
+    let headContent = headMatch ? headMatch[1] : '';
+    let bodyContent = bodyMatch ? bodyMatch[1] : '';
+
+    // If no body tag found, try to extract content between </head> and end of document
+    if (!bodyContent && headMatch) {
+      const afterHeadMatch = sanitizedHtml.match(/<\/head>([\s\S]*)$/i);
+      if (afterHeadMatch) {
+        bodyContent = afterHeadMatch[1];
+      }
     }
 
-    public static generateLoadingContent(message: string = 'Capturing webpage...', logoUrl?: string): string {
-        return this.loadingTemplate({ message, logoUrl });
+    // If still no body content, use the whole document but try to exclude head
+    if (!bodyContent) {
+      if (headMatch) {
+        // Remove head content from sanitizedHtml to get body
+        const headIndex = sanitizedHtml.indexOf(headMatch[0]);
+        const endHeadIndex = headIndex + headMatch[0].length;
+        bodyContent = sanitizedHtml.substring(endHeadIndex);
+      } else {
+        bodyContent = sanitizedHtml;
+      }
     }
 
-    public static generateInteractiveContent(
-        snapshot: DOMSnapshot,
-        sanitizedHtml: string,
-        interactivityScript?: string
-    ): string {
-        // Extract head and body content more safely
-        const headMatch = sanitizedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-        const bodyMatch = sanitizedHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-
-        let headContent = headMatch ? headMatch[1] : '';
-        let bodyContent = bodyMatch ? bodyMatch[1] : '';
-
-        // If no body tag found, try to extract content between </head> and end of document
-        if (!bodyContent && headMatch) {
-            const afterHeadMatch = sanitizedHtml.match(/<\/head>([\s\S]*)$/i);
-            if (afterHeadMatch) {
-                bodyContent = afterHeadMatch[1];
-            }
-        }
-
-        // If still no body content, use the whole document but try to exclude head
-        if (!bodyContent) {
-            if (headMatch) {
-                // Remove head content from sanitizedHtml to get body
-                const headIndex = sanitizedHtml.indexOf(headMatch[0]);
-                const endHeadIndex = headIndex + headMatch[0].length;
-                bodyContent = sanitizedHtml.substring(endHeadIndex);
-            } else {
-                bodyContent = sanitizedHtml;
-            }
-        }
-
-        // Ensure essential styles are preserved in head content
-        if (!headContent.includes('<style') && sanitizedHtml.includes('<style')) {
-            // Extract all style tags from sanitized HTML if not in head
-            const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
-            if (styleMatches.length > 0) {
-                headContent = styleMatches.join('\n') + '\n' + headContent;
-            }
-        }
-
-        // Safely escape the URL
-        const safeUrl = snapshot.url
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-
-        return this.mainTemplate({
-            safeUrl,
-            baseStyles: this.generateBaseStyles(),
-            headContent,
-            bodyContent,
-            toolbar: this.generateToolbar(snapshot),
-            webviewScripts: this.generateWebviewScripts(),
-            interactivityScript: interactivityScript || ''
-        });
+    // Ensure essential styles are preserved in head content
+    if (!headContent.includes('<style') && sanitizedHtml.includes('<style')) {
+      // Extract all style tags from sanitized HTML if not in head
+      const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+      if (styleMatches.length > 0) {
+        headContent = styleMatches.join('\n') + '\n' + headContent;
+      }
     }
 
-    private static generateBaseStyles(): string {
-        return `
+    // Safely escape the URL
+    const safeUrl = snapshot.url
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+    return this.mainTemplate({
+      safeUrl,
+      baseStyles: this.generateBaseStyles(),
+      headContent,
+      bodyContent,
+      toolbar: this.generateToolbar(snapshot),
+      webviewScripts: this.generateWebviewScripts(),
+      interactivityScript: interactivityScript || '',
+    });
+  }
+
+  private static generateBaseStyles(): string {
+    return `
             <style>
                 /* Reset and base styles */
                 * {
@@ -372,16 +375,16 @@ export class WebviewUI {
                 }
             </style>
         `;
-    }
+  }
 
-    private static generateToolbar(snapshot: DOMSnapshot): string {
-        const safeUrl = snapshot.url
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+  private static generateToolbar(snapshot: DOMSnapshot): string {
+    const safeUrl = snapshot.url
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
 
-        return `
+    return `
             <div class="dom-agent-toolbar">
                 <div class="logo">
                     🔍 <span>DOM Agent</span>
@@ -392,10 +395,10 @@ export class WebviewUI {
                 </div>
             </div>
         `;
-    }
+  }
 
-    private static generateWebviewScripts(): string {
-        return `
+  private static generateWebviewScripts(): string {
+    return `
             <script data-dom-agent="true">
                 // Basic webview functionality
                 if (!window.vscode) {
@@ -419,5 +422,5 @@ export class WebviewUI {
                 console.log('DOM Agent WebviewUI scripts loaded successfully');
             </script>
         `;
-    }
+  }
 }

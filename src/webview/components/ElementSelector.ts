@@ -3,12 +3,11 @@
  * Mimics Playwright's Pick Locator functionality
  */
 export class ElementSelector {
-    
-    /**
-     * Generate Playwright-style element selector with clipboard integration
-     */
-    public static generateScript(logoUrl?: string): string {
-        return `<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
+  /**
+   * Generate Playwright-style element selector with clipboard integration
+   */
+  public static generateScript(logoUrl?: string): string {
+    return `<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
         <script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
             // Store logo URL for panel icon
@@ -1278,5 +1277,5 @@ export class ElementSelector {
             } // Close initElementSelector
         })(); // Close main function
         </script>`;
-    }
+  }
 }

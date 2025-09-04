@@ -5,82 +5,81 @@ import unique from 'unique-selector';
 import * as xpath from 'xpath';
 
 export class DomSerializer {
-    private readonly logger: Logger;
-    private readonly htmlProcessor: HTMLProcessor;
+  private readonly logger: Logger;
+  private readonly htmlProcessor: HTMLProcessor;
 
-    constructor() {
-        this.logger = Logger.getInstance();
-        this.htmlProcessor = new HTMLProcessor();
+  constructor() {
+    this.logger = Logger.getInstance();
+    this.htmlProcessor = new HTMLProcessor();
+  }
+
+  public serializeElement(element: HTMLElement): ElementInfo {
+    this.logger.debug('Serializing element', { tag: element.tagName });
+
+    const rect = element.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(element);
+
+    const elementInfo: ElementInfo = {
+      tag: element.tagName.toLowerCase(),
+      classes: Array.from(element.classList),
+      textContent: this.extractTextContent(element),
+      attributes: this.extractAttributes(element),
+      cssSelector: this.generateCSSSelector(element),
+      xpath: this.generateXPath(element),
+      boundingBox: {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+      },
+      computedStyles: this.extractComputedStyles(computedStyle),
+    };
+
+    if (element.id) {
+      elementInfo.id = element.id;
     }
 
-    public serializeElement(element: HTMLElement): ElementInfo {
-        this.logger.debug('Serializing element', { tag: element.tagName });
+    return elementInfo;
+  }
 
-        const rect = element.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(element);
+  public sanitizeHTML(html: string): string {
+    this.logger.debug('Starting HTML sanitization', { inputLength: html.length });
 
-        const elementInfo: ElementInfo = {
-            tag: element.tagName.toLowerCase(),
-            classes: Array.from(element.classList),
-            textContent: this.extractTextContent(element),
-            attributes: this.extractAttributes(element),
-            cssSelector: this.generateCSSSelector(element),
-            xpath: this.generateXPath(element),
-            boundingBox: {
-                x: Math.round(rect.x),
-                y: Math.round(rect.y),
-                width: Math.round(rect.width),
-                height: Math.round(rect.height)
-            },
-            computedStyles: this.extractComputedStyles(computedStyle)
-        };
+    try {
+      // Use HTML processor to clean content
+      const cleanedHTML = this.htmlProcessor.sanitize(html);
 
-        if (element.id) {
-            elementInfo.id = element.id;
-        }
+      // Validate processing result quality
+      const validation = this.htmlProcessor.validate(cleanedHTML);
 
-        return elementInfo;
+      if (validation.warnings.length > 0) {
+        this.logger.warn('HTML processing warnings', validation.warnings);
+      }
+
+      this.logger.info('HTML sanitization completed successfully', {
+        hasInteractiveElements: validation.hasInteractiveElements,
+        hasStyles: validation.hasStyles,
+        hasClasses: validation.hasClasses,
+        originalLength: html.length,
+        cleanedLength: cleanedHTML.length,
+      });
+
+      return cleanedHTML;
+    } catch (error) {
+      this.logger.error('HTML sanitization failed, using fallback method', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      // Minimal fallback - only remove the most dangerous content
+      return html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/javascript\s*:/gi, 'removed:')
+        .replace(/document\s*\.\s*write\s*\(/gi, 'void(');
     }
+  }
 
-    public async sanitizeHTML(html: string): Promise<string> {
-        this.logger.debug('Starting HTML sanitization', { inputLength: html.length });
-        
-        try {
-            // Use HTML processor to clean content
-            const cleanedHTML = this.htmlProcessor.sanitize(html);
-
-            // Validate processing result quality
-            const validation = this.htmlProcessor.validate(cleanedHTML);
-
-            if (validation.warnings.length > 0) {
-                this.logger.warn('HTML processing warnings', validation.warnings);
-            }
-
-            this.logger.info('HTML sanitization completed successfully', {
-                hasInteractiveElements: validation.hasInteractiveElements,
-                hasStyles: validation.hasStyles,
-                hasClasses: validation.hasClasses,
-                originalLength: html.length,
-                cleanedLength: cleanedHTML.length
-            });
-
-            return cleanedHTML;
-
-        } catch (error) {
-            this.logger.error('HTML sanitization failed, using fallback method', {
-                error: error instanceof Error ? error.message : String(error)
-            });
-
-            // Minimal fallback - only remove the most dangerous content
-            return html
-                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                .replace(/javascript\s*:/gi, 'removed:')
-                .replace(/document\s*\.\s*write\s*\(/gi, 'void(');
-        }
-    }
-
-    public injectInteractivityScript(): string {
-        return `
+  public injectInteractivityScript(): string {
+    return `
             <script id="dom-agent-interactivity-script">
                 
                 // 🛡️ JavaScript Runtime Interceptor - Completely block dangerous function execution
@@ -474,126 +473,144 @@ export class DomSerializer {
                 
             </script>
         `;
+  }
+
+  private extractTextContent(element: HTMLElement): string {
+    // Get only direct text content, not from children
+    const textNodes = Array.from(element.childNodes).filter(
+      node => node.nodeType === Node.TEXT_NODE
+    );
+
+    const text = textNodes
+      .map(node => node.textContent ?? '')
+      .join(' ')
+      .trim();
+    return text.length > 200 ? text.substring(0, 200) + '...' : text;
+  }
+
+  private extractAttributes(element: HTMLElement): Record<string, string> {
+    const attributes: Record<string, string> = {};
+
+    for (let i = 0; i < element.attributes.length; i++) {
+      const attr = element.attributes[i];
+      // Skip event handlers and potentially sensitive attributes
+      if (!attr.name.startsWith('on') && !attr.name.startsWith('data-v-')) {
+        attributes[attr.name] = attr.value;
+      }
     }
 
-    private extractTextContent(element: HTMLElement): string {
-        // Get only direct text content, not from children
-        const textNodes = Array.from(element.childNodes).filter(
-            node => node.nodeType === Node.TEXT_NODE
-        );
-        
-        const text = textNodes.map(node => node.textContent || '').join(' ').trim();
-        return text.length > 200 ? text.substring(0, 200) + '...' : text;
-    }
+    return attributes;
+  }
 
-    private extractAttributes(element: HTMLElement): Record<string, string> {
-        const attributes: Record<string, string> = {};
-        
-        for (let i = 0; i < element.attributes.length; i++) {
-            const attr = element.attributes[i];
-            // Skip event handlers and potentially sensitive attributes
-            if (!attr.name.startsWith('on') && !attr.name.startsWith('data-v-')) {
-                attributes[attr.name] = attr.value;
-            }
+  private generateCSSSelector(element: HTMLElement): string {
+    try {
+      // Use unique-selector library for better CSS selector generation
+      return unique(element, {
+        selectorTypes: ['ID', 'Class', 'Tag', 'NthChild'],
+        attributesToIgnore: ['style', 'data-dom-agent-selected', 'data-dom-agent-highlighted'],
+        excludeRegex: /^dom-agent-/,
+      });
+    } catch (error) {
+      this.logger.warn('unique-selector failed, using fallback', error);
+
+      // Fallback to simple ID or tag-based selector
+      if (element.id) {
+        return `#${element.id}`;
+      }
+
+      let selector = element.tagName.toLowerCase();
+      if (element.classList.length > 0) {
+        const classes = Array.from(element.classList)
+          .filter(c => !c.startsWith('dom-agent-'))
+          .slice(0, 2); // Limit to first 2 classes
+        if (classes.length > 0) {
+          selector += '.' + classes.join('.');
         }
-        
-        return attributes;
-    }
+      }
 
-    private generateCSSSelector(element: HTMLElement): string {
-        try {
-            // Use unique-selector library for better CSS selector generation
-            return unique(element, {
-                selectorTypes: ['ID', 'Class', 'Tag', 'NthChild'],
-                attributesToIgnore: ['style', 'data-dom-agent-selected', 'data-dom-agent-highlighted'],
-                excludeRegex: /^dom-agent-/
-            });
-        } catch (error) {
-            this.logger.warn('unique-selector failed, using fallback', error);
-            
-            // Fallback to simple ID or tag-based selector
-            if (element.id) {
-                return `#${element.id}`;
-            }
-            
-            let selector = element.tagName.toLowerCase();
-            if (element.classList.length > 0) {
-                const classes = Array.from(element.classList)
-                    .filter(c => !c.startsWith('dom-agent-'))
-                    .slice(0, 2); // Limit to first 2 classes
-                if (classes.length > 0) {
-                    selector += '.' + classes.join('.');
-                }
-            }
-            
-            return selector;
+      return selector;
+    }
+  }
+
+  private generateXPath(element: HTMLElement): string {
+    try {
+      // Try to use xpath library for better XPath generation
+      if (element.ownerDocument) {
+        const doc = element.ownerDocument;
+        xpath.select('//*', doc, true);
+
+        // Find the element in the document and generate its XPath
+        const elementNodes = xpath.select('//*', doc) as Element[];
+        const elementIndex = elementNodes.indexOf(element);
+
+        if (elementIndex !== -1) {
+          // Generate XPath based on element position
+          return this.generateSimpleXPath(element);
         }
-    }
+      }
 
-    private generateXPath(element: HTMLElement): string {
-        try {
-            // Try to use xpath library for better XPath generation
-            if (element.ownerDocument) {
-                const doc = element.ownerDocument;
-                xpath.select('//*', doc, true);
-                
-                // Find the element in the document and generate its XPath
-                const elementNodes = xpath.select('//*', doc) as Element[];
-                const elementIndex = elementNodes.indexOf(element);
-                
-                if (elementIndex !== -1) {
-                    // Generate XPath based on element position
-                    return this.generateSimpleXPath(element);
-                }
-            }
-            
-            return this.generateSimpleXPath(element);
-            
-        } catch (error) {
-            this.logger.warn('xpath library failed, using fallback', error);
-            return this.generateSimpleXPath(element);
+      return this.generateSimpleXPath(element);
+    } catch (error) {
+      this.logger.warn('xpath library failed, using fallback', error);
+      return this.generateSimpleXPath(element);
+    }
+  }
+
+  private generateSimpleXPath(element: HTMLElement): string {
+    const path: string[] = [];
+    let current: Element | null = element;
+
+    while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body) {
+      let index = 1;
+      let sibling = current.previousElementSibling;
+
+      while (sibling) {
+        if (sibling.tagName === current.tagName) {
+          index++;
         }
-    }
-    
-    private generateSimpleXPath(element: HTMLElement): string {
-        const path: string[] = [];
-        let current: Element | null = element;
+        sibling = sibling.previousElementSibling;
+      }
 
-        while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body) {
-            let index = 1;
-            let sibling = current.previousElementSibling;
-            
-            while (sibling) {
-                if (sibling.tagName === current.tagName) {
-                    index++;
-                }
-                sibling = sibling.previousElementSibling;
-            }
-            
-            const tagName = current.tagName.toLowerCase();
-            path.unshift(`${tagName}[${index}]`);
-            current = current.parentElement;
-        }
-
-        return `//${path.join('/')}`;
+      const tagName = current.tagName.toLowerCase();
+      path.unshift(`${tagName}[${index}]`);
+      current = current.parentElement;
     }
 
-    private extractComputedStyles(computedStyle: CSSStyleDeclaration): Record<string, string> {
-        const importantStyles = [
-            'display', 'position', 'width', 'height', 'margin', 'padding',
-            'border', 'background', 'color', 'font-size', 'font-family',
-            'text-align', 'vertical-align', 'line-height', 'z-index',
-            'opacity', 'visibility', 'overflow', 'float', 'clear'
-        ];
-        
-        const styles: Record<string, string> = {};
-        importantStyles.forEach(prop => {
-            const value = computedStyle.getPropertyValue(prop);
-            if (value) {
-                styles[prop] = value;
-            }
-        });
-        
-        return styles;
-    }
+    return `//${path.join('/')}`;
+  }
+
+  private extractComputedStyles(computedStyle: CSSStyleDeclaration): Record<string, string> {
+    const importantStyles = [
+      'display',
+      'position',
+      'width',
+      'height',
+      'margin',
+      'padding',
+      'border',
+      'background',
+      'color',
+      'font-size',
+      'font-family',
+      'text-align',
+      'vertical-align',
+      'line-height',
+      'z-index',
+      'opacity',
+      'visibility',
+      'overflow',
+      'float',
+      'clear',
+    ];
+
+    const styles: Record<string, string> = {};
+    importantStyles.forEach(prop => {
+      const value = computedStyle.getPropertyValue(prop);
+      if (value) {
+        styles[prop] = value;
+      }
+    });
+
+    return styles;
+  }
 }

@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="./src/image/DOM_Agent.png" alt="DOM Agent Logo" width="120" height="120">
+  <img src="./src/image/DOM_Agent.png" alt="Viber Logo" width="120" height="120">
 </p>
 
-<h1 align="center">DOM Agent 🔍</h1>
+<h1 align="center">Viber 🔍</h1>
 
 <p align="center">
   <strong>Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/your-username/dom-agent/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
+  <a href="https://github.com/your-username/viber/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
   <a href="https://code.visualstudio.com/"><img src="https://img.shields.io/badge/vscode-1.73+-blue.svg" alt="VS Code"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18+-green.svg" alt="Node.js"></a>
@@ -38,12 +38,12 @@
 ### Installation
 
 #### From Marketplace (Coming Soon)
-Search for "DOM Agent" in VS Code Extensions
+Search for "Viber" in VS Code Extensions
 
 #### Development Setup
 ```bash
-git clone https://github.com/your-username/dom-agent.git
-cd dom-agent
+git clone https://github.com/your-username/viber.git
+cd viber
 npm install
 npm run compile-dev
 # Press F5 in VS Code to launch
@@ -53,21 +53,21 @@ npm run compile-dev
 
 ### Basic Workflow
 1. **Open Command Palette** (`Ctrl+Shift+P`)
-2. **Run** `DOM Agent: Open URL in DOM Agent`
-3. **Enter URL** or run `DOM Agent: Detect Local Dev Server`
+2. **Run** `Viber: Open URL in Viber`
+3. **Enter URL** or run `Viber: Detect Local Dev Server`
 4. **Click elements** to inspect and generate code
 
 ### Commands
-- `DOM Agent: Open URL` - Capture webpage DOM
-- `DOM Agent: Detect Local Dev Server` - Find dev servers
-- `DOM Agent: Generate Code from Selection` - Generate components
+- `Viber: Open URL` - Capture webpage DOM
+- `Viber: Detect Local Dev Server` - Find dev servers
+- `Viber: Generate Code from Selection` - Generate components
 
 ### Configuration
 ```json
 {
-  "domAgent.defaultBrowser": "chromium",
-  "domAgent.aiProvider": "cursor-native",
-  "domAgent.autoDetectDevServer": true
+  "viber.defaultBrowser": "chromium",
+  "viber.aiProvider": "cursor-native",
+  "viber.autoDetectDevServer": true
 }
 ```
 
@@ -82,7 +82,8 @@ npm run compile-dev
 ## ⚙️ Configuration
 
 **Browser Options:** `chromium`, `firefox`, `webkit`  
-**AI Providers:** `cursor-native`, `openai`, `anthropic`
+**AI Providers:** `cursor-native`, `openai`, `anthropic`  
+**Settings:** Use `viber.*` instead of `domAgent.*` in your VS Code settings
 
 ## 🧪 Development
 
@@ -121,6 +122,7 @@ We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for deta
 - Ensure VS Code/Cursor is version 1.73.0 or higher
 - Check Node.js version (18+ required)
 - Try reloading the window (`Ctrl+Shift+P` → "Developer: Reload Window")
+- Check that you're using the new `viber.*` commands instead of `dom-agent.*`
 
 **DOM capture fails:**
 - Verify the URL is accessible
@@ -145,9 +147,9 @@ Licensed under [Apache License 2.0](LICENSE).
 
 ## 📞 Support
 
-- 🐛 [Issues](https://github.com/your-username/dom-agent/issues)
-- 💬 [Discussions](https://github.com/your-username/dom-agent/discussions)
-- 📧 contact@dom-agent.dev
+- 🐛 [Issues](https://github.com/your-username/viber/issues)
+- 💬 [Discussions](https://github.com/your-username/viber/discussions)
+- 📧 contact@viber.dev
 
 ---
 

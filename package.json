@@ -1,20 +1,20 @@
 {
-  "name": "dom-agent",
-  "displayName": "DOM Agent",
+  "name": "viber",
+  "displayName": "Viber",
   "description": "Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code",
   "version": "0.1.0",
-  "publisher": "dom-agent",
+  "publisher": "viber-dev",
   "author": {
-    "name": "DOM Agent Contributors"
+    "name": "Viber Team"
   },
   "license": "Apache-2.0",
-  "homepage": "https://dom-agent.dev",
+  "homepage": "https://viber.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/dom-agent.git"
+    "url": "https://github.com/viber-dev/viber.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/dom-agent/issues"
+    "url": "https://github.com/viber-dev/viber/issues"
   },
   "engines": {
     "vscode": "^1.73.0",
@@ -32,7 +32,10 @@
     "ai",
     "cursor",
     "playwright",
-    "automation"
+    "automation",
+    "viber",
+    "web-scraping",
+    "code-generation"
   ],
   "activationEvents": [
     "*"
@@ -41,42 +44,42 @@
   "contributes": {
     "commands": [
       {
-        "command": "dom-agent.openUrl",
-        "title": "Open URL in DOM Agent",
-        "category": "DOM Agent",
+        "command": "viber.openUrl",
+        "title": "Open URL in Viber",
+        "category": "Viber",
         "icon": "$(globe)"
       },
       {
-        "command": "dom-agent.detectDevServer",
+        "command": "viber.detectDevServer",
         "title": "Detect Local Dev Server",
-        "category": "DOM Agent",
+        "category": "Viber",
         "icon": "$(server-environment)"
       },
       {
-        "command": "dom-agent.generateCode",
+        "command": "viber.generateCode",
         "title": "Generate Code from Selection",
-        "category": "DOM Agent",
+        "category": "Viber",
         "icon": "$(wand)"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "dom-agent.openUrl"
+          "command": "viber.openUrl"
         },
         {
-          "command": "dom-agent.detectDevServer"
+          "command": "viber.detectDevServer"
         },
         {
-          "command": "dom-agent.generateCode",
-          "when": "dom-agent.hasSelection"
+          "command": "viber.generateCode",
+          "when": "viber.hasSelection"
         }
       ]
     },
     "configuration": {
-      "title": "DOM Agent",
+      "title": "Viber",
       "properties": {
-        "domAgent.defaultBrowser": {
+        "viber.defaultBrowser": {
           "type": "string",
           "default": "chromium",
           "enum": [
@@ -86,7 +89,7 @@
           ],
           "description": "Default browser for DOM capture"
         },
-        "domAgent.aiProvider": {
+        "viber.aiProvider": {
           "type": "string",
           "default": "cursor-native",
           "enum": [
@@ -96,7 +99,7 @@
           ],
           "description": "AI provider for code generation"
         },
-        "domAgent.autoDetectDevServer": {
+        "viber.autoDetectDevServer": {
           "type": "boolean",
           "default": true,
           "description": "Automatically detect running dev servers"
