@@ -8,10 +8,20 @@ export class ElementSelector {
      * Generate Playwright-style element selector with clipboard integration
      */
     public static generateScript(): string {
-        return `<script id="dom-agent-element-selector" data-dom-agent="true">
+        return `<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
+        <script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
-            // Skip Floating UI loading - using fallback positioning
-            console.log('ℹ️ Using fallback positioning (no external dependencies)');
+            // Load Floating UI library dynamically
+            console.log('🎯 Loading Floating UI for tooltip positioning');
+
+            // Check if Floating UI is available
+            if (typeof computePosition === 'undefined') {
+                console.warn('⚠️ Floating UI not available, falling back to custom positioning');
+                initElementSelector();
+                return;
+            }
+
+            console.log('✅ Floating UI loaded successfully');
             initElementSelector();
 
             function initElementSelector() {
@@ -38,26 +48,114 @@ export class ElementSelector {
                         'z-index: 999999 !important;' +
                     'box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2) !important;' +
                     '}' +
-                    '.dom-agent-hover-info {' +
-                        'position: fixed !important;' +
-                        'background: rgba(255, 255, 255, 0.98) !important;' +
+                    '.dom-agent-unified-panel {' +
+                        'position: absolute !important;' +
+                        'background: rgba(255, 255, 255, 0.95) !important;' +
                         'color: #202124 !important;' +
                         'border: 1px solid #dadce0 !important;' +
-                        'border-radius: 4px !important;' +
-                        'padding: 12px !important;' +
-                        'font-size: 12px !important;' +
+                        'border-radius: 8px !important;' +
+                        'padding: 16px !important;' +
+                        'font-size: 13px !important;' +
                         'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;' +
                         'z-index: 1000000 !important;' +
-                        'pointer-events: none !important;' +
-                        'box-shadow: 0 2px 12px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;' +
-                        'backdrop-filter: blur(8px) !important;' +
-                        '-webkit-backdrop-filter: blur(8px) !important;' +
-                        'max-width: 400px !important;' +
+                        'pointer-events: auto !important;' +
+                        'box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1) !important;' +
+                        'backdrop-filter: blur(12px) !important;' +
+                        '-webkit-backdrop-filter: blur(12px) !important;' +
+                        'max-width: 320px !important;' +
                         'min-width: 280px !important;' +
-                        'line-height: 1.4 !important;' +
+                        'line-height: 1.5 !important;' +
                         'word-wrap: break-word !important;' +
                         'overflow-wrap: break-word !important;' +
-                        'transition: opacity 0.15s ease-out, transform 0.15s ease-out !important;' +
+                        'transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;' +
+                        'transform: translateY(-10px) scale(0.95) !important;' +
+                        'opacity: 0 !important;' +
+                        'visibility: hidden !important;' +
+                    '}' +
+                    '.dom-agent-unified-panel.visible {' +
+                        'transform: translateY(0) scale(1) !important;' +
+                        'opacity: 1 !important;' +
+                        'visibility: visible !important;' +
+                    '}' +
+                    '.dom-agent-panel-header {' +
+                        'display: flex !important;' +
+                        'align-items: center !important;' +
+                        'margin-bottom: 12px !important;' +
+                        'padding-bottom: 8px !important;' +
+                        'border-bottom: 1px solid #e8eaed !important;' +
+                    '}' +
+                    '.dom-agent-panel-icon {' +
+                        'width: 20px !important;' +
+                        'height: 20px !important;' +
+                        'margin-right: 8px !important;' +
+                        'background: #1a73e8 !important;' +
+                        'border-radius: 4px !important;' +
+                        'display: flex !important;' +
+                        'align-items: center !important;' +
+                        'justify-content: center !important;' +
+                        'color: white !important;' +
+                        'font-weight: bold !important;' +
+                        'font-size: 12px !important;' +
+                    '}' +
+                    '.dom-agent-panel-title {' +
+                        'font-weight: 600 !important;' +
+                        'font-size: 14px !important;' +
+                        'color: #202124 !important;' +
+                        'flex: 1 !important;' +
+                    '}' +
+                    '.dom-agent-panel-status {' +
+                        'font-size: 11px !important;' +
+                        'color: #5f6368 !important;' +
+                        'background: #f1f3f4 !important;' +
+                        'padding: 2px 6px !important;' +
+                        'border-radius: 3px !important;' +
+                    '}' +
+                    '.dom-agent-panel-content {' +
+                        'margin-bottom: 12px !important;' +
+                    '}' +
+                    '.dom-agent-locator {' +
+                        'background: #f8f9fa !important;' +
+                        'border: 1px solid #e8eaed !important;' +
+                        'border-radius: 6px !important;' +
+                        'padding: 8px 12px !important;' +
+                        'font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace !important;' +
+                        'font-size: 11px !important;' +
+                        'color: #202124 !important;' +
+                        'margin-bottom: 8px !important;' +
+                        'word-break: break-all !important;' +
+                        'cursor: pointer !important;' +
+                        'transition: background-color 0.2s ease !important;' +
+                    '}' +
+                    '.dom-agent-locator:hover {' +
+                        'background: #e8eaed !important;' +
+                    '}' +
+                    '.dom-agent-panel-actions {' +
+                        'display: flex !important;' +
+                        'gap: 8px !important;' +
+                    '}' +
+                    '.dom-agent-panel-btn {' +
+                        'background: #1a73e8 !important;' +
+                        'color: white !important;' +
+                        'border: none !important;' +
+                        'padding: 6px 12px !important;' +
+                        'border-radius: 4px !important;' +
+                        'font-size: 11px !important;' +
+                        'cursor: pointer !important;' +
+                        'transition: background-color 0.2s ease !important;' +
+                        'flex: 1 !important;' +
+                    '}' +
+                    '.dom-agent-panel-btn:hover {' +
+                        'background: #1557b0 !important;' +
+                    '}' +
+                    '.dom-agent-panel-btn.secondary {' +
+                        'background: #f1f3f4 !important;' +
+                        'color: #3c4043 !important;' +
+                    '}' +
+                    '.dom-agent-panel-btn.secondary:hover {' +
+                        'background: #e8eaed !important;' +
+                    '}' +
+                    '.dom-agent-hover-info {' +
+                        'display: none !important;' + /* 隐藏旧的悬浮框 */
                     '}' +
                     '.dom-agent-copied-notification {' +
                         'position: fixed !important;' +
@@ -398,38 +496,96 @@ export class ElementSelector {
             // Event handling
                 var currentHighlight = null;
                 var currentTargetElement = null; // Track current target element for relative positioning
-                var hoverInfo = null;
+                var unifiedPanel = null; // New unified panel element
                 var isEnabled = true;
                 var currentTooltipPosition = null; // Store current tooltip position relative to element
                 var scrollThrottleTimer = null; // Throttle scroll updates for performance
                 var lastMousePosition = null; // Track last mouse position for stability
                 var positionStabilityThreshold = 20; // Minimum pixel distance for repositioning
+                var cleanupAutoUpdate = null; // Floating UI auto-update cleanup function
 
-            // Create hover info element
-            function createHoverInfo() {
-                hoverInfo = document.createElement('div');
-                hoverInfo.className = 'dom-agent-hover-info';
-                document.body.appendChild(hoverInfo);
+            // Create unified panel element
+            function createUnifiedPanel() {
+                unifiedPanel = document.createElement('div');
+                unifiedPanel.className = 'dom-agent-unified-panel';
+                unifiedPanel.id = 'dom-agent-unified-panel';
+                unifiedPanel.innerHTML =
+                    '<div class="dom-agent-panel-header">' +
+                        '<div class="dom-agent-panel-icon">🎯</div>' +
+                        '<div class="dom-agent-panel-title">Element Inspector</div>' +
+                        '<div class="dom-agent-panel-status" id="panel-status">Ready</div>' +
+                    '</div>' +
+                    '<div class="dom-agent-panel-content" id="panel-content">' +
+                        '<div style="color: #5f6368; font-size: 12px; text-align: center; padding: 20px;">' +
+                            'Hover over an element to inspect' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="dom-agent-panel-actions" id="panel-actions" style="display: none;">' +
+                        '<button class="dom-agent-panel-btn" onclick="copyLocator()">Copy Locator</button>' +
+                        '<button class="dom-agent-panel-btn secondary" onclick="clearSelection()">Clear</button>' +
+                    '</div>';
+                document.body.appendChild(unifiedPanel);
+
+                // Add click handlers for locator copying
+                unifiedPanel.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('dom-agent-locator')) {
+                        var locator = e.target.textContent;
+                        copyToClipboard(locator, 'Locator');
+                    }
+                });
+
+                // Add global functions for button clicks
+                window.copyLocator = function() {
+                    if (currentTargetElement) {
+                        var locators = PlaywrightLocatorGenerator.generateLocators(currentTargetElement);
+                        copyToClipboard(locators.primary, 'Playwright Locator');
+                    }
+                };
+
+                window.clearSelection = function() {
+                    // Clear all selected states
+                    var selectedElements = document.querySelectorAll('.dom-agent-selected');
+                    for (var i = 0; i < selectedElements.length; i++) {
+                        selectedElements[i].classList.remove('dom-agent-selected');
+                        selectedElements[i].classList.remove('dom-agent-highlight');
+                    }
+                    hideUnifiedPanel();
+                };
             }
 
-            // Update tooltip position relative to current target element with throttling
+            // Update tooltip position using Floating UI
             function updateTooltipPosition() {
-                if (!hoverInfo || !currentTargetElement || !currentTooltipPosition || !isTooltipVisible) {
+                if (!hoverInfo || !currentTargetElement || !isTooltipVisible) {
                     return;
                 }
 
-                // Throttle scroll updates to improve performance
-                if (scrollThrottleTimer) {
-                    clearTimeout(scrollThrottleTimer);
+                // Use Floating UI to compute position automatically
+                if (typeof computePosition !== 'undefined') {
+                    console.log('🎯 Using Floating UI to update tooltip position');
+                    computePosition(currentTargetElement, hoverInfo, {
+                        placement: 'top',
+                        middleware: [
+                            offset(8), // 8px offset from element
+                            flip(), // Flip to opposite side if needed
+                            shift({ padding: 8 }) // Keep within viewport with 8px padding
+                        ]
+                    }).then(({ x, y }) => {
+                        hoverInfo.style.left = x + 'px';
+                        hoverInfo.style.top = y + 'px';
+                        console.log('✅ Tooltip positioned at:', { x, y });
+                    }).catch(error => {
+                        console.error('❌ Floating UI positioning error:', error);
+                        // Fallback to manual positioning
+                        updateTooltipPositionManual();
+                    });
+                } else {
+                    // Fallback to manual positioning if Floating UI is not available
+                    updateTooltipPositionManual();
                 }
-
-                scrollThrottleTimer = setTimeout(() => {
-                    console.log('📜 Updating tooltip position on scroll');
-                    updateTooltipPositionNow();
-                }, 16); // ~60fps throttling
             }
 
-            function updateTooltipPositionNow() {
+            // Fallback manual positioning (original logic)
+            function updateTooltipPositionManual() {
                 if (!hoverInfo || !currentTargetElement || !currentTooltipPosition || !isTooltipVisible) {
                     return;
                 }
@@ -483,74 +639,22 @@ export class ElementSelector {
                 hoverInfo.style.top = newTop + 'px';
             }
 
-            // Update hover info with Playwright locator
-            function updateHoverInfo(element, mouseEvent) {
-                console.log('🔄 Updating hover info for element:', element.tagName, element.id || 'no-id');
+            // Update unified panel with element information and position
+            function updateUnifiedPanel(element, mouseEvent) {
+                console.log('🔄 Updating unified panel for element:', element.tagName, element.id || 'no-id');
 
-                // Check if mouse position has changed significantly enough to warrant repositioning
-                if (mouseEvent) {
-                    const currentMousePos = { x: mouseEvent.clientX, y: mouseEvent.clientY };
-
-                    if (lastMousePosition && isTooltipVisible && currentTargetElement === element) {
-                        const distance = Math.sqrt(
-                            Math.pow(currentMousePos.x - lastMousePosition.x, 2) +
-                            Math.pow(currentMousePos.y - lastMousePosition.y, 2)
-                        );
-
-                        // Check if element position has changed significantly
-                        const currentRect = element.getBoundingClientRect();
-                        let elementPositionChanged = false;
-
-                        if (currentTargetElement && currentTargetElement === element) {
-                            const lastRect = currentTargetElement.getBoundingClientRect();
-                            const elementDistance = Math.sqrt(
-                                Math.pow(currentRect.left - lastRect.left, 2) +
-                                Math.pow(currentRect.top - lastRect.top, 2)
-                            );
-                            elementPositionChanged = elementDistance > POSITION_CHANGE_THRESHOLD;
-                        }
-
-                        // If mouse and element haven't moved much, don't reposition
-                        if (distance < positionStabilityThreshold && !elementPositionChanged) {
-                            console.log('🎯 Mouse and element stable, keeping current tooltip position');
-                            lastMousePosition = currentMousePos;
-                            return;
-                        }
-
-                        // If mouse moved but element stayed the same, only reposition if movement is significant
-                        if (distance >= positionStabilityThreshold && !elementPositionChanged) {
-                            console.log('🎯 Mouse moved significantly, repositioning tooltip');
-                        }
-                    }
-
-                    lastMousePosition = currentMousePos;
-                }
-
-                // Clear any existing hide timeout and scroll throttle to prevent conflicts
-                if (hideTimeout) {
-                    clearTimeout(hideTimeout);
-                    hideTimeout = null;
-                    console.log('⏸️ Cleared existing hide timeout during tooltip update');
-                }
-
-                if (scrollThrottleTimer) {
-                    clearTimeout(scrollThrottleTimer);
-                    scrollThrottleTimer = null;
-                    console.log('⏸️ Cleared existing scroll throttle during tooltip update');
-                }
-
-                // Store current target element for relative positioning
+                // Store current target element
                 currentTargetElement = element;
 
-                if (!hoverInfo) {
-                    console.log('📦 Creating new hover info element');
-                    createHoverInfo();
+                if (!unifiedPanel) {
+                    console.log('📦 Creating new unified panel element');
+                    createUnifiedPanel();
                 }
 
                 var rect = element.getBoundingClientRect();
                 console.log('📐 Element rect:', rect);
                 var locators = PlaywrightLocatorGenerator.generateLocators(element);
-                
+
                 // Get element details
                 var tag = element.tagName.toLowerCase();
                 var id = element.id || 'none';
@@ -560,238 +664,199 @@ export class ElementSelector {
                 var className = classes.length > 0 ? classes.join(', ') : 'none';
                 var text = element.textContent ? element.textContent.trim().substring(0, 50) + '...' : 'none';
                 var dimensions = Math.round(rect.width) + 'px × ' + Math.round(rect.height) + 'px';
-                
-                // Build rich hover info HTML
-                var html = '<div style="padding: 8px; max-width: 300px;">';
 
-                // Element tag and primary locator
-                html += '<div style="font-weight: bold; color: #1a73e8; margin-bottom: 6px; font-size: 12px;">&lt;' + tag + '&gt;</div>';
-                html += '<div style="font-family: monospace; font-size: 11px; background: rgba(26, 115, 232, 0.1); padding: 4px 6px; border-radius: 3px; margin-bottom: 8px; word-break: break-all;">' + locators.primary + '</div>';
+                // Update panel status
+                var statusElement = document.getElementById('panel-status');
+                if (statusElement) {
+                    statusElement.textContent = 'Inspecting';
+                    statusElement.style.color = '#1a73e8';
+                }
+
+                // Build panel content HTML
+                var contentHtml = '<div style="margin-bottom: 12px;">';
+                contentHtml += '<div style="font-weight: 600; color: #1a73e8; margin-bottom: 8px; font-size: 14px;">&lt;' + tag + '&gt;</div>';
+
+                // Primary locator
+                contentHtml += '<div class="dom-agent-locator" title="Click to copy">' + locators.primary + '</div>';
 
                 // Alternative locators
                 if (locators.alternatives && locators.alternatives.length > 1) {
-                    html += '<div style="font-size: 10px; color: #5f6368; margin-bottom: 4px;">Alternatives:</div>';
+                    contentHtml += '<div style="font-size: 11px; color: #5f6368; margin-bottom: 6px;">Alternative locators:</div>';
                     var altCount = 0;
                     locators.alternatives.forEach(function(alt) {
                         if (alt.locator !== locators.primary && altCount < 2) {
-                            html += '<div style="font-size: 9px; color: #5f6368; margin-bottom: 2px;">• ' + alt.type + '</div>';
+                            contentHtml += '<div class="dom-agent-locator" style="font-size: 10px; margin-bottom: 4px;" title="Click to copy">' + alt.locator + '</div>';
                             altCount++;
                         }
                     });
                 }
 
-                // Basic info section
-                html += '<div style="border-top: 1px solid #e0e0e0; padding-top: 6px; margin-top: 6px;">';
-                if (id !== 'none') html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">ID:</span> ' + id + '</div>';
-                if (className !== 'none') html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">Classes:</span> ' + className + '</div>';
-                html += '<div style="font-size: 10px; margin-bottom: 2px;"><span style="color: #5f6368;">Size:</span> ' + dimensions + '</div>';
-                if (text !== 'none') html += '<div style="font-size: 10px;"><span style="color: #5f6368;">Text:</span> ' + text + '</div>';
-                html += '</div>';
+                // Element details
+                contentHtml += '<div style="border-top: 1px solid #e8eaed; padding-top: 8px; margin-top: 8px;">';
+                if (id !== 'none') contentHtml += '<div style="font-size: 11px; margin-bottom: 3px;"><span style="color: #5f6368;">ID:</span> ' + id + '</div>';
+                if (className !== 'none') contentHtml += '<div style="font-size: 11px; margin-bottom: 3px;"><span style="color: #5f6368;">Classes:</span> ' + className + '</div>';
+                contentHtml += '<div style="font-size: 11px; margin-bottom: 3px;"><span style="color: #5f6368;">Size:</span> ' + dimensions + '</div>';
+                if (text !== 'none') contentHtml += '<div style="font-size: 11px;"><span style="color: #5f6368;">Text:</span> ' + text + '</div>';
+                contentHtml += '</div>';
+                contentHtml += '</div>';
 
-                // Action hint
-                html += '<div style="font-size: 9px; color: #5f6368; margin-top: 6px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 4px;">🎯 Click to copy locator</div>';
-
-                html += '</div>';
-
-                hoverInfo.innerHTML = html;
-                hoverInfo.style.display = 'block';
-                hoverInfo.style.opacity = '0';
-                hoverInfo.style.visibility = 'hidden'; // Temporarily hide for measurement
-
-                // Get actual tooltip dimensions after content is set
-                const margin = 12; // Increased margin for better spacing
-                const tooltipRect = hoverInfo.getBoundingClientRect();
-                const tooltipWidth = Math.max(280, Math.min(tooltipRect.width || 320, 400)); // Dynamic width with limits
-                const tooltipHeight = Math.max(120, tooltipRect.height || 200); // Dynamic height with min limit
-
-                hoverInfo.style.visibility = 'visible'; // Restore visibility
-
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                const scrollX = window.scrollX;
-                const scrollY = window.scrollY;
-
-                console.log('📍 Viewport:', { width: viewportWidth, height: viewportHeight, scrollX, scrollY });
-                console.log('📏 Tooltip size:', { width: tooltipWidth, height: tooltipHeight });
-                console.log('🎯 Element rect:', rect);
-
-                // Smart positioning algorithm to avoid blocking the target element
-                const elementCenterX = rect.left + rect.width / 2;
-                const elementCenterY = rect.top + rect.height / 2;
-
-                // Calculate available space in all directions
-                const spaceAbove = rect.top;
-                const spaceBelow = viewportHeight - rect.bottom;
-                const spaceLeft = rect.left;
-                const spaceRight = viewportWidth - rect.right;
-
-                // Define positioning options with their viability scores
-                const positions = [
-                    {
-                        name: 'top-center',
-                        left: Math.max(margin, Math.min(elementCenterX - tooltipWidth / 2, viewportWidth - tooltipWidth - margin)),
-                        top: rect.top + scrollY - tooltipHeight - margin,
-                        fits: spaceAbove >= tooltipHeight + margin,
-                        overlaps: false
-                    },
-                    {
-                        name: 'bottom-center',
-                        left: Math.max(margin, Math.min(elementCenterX - tooltipWidth / 2, viewportWidth - tooltipWidth - margin)),
-                        top: rect.bottom + scrollY + margin,
-                        fits: spaceBelow >= tooltipHeight + margin,
-                        overlaps: false
-                    },
-                    {
-                        name: 'right-center',
-                        left: rect.right + scrollX + margin,
-                        top: Math.max(margin, Math.min(elementCenterY - tooltipHeight / 2, viewportHeight - tooltipHeight - margin)),
-                        fits: spaceRight >= tooltipWidth + margin,
-                        overlaps: false
-                    },
-                    {
-                        name: 'left-center',
-                        left: rect.left + scrollX - tooltipWidth - margin,
-                        top: Math.max(margin, Math.min(elementCenterY - tooltipHeight / 2, viewportHeight - tooltipHeight - margin)),
-                        fits: spaceLeft >= tooltipWidth + margin,
-                        overlaps: false
-                    },
-                    // Fallback positions that might overlap but are better than nothing
-                    {
-                        name: 'top-left',
-                        left: rect.left + scrollX,
-                        top: rect.top + scrollY - tooltipHeight - margin,
-                        fits: spaceAbove >= tooltipHeight + margin && spaceLeft >= tooltipWidth,
-                        overlaps: spaceLeft < tooltipWidth
-                    },
-                    {
-                        name: 'bottom-right',
-                        left: rect.right + scrollX - tooltipWidth,
-                        top: rect.bottom + scrollY + margin,
-                        fits: spaceBelow >= tooltipHeight + margin && spaceRight >= tooltipWidth,
-                        overlaps: spaceRight < tooltipWidth
-                    }
-                ];
-
-                // Find the best position
-                let bestPosition = positions.find(pos => pos.fits);
-                if (!bestPosition) {
-                    // If no perfect fit, use the one with least overlap
-                    bestPosition = positions.reduce((best, current) =>
-                        (current.fits || (!best.fits && current.overlaps)) ? current : best
-                    );
+                // Update panel content
+                var contentElement = document.getElementById('panel-content');
+                if (contentElement) {
+                    contentElement.innerHTML = contentHtml;
                 }
 
-                let left = bestPosition.left;
-                let top = bestPosition.top;
+                // Show actions
+                var actionsElement = document.getElementById('panel-actions');
+                if (actionsElement) {
+                    actionsElement.style.display = 'flex';
+                }
 
-                // Final viewport boundary check
-                left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
-                top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
+                // Position panel relative to element using Floating UI
+                updatePanelPosition(element);
 
-                console.log('🎯 Selected position:', bestPosition.name, { left, top, fits: bestPosition.fits, overlaps: bestPosition.overlaps });
+                // Setup auto-update to follow element movements
+                if (typeof autoUpdate !== 'undefined' && typeof computePosition !== 'undefined') {
+                    // Clean up previous auto-update
+                    if (cleanupAutoUpdate) {
+                        cleanupAutoUpdate();
+                        cleanupAutoUpdate = null;
+                    }
 
-                // Store position info for relative positioning updates
-                currentTooltipPosition = {
-                    type: bestPosition.name,
-                    margin: margin,
-                    left: left,
-                    top: top
-                };
+                    // Setup new auto-update to follow element
+                    cleanupAutoUpdate = autoUpdate(element, unifiedPanel, () => {
+                        updatePanelPosition(element);
+                    });
+                    console.log('🔄 Auto-update enabled: panel will follow element movements');
+                }
 
-                // Apply smooth positioning with animation
-                hoverInfo.style.left = left + 'px';
-                hoverInfo.style.top = top + 'px';
-                hoverInfo.style.display = 'block';
-                hoverInfo.style.opacity = '0';
-                hoverInfo.style.transform = 'scale(0.95)';
-
-                console.log('✨ Showing hover tooltip at:', left + 'px', top + 'px');
-
-                // Trigger animation with proper timing
-                setTimeout(() => {
-                    isTooltipAnimating = true; // Set animation flag
-                    hoverInfo.style.opacity = '1';
-                    hoverInfo.style.transform = 'scale(1)';
-                    hoverInfo.style.transition = 'opacity 0.15s ease-out, transform 0.15s ease-out';
-
-                    console.log('✅ Hover tooltip animation started');
-
-                    // Record show time after animation completes
-                    setTimeout(() => {
-                        tooltipShowTime = Date.now(); // Record when tooltip is fully visible
-                        isTooltipVisible = true;
-                        isTooltipAnimating = false; // Clear animation flag
-                        tooltipProtectionUntil = Date.now() + PROTECTION_BUFFER; // Set protection period
-
-                        // Add scroll listener for relative positioning
-                        window.addEventListener('scroll', updateTooltipPosition, { passive: true });
-                        console.log('🎯 Tooltip fully visible, show time recorded:', tooltipShowTime);
-                        console.log('🛡️ Protection period until:', tooltipProtectionUntil);
-                        console.log('📜 Scroll listener added for relative positioning');
-                    }, ANIMATION_DURATION); // Animation duration
-                }, 10);
+                // Show panel with animation
+                unifiedPanel.classList.add('visible');
+                console.log('✨ Showing unified panel following element');
             }
 
-            function hideHoverInfo() {
-                // Don't hide if tooltip is currently animating or not fully visible yet
-                if (isTooltipAnimating) {
-                    console.log('🚫 Hide blocked: tooltip is animating');
-                    return;
+            // Update panel position relative to target element
+            function updatePanelPosition(element) {
+                if (!unifiedPanel || !element) return;
+
+                // Use Floating UI to compute optimal position
+                if (typeof computePosition !== 'undefined') {
+                    console.log('🎯 Using Floating UI to position panel relative to element');
+
+                    computePosition(element, unifiedPanel, {
+                        placement: 'bottom-start', // Try bottom first, then flip
+                        middleware: [
+                            offset(12), // 12px offset from element
+                            flip({
+                                fallbackPlacements: ['bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'],
+                                padding: 8 // Keep 8px from viewport edges
+                            }),
+                            shift({
+                                padding: 8, // Keep 8px from viewport edges
+                                limiter: {
+                                    fn: (middlewareArguments) => {
+                                        // Custom limiter to keep panel within reasonable bounds
+                                        const { x, y, placement } = middlewareArguments;
+                                        return {
+                                            x: Math.max(8, Math.min(x, window.innerWidth - unifiedPanel.offsetWidth - 8)),
+                                            y: Math.max(8, Math.min(y, window.innerHeight - unifiedPanel.offsetHeight - 8)),
+                                            data: { placement }
+                                        };
+                                    }
+                                }
+                            })
+                        ]
+                    }).then(({ x, y, placement }) => {
+                        unifiedPanel.style.left = x + 'px';
+                        unifiedPanel.style.top = y + 'px';
+                        console.log('✅ Panel positioned at:', { x, y, placement });
+
+                        // Update panel arrow/pointer if needed (could add later)
+                        // unifiedPanel.setAttribute('data-placement', placement);
+                    }).catch(error => {
+                        console.error('❌ Floating UI positioning error:', error);
+                        // Fallback to manual positioning
+                        updatePanelPositionManual(element);
+                    });
+                } else {
+                    // Fallback if Floating UI is not available
+                    updatePanelPositionManual(element);
+                }
+            }
+
+            // Manual positioning fallback
+            function updatePanelPositionManual(element) {
+                if (!unifiedPanel || !element) return;
+
+                const rect = element.getBoundingClientRect();
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+                const margin = 12;
+
+                // Try to position below the element first
+                let left = rect.left + scrollX;
+                let top = rect.bottom + scrollY + margin;
+
+                // Check if it fits below
+                if (top + unifiedPanel.offsetHeight > window.innerHeight + scrollY) {
+                    // Try above the element
+                    top = rect.top + scrollY - unifiedPanel.offsetHeight - margin;
+                    if (top < scrollY) {
+                        // Try to the right
+                        left = rect.right + scrollX + margin;
+                        top = rect.top + scrollY;
+                        if (left + unifiedPanel.offsetWidth > window.innerWidth + scrollX) {
+                            // Try to the left
+                            left = rect.left + scrollX - unifiedPanel.offsetWidth - margin;
+                        }
+                    }
                 }
 
-                // Don't hide if we're still in the protection period
-                if (Date.now() < tooltipProtectionUntil) {
-                    console.log('🚫 Hide blocked: in protection period, remaining:', tooltipProtectionUntil - Date.now(), 'ms');
-                    return;
-                }
+                // Apply viewport bounds
+                left = Math.max(8, Math.min(left, window.innerWidth + scrollX - unifiedPanel.offsetWidth - 8));
+                top = Math.max(8, Math.min(top, window.innerHeight + scrollY - unifiedPanel.offsetHeight - 8));
 
-                if (hoverInfo && hoverInfo.style.display !== 'none' && !isHoveringOnTooltip && isTooltipVisible) {
-                    const timeSinceShown = Date.now() - tooltipShowTime;
-                    const remainingTime = Math.max(0, MIN_DISPLAY_TIME - timeSinceShown);
+                unifiedPanel.style.left = left + 'px';
+                unifiedPanel.style.top = top + 'px';
+                console.log('📍 Manual panel position:', { left, top });
+            }
 
-                    console.log('🙈 Hiding hover tooltip (shown for', timeSinceShown, 'ms, remaining:', remainingTime, 'ms)');
+            function hideUnifiedPanel() {
+                if (unifiedPanel && unifiedPanel.classList.contains('visible')) {
+                    console.log('🙈 Hiding unified panel');
 
-                    // Clear any existing hide timeout to prevent duplicates
-                    if (hideTimeout) {
-                        clearTimeout(hideTimeout);
-                        console.log('🧹 Cleared previous hide timeout');
+                    // Clean up auto-update
+                    if (cleanupAutoUpdate) {
+                        cleanupAutoUpdate();
+                        cleanupAutoUpdate = null;
+                        console.log('🔄 Auto-update cleaned up');
                     }
 
-                    // Delay hiding to ensure minimum display time
-                    hideTimeout = setTimeout(() => {
-                        // Double-check conditions before hiding
-                        if (hoverInfo && !isHoveringOnTooltip && isTooltipVisible &&
-                            hoverInfo.style.display !== 'none') {
-                            console.log('🚫 Executing hide after delay');
-                            isTooltipVisible = false; // Reset visibility state
-                            hoverInfo.style.opacity = '0';
-                            hoverInfo.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                                if (hoverInfo && !isHoveringOnTooltip && hoverInfo.style.display !== 'none') {
-                                    hoverInfo.style.display = 'none';
-                                    isTooltipVisible = false; // Reset visibility state
-                                    isTooltipAnimating = false; // Reset animation state
-                                    tooltipShowTime = 0; // Reset show time
-                                    tooltipProtectionUntil = 0; // Reset protection period
-                                    currentTargetElement = null; // Clear target element
-                                    currentTooltipPosition = null; // Clear position info
+                    // Update status
+                    var statusElement = document.getElementById('panel-status');
+                    if (statusElement) {
+                        statusElement.textContent = 'Ready';
+                        statusElement.style.color = '#5f6368';
+                    }
 
-                                    // Remove scroll listener
-                                    window.removeEventListener('scroll', updateTooltipPosition);
-                                    console.log('✅ Hover tooltip hidden and state reset');
-                                    console.log('📜 Scroll listener removed');
-                                } else {
-                                    console.log('⏸️ Hover tooltip hide cancelled (hovering on tooltip)');
-                                }
-                            }, 150);
-                        } else {
-                            console.log('⏸️ Hover tooltip hide cancelled (conditions changed)');
-                        }
-                    }, remainingTime);
-                } else if (isTooltipAnimating) {
-                    console.log('🚫 Hide skipped: tooltip is animating');
-                } else if (!isTooltipVisible) {
-                    console.log('🚫 Hide skipped: tooltip not fully visible yet');
+                    // Reset content
+                    var contentElement = document.getElementById('panel-content');
+                    if (contentElement) {
+                        contentElement.innerHTML = '<div style="color: #5f6368; font-size: 12px; text-align: center; padding: 20px;">Hover over an element to inspect</div>';
+                    }
+
+                    // Hide actions
+                    var actionsElement = document.getElementById('panel-actions');
+                    if (actionsElement) {
+                        actionsElement.style.display = 'none';
+                    }
+
+                    // Hide panel with animation
+                    unifiedPanel.classList.remove('visible');
+
+                    // Clear current target
+                    currentTargetElement = null;
+                    console.log('✅ Unified panel hidden and state reset');
                 }
             }
 
@@ -881,7 +946,7 @@ export class ElementSelector {
 
                 // Skip if hovering over our own elements - but don't skip toolbar
                 if (
-                    target.closest('.dom-agent-hover-info') ||
+                    target.closest('.dom-agent-unified-panel') ||
                     target.classList.contains('dom-agent-copied-notification') ||
                     target.closest('.dom-agent-copied-notification')
                 ) {
@@ -924,13 +989,13 @@ export class ElementSelector {
                         const mouseX = e.clientX;
                         const mouseY = e.clientY;
 
-                        // Only show tooltip if mouse is still within element bounds
+                        // Only show panel if mouse is still within element bounds
                         if (mouseX >= currentRect.left && mouseX <= currentRect.right &&
                             mouseY >= currentRect.top && mouseY <= currentRect.bottom) {
                             console.log('🎯 Mouse hover detected on element:', target.tagName, target.id || 'no-id');
-                            updateHoverInfo(target, e);
+                            updateUnifiedPanel(target, e);
                         } else {
-                            console.log('🚫 Mouse moved outside element bounds, skipping tooltip update');
+                            console.log('🚫 Mouse moved outside element bounds, skipping panel update');
                         }
                     }
                 }, HOVER_DEBOUNCE_DELAY); // Reduced delay for better responsiveness
@@ -946,7 +1011,7 @@ export class ElementSelector {
 
                 // Skip if hovering over our own elements
                 if (
-                    target.closest('.dom-agent-hover-info') ||
+                    target.closest('.dom-agent-unified-panel') ||
                     target.classList.contains('dom-agent-copied-notification') ||
                     target.closest('.dom-agent-copied-notification')
                 ) {
@@ -972,9 +1037,9 @@ export class ElementSelector {
                 target.classList.add('dom-agent-highlight');
                 currentHighlight = target;
                 
-                // Trigger tooltip immediately for mouseenter (no debounce)
+                // Trigger panel immediately for mouseenter (no debounce)
                 console.log('🎯 Mouse enter detected on element:', target.tagName, target.id || 'no-id');
-                updateHoverInfo(target, e);
+                updateUnifiedPanel(target, e);
                 
                 e.stopPropagation();
             }, true);
@@ -1010,7 +1075,7 @@ export class ElementSelector {
                     hoverTimeout = null;
                 }
 
-                // Clear hide timeout and scroll throttle if mouse is moving to another element
+                // Clear hide timeout, scroll throttle, and Floating UI cleanup if mouse is moving to another element
                 if (hideTimeout) {
                     clearTimeout(hideTimeout);
                     hideTimeout = null;
@@ -1023,15 +1088,22 @@ export class ElementSelector {
                     console.log('⏸️ Scroll throttle cleared due to mouse movement');
                 }
 
-                    // Don't hide if moving to the hover info itself or its children
+                // Clean up auto-update when moving to different element
+                if (cleanupAutoUpdate) {
+                    cleanupAutoUpdate();
+                    cleanupAutoUpdate = null;
+                    console.log('⏸️ Floating UI autoUpdate cleared due to mouse movement');
+                }
+
+                    // Don't hide if moving to the unified panel itself or its children
                     if (relatedTarget && (
-                        relatedTarget.classList.contains('dom-agent-hover-info') ||
-                        relatedTarget.closest('.dom-agent-hover-info') ||
+                        relatedTarget.classList.contains('dom-agent-unified-panel') ||
+                        relatedTarget.closest('.dom-agent-unified-panel') ||
                         relatedTarget.classList.contains('dom-agent-copied-notification') ||
                         relatedTarget.closest('.dom-agent-copied-notification')
                     )) {
                         isHoveringOnTooltip = true;
-                        console.log('🎯 Mouse moved to tooltip, keeping visible');
+                        console.log('🎯 Mouse moved to panel, keeping visible');
                         return;
                     }
 
@@ -1069,7 +1141,7 @@ export class ElementSelector {
                                     }
                                 }
 
-                                hideHoverInfo();
+                                hideUnifiedPanel();
                             } else {
                                 if (isTooltipAnimating) {
                                     console.log('⏸️ Hide delayed: waiting for animation to complete');
@@ -1091,14 +1163,11 @@ export class ElementSelector {
 
                 if (
                     target.closest('.dom-agent-toolbar') ||
-                    target.classList.contains('dom-agent-hover-info') ||
                     target.classList.contains('dom-agent-copied-notification')) {
                     return;
                 }
 
                 console.log('🎯 Element clicked for locator generation:', target.tagName);
-
-                hideHoverInfo();
 
                 // Clear all selected states
                 var selectedElements = document.querySelectorAll('.dom-agent-selected');
