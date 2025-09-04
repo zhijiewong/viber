@@ -34,7 +34,6 @@ export class ElementSelector {
                         'outline: 2px solid #1a73e8 !important;' +
                         'outline-offset: -2px !important;' +
                     'background: rgba(26, 115, 232, 0.1) !important;' +
-                        'cursor: crosshair !important;' +
                         'position: relative !important;' +
                         'z-index: 999999 !important;' +
                     'box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;' +
@@ -137,22 +136,19 @@ export class ElementSelector {
                         'background: #1a73e8 !important;' +
                         'color: white !important;' +
                         'border: none !important;' +
-                        'padding: 6px 12px !important;' +
-                        'border-radius: 4px !important;' +
-                        'font-size: 11px !important;' +
+                        'padding: 8px 16px !important;' +
+                        'border-radius: 6px !important;' +
+                        'font-size: 12px !important;' +
+                        'font-weight: 500 !important;' +
                         'cursor: pointer !important;' +
-                        'transition: background-color 0.2s ease !important;' +
+                        'transition: all 0.2s ease !important;' +
                         'flex: 1 !important;' +
+                        'min-height: 32px !important;' +
                     '}' +
                     '.dom-agent-panel-btn:hover {' +
                         'background: #1557b0 !important;' +
-                    '}' +
-                    '.dom-agent-panel-btn.secondary {' +
-                        'background: #f1f3f4 !important;' +
-                        'color: #3c4043 !important;' +
-                    '}' +
-                    '.dom-agent-panel-btn.secondary:hover {' +
-                        'background: #e8eaed !important;' +
+                        'transform: translateY(-1px) !important;' +
+                        'box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3) !important;' +
                     '}' +
                     '.dom-agent-hover-info {' +
                         'display: none !important;' + /* 隐藏旧的悬浮框 */
@@ -501,7 +497,7 @@ export class ElementSelector {
                 var currentTooltipPosition = null; // Store current tooltip position relative to element
                 var scrollThrottleTimer = null; // Throttle scroll updates for performance
                 var lastMousePosition = null; // Track last mouse position for stability
-                var positionStabilityThreshold = 20; // Minimum pixel distance for repositioning
+                var positionStabilityThreshold = 10; // Minimum pixel distance for repositioning (increased sensitivity)
                 var cleanupAutoUpdate = null; // Floating UI auto-update cleanup function
 
             // Create unified panel element
@@ -521,8 +517,7 @@ export class ElementSelector {
                         '</div>' +
                     '</div>' +
                     '<div class="dom-agent-panel-actions" id="panel-actions" style="display: none;">' +
-                        '<button class="dom-agent-panel-btn" onclick="copyLocator()">Copy Locator</button>' +
-                        '<button class="dom-agent-panel-btn secondary" onclick="clearSelection()">Clear</button>' +
+                        '<button class="dom-agent-panel-btn" onclick="copyLocator()">📋 Copy Locator</button>' +
                     '</div>';
                 document.body.appendChild(unifiedPanel);
 
@@ -542,15 +537,6 @@ export class ElementSelector {
                     }
                 };
 
-                window.clearSelection = function() {
-                    // Clear all selected states
-                    var selectedElements = document.querySelectorAll('.dom-agent-selected');
-                    for (var i = 0; i < selectedElements.length; i++) {
-                        selectedElements[i].classList.remove('dom-agent-selected');
-                        selectedElements[i].classList.remove('dom-agent-highlight');
-                    }
-                    hideUnifiedPanel();
-                };
             }
 
             // Update tooltip position using Floating UI
@@ -746,20 +732,39 @@ export class ElementSelector {
                     computePosition(element, unifiedPanel, {
                         placement: 'bottom-start', // Try bottom first, then flip
                         middleware: [
-                            offset(12), // 12px offset from element
+                            offset(16), // Increased offset for better visual separation
                             flip({
-                                fallbackPlacements: ['bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'],
-                                padding: 8 // Keep 8px from viewport edges
+                                fallbackPlacements: ['bottom-end', 'top-start', 'top-end', 'right-start', 'right-end', 'left-start', 'left-end'],
+                                padding: 12 // Increased padding from viewport edges
                             }),
                             shift({
-                                padding: 8, // Keep 8px from viewport edges
+                                padding: 12, // Increased padding from viewport edges
                                 limiter: {
                                     fn: (middlewareArguments) => {
-                                        // Custom limiter to keep panel within reasonable bounds
+                                        // Smart limiter that considers both viewport and element position
                                         const { x, y, placement } = middlewareArguments;
+                                        const elementRect = element.getBoundingClientRect();
+                                        const panelWidth = unifiedPanel.offsetWidth || 320;
+                                        const panelHeight = unifiedPanel.offsetHeight || 200;
+
+                                        // Ensure panel stays within viewport with comfortable margins
+                                        const margin = 16;
+                                        const viewportWidth = window.innerWidth;
+                                        const viewportHeight = window.innerHeight;
+
+                                        let finalX = Math.max(margin, Math.min(x, viewportWidth - panelWidth - margin));
+                                        let finalY = Math.max(margin, Math.min(y, viewportHeight - panelHeight - margin));
+
+                                        // Additional smart positioning to avoid overlapping with element
+                                        if (placement.startsWith('bottom') && finalY < elementRect.bottom + 20) {
+                                            finalY = elementRect.bottom + 20;
+                                        } else if (placement.startsWith('top') && finalY > elementRect.top - panelHeight - 20) {
+                                            finalY = elementRect.top - panelHeight - 20;
+                                        }
+
                                         return {
-                                            x: Math.max(8, Math.min(x, window.innerWidth - unifiedPanel.offsetWidth - 8)),
-                                            y: Math.max(8, Math.min(y, window.innerHeight - unifiedPanel.offsetHeight - 8)),
+                                            x: finalX,
+                                            y: finalY,
                                             data: { placement }
                                         };
                                     }
@@ -930,8 +935,8 @@ export class ElementSelector {
             const MIN_DISPLAY_TIME = 300; // Minimum display time in milliseconds
             const ANIMATION_DURATION = 150; // Animation duration in milliseconds
             const PROTECTION_BUFFER = 200; // Additional protection time after animation
-            const HOVER_DEBOUNCE_DELAY = 100; // Increased debounce delay for better stability
-            const POSITION_CHANGE_THRESHOLD = 30; // Minimum pixel change to trigger repositioning
+            const HOVER_DEBOUNCE_DELAY = 50; // Reduced debounce delay for better responsiveness
+            const POSITION_CHANGE_THRESHOLD = 15; // Minimum pixel change to trigger repositioning (increased sensitivity)
             const TOOLTIP_STICKINESS_DELAY = 150; // Delay before hiding tooltip when mouse leaves element
 
             document.addEventListener('mouseover', function(e) {
