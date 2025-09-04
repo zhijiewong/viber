@@ -283,16 +283,20 @@ export class WebviewUI {
                     position: fixed !important;
                     background: white !important;
                     color: #202124 !important;
-                    border: 1px solid #e0e0e0 !important;
+                    border: 1px solid #dadce0 !important;
                     border-radius: 8px !important;
                     font-size: 12px !important;
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
                     z-index: 1000000 !important;
                     pointer-events: none !important;
-                    box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
-                    max-width: 320px !important;
+                    box-shadow: 0 2px 12px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;
+                    max-width: 400px !important;
                     min-width: 280px !important;
                     line-height: 1.4 !important;
+                    backdrop-filter: blur(8px) !important;
+                    -webkit-backdrop-filter: blur(8px) !important;
+                    word-wrap: break-word !important;
+                    overflow-wrap: break-word !important;
                 }
 
                 /* Copy notification */

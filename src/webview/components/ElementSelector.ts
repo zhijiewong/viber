@@ -40,19 +40,24 @@ export class ElementSelector {
                     '}' +
                     '.dom-agent-hover-info {' +
                         'position: fixed !important;' +
-                        'background: white !important;' +
+                        'background: rgba(255, 255, 255, 0.98) !important;' +
                         'color: #202124 !important;' +
-                        'border: 1px solid #e0e0e0 !important;' +
-                        'padding: 8px !important;' +
-                        'border-radius: 8px !important;' +
+                        'border: 1px solid #dadce0 !important;' +
+                        'border-radius: 4px !important;' +
+                        'padding: 12px !important;' +
                         'font-size: 12px !important;' +
                         'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;' +
                         'z-index: 1000000 !important;' +
                         'pointer-events: none !important;' +
-                        'box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;' +
-                        'max-width: 320px !important;' +
+                        'box-shadow: 0 2px 12px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;' +
+                        'backdrop-filter: blur(8px) !important;' +
+                        '-webkit-backdrop-filter: blur(8px) !important;' +
+                        'max-width: 400px !important;' +
                         'min-width: 280px !important;' +
                         'line-height: 1.4 !important;' +
+                        'word-wrap: break-word !important;' +
+                        'overflow-wrap: break-word !important;' +
+                        'transition: opacity 0.15s ease-out, transform 0.15s ease-out !important;' +
                     '}' +
                     '.dom-agent-copied-notification {' +
                         'position: fixed !important;' +
@@ -392,8 +397,13 @@ export class ElementSelector {
             
             // Event handling
                 var currentHighlight = null;
+                var currentTargetElement = null; // Track current target element for relative positioning
                 var hoverInfo = null;
                 var isEnabled = true;
+                var currentTooltipPosition = null; // Store current tooltip position relative to element
+                var scrollThrottleTimer = null; // Throttle scroll updates for performance
+                var lastMousePosition = null; // Track last mouse position for stability
+                var positionStabilityThreshold = 20; // Minimum pixel distance for repositioning
 
             // Create hover info element
             function createHoverInfo() {
@@ -402,16 +412,135 @@ export class ElementSelector {
                 document.body.appendChild(hoverInfo);
             }
 
+            // Update tooltip position relative to current target element with throttling
+            function updateTooltipPosition() {
+                if (!hoverInfo || !currentTargetElement || !currentTooltipPosition || !isTooltipVisible) {
+                    return;
+                }
+
+                // Throttle scroll updates to improve performance
+                if (scrollThrottleTimer) {
+                    clearTimeout(scrollThrottleTimer);
+                }
+
+                scrollThrottleTimer = setTimeout(() => {
+                    console.log('📜 Updating tooltip position on scroll');
+                    updateTooltipPositionNow();
+                }, 16); // ~60fps throttling
+            }
+
+            function updateTooltipPositionNow() {
+                if (!hoverInfo || !currentTargetElement || !currentTooltipPosition || !isTooltipVisible) {
+                    return;
+                }
+
+                const rect = currentTargetElement.getBoundingClientRect();
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+
+                // Calculate new position based on stored relative position
+                let newLeft, newTop;
+
+                switch (currentTooltipPosition.type) {
+                    case 'top-center':
+                        newLeft = rect.left + rect.width / 2 + scrollX - hoverInfo.offsetWidth / 2;
+                        newTop = rect.top + scrollY - hoverInfo.offsetHeight - currentTooltipPosition.margin;
+                        break;
+                    case 'bottom-center':
+                        newLeft = rect.left + rect.width / 2 + scrollX - hoverInfo.offsetWidth / 2;
+                        newTop = rect.bottom + scrollY + currentTooltipPosition.margin;
+                        break;
+                    case 'right-center':
+                        newLeft = rect.right + scrollX + currentTooltipPosition.margin;
+                        newTop = rect.top + rect.height / 2 + scrollY - hoverInfo.offsetHeight / 2;
+                        break;
+                    case 'left-center':
+                        newLeft = rect.left + scrollX - hoverInfo.offsetWidth - currentTooltipPosition.margin;
+                        newTop = rect.top + rect.height / 2 + scrollY - hoverInfo.offsetHeight / 2;
+                        break;
+                    case 'top-left':
+                        newLeft = rect.left + scrollX;
+                        newTop = rect.top + scrollY - hoverInfo.offsetHeight - currentTooltipPosition.margin;
+                        break;
+                    case 'bottom-right':
+                        newLeft = rect.right + scrollX - hoverInfo.offsetWidth;
+                        newTop = rect.bottom + scrollY + currentTooltipPosition.margin;
+                        break;
+                    default:
+                        return; // Unknown position type
+                }
+
+                // Apply viewport bounds
+                const margin = currentTooltipPosition.margin;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                newLeft = Math.max(margin, Math.min(newLeft, viewportWidth - hoverInfo.offsetWidth - margin));
+                newTop = Math.max(margin, Math.min(newTop, viewportHeight - hoverInfo.offsetHeight - margin));
+
+                // Update position without animation for smooth scrolling
+                hoverInfo.style.left = newLeft + 'px';
+                hoverInfo.style.top = newTop + 'px';
+            }
+
             // Update hover info with Playwright locator
-            function updateHoverInfo(element) {
+            function updateHoverInfo(element, mouseEvent) {
                 console.log('🔄 Updating hover info for element:', element.tagName, element.id || 'no-id');
 
-                // Clear any existing hide timeout to prevent premature hiding
+                // Check if mouse position has changed significantly enough to warrant repositioning
+                if (mouseEvent) {
+                    const currentMousePos = { x: mouseEvent.clientX, y: mouseEvent.clientY };
+
+                    if (lastMousePosition && isTooltipVisible && currentTargetElement === element) {
+                        const distance = Math.sqrt(
+                            Math.pow(currentMousePos.x - lastMousePosition.x, 2) +
+                            Math.pow(currentMousePos.y - lastMousePosition.y, 2)
+                        );
+
+                        // Check if element position has changed significantly
+                        const currentRect = element.getBoundingClientRect();
+                        let elementPositionChanged = false;
+
+                        if (currentTargetElement && currentTargetElement === element) {
+                            const lastRect = currentTargetElement.getBoundingClientRect();
+                            const elementDistance = Math.sqrt(
+                                Math.pow(currentRect.left - lastRect.left, 2) +
+                                Math.pow(currentRect.top - lastRect.top, 2)
+                            );
+                            elementPositionChanged = elementDistance > POSITION_CHANGE_THRESHOLD;
+                        }
+
+                        // If mouse and element haven't moved much, don't reposition
+                        if (distance < positionStabilityThreshold && !elementPositionChanged) {
+                            console.log('🎯 Mouse and element stable, keeping current tooltip position');
+                            lastMousePosition = currentMousePos;
+                            return;
+                        }
+
+                        // If mouse moved but element stayed the same, only reposition if movement is significant
+                        if (distance >= positionStabilityThreshold && !elementPositionChanged) {
+                            console.log('🎯 Mouse moved significantly, repositioning tooltip');
+                        }
+                    }
+
+                    lastMousePosition = currentMousePos;
+                }
+
+                // Clear any existing hide timeout and scroll throttle to prevent conflicts
                 if (hideTimeout) {
                     clearTimeout(hideTimeout);
                     hideTimeout = null;
                     console.log('⏸️ Cleared existing hide timeout during tooltip update');
                 }
+
+                if (scrollThrottleTimer) {
+                    clearTimeout(scrollThrottleTimer);
+                    scrollThrottleTimer = null;
+                    console.log('⏸️ Cleared existing scroll throttle during tooltip update');
+                }
+
+                // Store current target element for relative positioning
+                currentTargetElement = element;
 
                 if (!hoverInfo) {
                     console.log('📦 Creating new hover info element');
@@ -465,11 +594,17 @@ export class ElementSelector {
                 html += '</div>';
 
                 hoverInfo.innerHTML = html;
+                hoverInfo.style.display = 'block';
+                hoverInfo.style.opacity = '0';
+                hoverInfo.style.visibility = 'hidden'; // Temporarily hide for measurement
 
-                // Use fallback positioning (no external dependencies)
-                const margin = 8;
-                const tooltipWidth = 320;
-                const tooltipHeight = 200;
+                // Get actual tooltip dimensions after content is set
+                const margin = 12; // Increased margin for better spacing
+                const tooltipRect = hoverInfo.getBoundingClientRect();
+                const tooltipWidth = Math.max(280, Math.min(tooltipRect.width || 320, 400)); // Dynamic width with limits
+                const tooltipHeight = Math.max(120, tooltipRect.height || 200); // Dynamic height with min limit
+
+                hoverInfo.style.visibility = 'visible'; // Restore visibility
 
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
@@ -477,21 +612,91 @@ export class ElementSelector {
                 const scrollY = window.scrollY;
 
                 console.log('📍 Viewport:', { width: viewportWidth, height: viewportHeight, scrollX, scrollY });
+                console.log('📏 Tooltip size:', { width: tooltipWidth, height: tooltipHeight });
+                console.log('🎯 Element rect:', rect);
 
-                let left = Math.max(margin, Math.min(rect.left + scrollX, viewportWidth - tooltipWidth - margin));
-                let top = rect.top + scrollY - tooltipHeight - margin;
+                // Smart positioning algorithm to avoid blocking the target element
+                const elementCenterX = rect.left + rect.width / 2;
+                const elementCenterY = rect.top + rect.height / 2;
 
-                // If above doesn't fit, try below
-                if (top < margin) {
-                    top = rect.bottom + scrollY + margin;
-                    console.log('🔄 Switched to below positioning');
+                // Calculate available space in all directions
+                const spaceAbove = rect.top;
+                const spaceBelow = viewportHeight - rect.bottom;
+                const spaceLeft = rect.left;
+                const spaceRight = viewportWidth - rect.right;
+
+                // Define positioning options with their viability scores
+                const positions = [
+                    {
+                        name: 'top-center',
+                        left: Math.max(margin, Math.min(elementCenterX - tooltipWidth / 2, viewportWidth - tooltipWidth - margin)),
+                        top: rect.top + scrollY - tooltipHeight - margin,
+                        fits: spaceAbove >= tooltipHeight + margin,
+                        overlaps: false
+                    },
+                    {
+                        name: 'bottom-center',
+                        left: Math.max(margin, Math.min(elementCenterX - tooltipWidth / 2, viewportWidth - tooltipWidth - margin)),
+                        top: rect.bottom + scrollY + margin,
+                        fits: spaceBelow >= tooltipHeight + margin,
+                        overlaps: false
+                    },
+                    {
+                        name: 'right-center',
+                        left: rect.right + scrollX + margin,
+                        top: Math.max(margin, Math.min(elementCenterY - tooltipHeight / 2, viewportHeight - tooltipHeight - margin)),
+                        fits: spaceRight >= tooltipWidth + margin,
+                        overlaps: false
+                    },
+                    {
+                        name: 'left-center',
+                        left: rect.left + scrollX - tooltipWidth - margin,
+                        top: Math.max(margin, Math.min(elementCenterY - tooltipHeight / 2, viewportHeight - tooltipHeight - margin)),
+                        fits: spaceLeft >= tooltipWidth + margin,
+                        overlaps: false
+                    },
+                    // Fallback positions that might overlap but are better than nothing
+                    {
+                        name: 'top-left',
+                        left: rect.left + scrollX,
+                        top: rect.top + scrollY - tooltipHeight - margin,
+                        fits: spaceAbove >= tooltipHeight + margin && spaceLeft >= tooltipWidth,
+                        overlaps: spaceLeft < tooltipWidth
+                    },
+                    {
+                        name: 'bottom-right',
+                        left: rect.right + scrollX - tooltipWidth,
+                        top: rect.bottom + scrollY + margin,
+                        fits: spaceBelow >= tooltipHeight + margin && spaceRight >= tooltipWidth,
+                        overlaps: spaceRight < tooltipWidth
+                    }
+                ];
+
+                // Find the best position
+                let bestPosition = positions.find(pos => pos.fits);
+                if (!bestPosition) {
+                    // If no perfect fit, use the one with least overlap
+                    bestPosition = positions.reduce((best, current) =>
+                        (current.fits || (!best.fits && current.overlaps)) ? current : best
+                    );
                 }
 
-                // Ensure tooltip stays in viewport
+                let left = bestPosition.left;
+                let top = bestPosition.top;
+
+                // Final viewport boundary check
                 left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
                 top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
 
-                console.log('🎯 Final position:', { left, top });
+                console.log('🎯 Selected position:', bestPosition.name, { left, top, fits: bestPosition.fits, overlaps: bestPosition.overlaps });
+
+                // Store position info for relative positioning updates
+                currentTooltipPosition = {
+                    type: bestPosition.name,
+                    margin: margin,
+                    left: left,
+                    top: top
+                };
 
                 // Apply smooth positioning with animation
                 hoverInfo.style.left = left + 'px';
@@ -517,8 +722,12 @@ export class ElementSelector {
                         isTooltipVisible = true;
                         isTooltipAnimating = false; // Clear animation flag
                         tooltipProtectionUntil = Date.now() + PROTECTION_BUFFER; // Set protection period
+
+                        // Add scroll listener for relative positioning
+                        window.addEventListener('scroll', updateTooltipPosition, { passive: true });
                         console.log('🎯 Tooltip fully visible, show time recorded:', tooltipShowTime);
                         console.log('🛡️ Protection period until:', tooltipProtectionUntil);
+                        console.log('📜 Scroll listener added for relative positioning');
                     }, ANIMATION_DURATION); // Animation duration
                 }, 10);
             }
@@ -557,14 +766,20 @@ export class ElementSelector {
                             isTooltipVisible = false; // Reset visibility state
                             hoverInfo.style.opacity = '0';
                             hoverInfo.style.transform = 'scale(0.95)';
-                            setTimeout(() => {
+            setTimeout(() => {
                                 if (hoverInfo && !isHoveringOnTooltip && hoverInfo.style.display !== 'none') {
                                     hoverInfo.style.display = 'none';
                                     isTooltipVisible = false; // Reset visibility state
                                     isTooltipAnimating = false; // Reset animation state
                                     tooltipShowTime = 0; // Reset show time
                                     tooltipProtectionUntil = 0; // Reset protection period
+                                    currentTargetElement = null; // Clear target element
+                                    currentTooltipPosition = null; // Clear position info
+
+                                    // Remove scroll listener
+                                    window.removeEventListener('scroll', updateTooltipPosition);
                                     console.log('✅ Hover tooltip hidden and state reset');
+                                    console.log('📜 Scroll listener removed');
                                 } else {
                                     console.log('⏸️ Hover tooltip hide cancelled (hovering on tooltip)');
                                 }
@@ -650,11 +865,13 @@ export class ElementSelector {
             const MIN_DISPLAY_TIME = 300; // Minimum display time in milliseconds
             const ANIMATION_DURATION = 150; // Animation duration in milliseconds
             const PROTECTION_BUFFER = 200; // Additional protection time after animation
-            const HOVER_DEBOUNCE_DELAY = 50; // Reduced hover debounce delay for better responsiveness
+            const HOVER_DEBOUNCE_DELAY = 100; // Increased debounce delay for better stability
+            const POSITION_CHANGE_THRESHOLD = 30; // Minimum pixel change to trigger repositioning
+            const TOOLTIP_STICKINESS_DELAY = 150; // Delay before hiding tooltip when mouse leaves element
 
             document.addEventListener('mouseover', function(e) {
                 if (!isEnabled) return;
-
+                
                 var target = e.target;
 
                 // Clear any existing timeout
@@ -671,7 +888,7 @@ export class ElementSelector {
                     isHoveringOnTooltip = true;
                     return;
                 }
-
+                
                 isHoveringOnTooltip = false;
 
                 // Skip if target is not a valid element (less restrictive filtering)
@@ -693,11 +910,11 @@ export class ElementSelector {
                 if (currentHighlight && currentHighlight !== target) {
                     currentHighlight.classList.remove('dom-agent-highlight');
                 }
-
+                
                 // Add new highlight
                 target.classList.add('dom-agent-highlight');
                 currentHighlight = target;
-
+                
                 // Update hover info with optimized delay for better performance and stability
                 hoverTimeout = setTimeout(() => {
                     // Double-check we're still hovering on the same element and not on tooltip
@@ -711,20 +928,20 @@ export class ElementSelector {
                         if (mouseX >= currentRect.left && mouseX <= currentRect.right &&
                             mouseY >= currentRect.top && mouseY <= currentRect.bottom) {
                             console.log('🎯 Mouse hover detected on element:', target.tagName, target.id || 'no-id');
-                            updateHoverInfo(target);
+                            updateHoverInfo(target, e);
                         } else {
                             console.log('🚫 Mouse moved outside element bounds, skipping tooltip update');
                         }
                     }
                 }, HOVER_DEBOUNCE_DELAY); // Reduced delay for better responsiveness
-
+                
                 e.stopPropagation();
             }, true);
-
+            
             // Add mouseenter as backup for better hover detection
             document.addEventListener('mouseenter', function(e) {
                 if (!isEnabled) return;
-
+                
                 var target = e.target;
 
                 // Skip if hovering over our own elements
@@ -736,7 +953,7 @@ export class ElementSelector {
                     isHoveringOnTooltip = true;
                     return;
                 }
-
+                
                 isHoveringOnTooltip = false;
 
                 // Skip if target is not a valid element
@@ -754,21 +971,21 @@ export class ElementSelector {
                 }
                 target.classList.add('dom-agent-highlight');
                 currentHighlight = target;
-
+                
                 // Trigger tooltip immediately for mouseenter (no debounce)
                 console.log('🎯 Mouse enter detected on element:', target.tagName, target.id || 'no-id');
-                updateHoverInfo(target);
-
+                updateHoverInfo(target, e);
+                
                 e.stopPropagation();
             }, true);
-
+            
             // Improved mouse out event with better stability and debouncing
             let mouseoutDebounce = null;
             const MOUSEOUT_DEBOUNCE_DELAY = 100; // 100ms debounce for mouseout
 
             document.addEventListener('mouseout', function(e) {
                 if (!isEnabled) return;
-
+                
                 var target = e.target;
                 var relatedTarget = e.relatedTarget;
 
@@ -787,18 +1004,24 @@ export class ElementSelector {
                     }
                     console.log('👆 Mouseout event processed for:', target.tagName, target.id || 'no-id');
 
-                    // Clear hover timeout if leaving the element
-                    if (hoverTimeout) {
-                        clearTimeout(hoverTimeout);
-                        hoverTimeout = null;
-                    }
+                                    // Clear hover timeout if leaving the element
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
 
-                    // Clear hide timeout if mouse is moving to another element
-                    if (hideTimeout) {
-                        clearTimeout(hideTimeout);
-                        hideTimeout = null;
-                        console.log('⏸️ Hide timeout cleared due to mouse movement');
-                    }
+                // Clear hide timeout and scroll throttle if mouse is moving to another element
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                    console.log('⏸️ Hide timeout cleared due to mouse movement');
+                }
+
+                if (scrollThrottleTimer) {
+                    clearTimeout(scrollThrottleTimer);
+                    scrollThrottleTimer = null;
+                    console.log('⏸️ Scroll throttle cleared due to mouse movement');
+                }
 
                     // Don't hide if moving to the hover info itself or its children
                     if (relatedTarget && (
@@ -815,21 +1038,37 @@ export class ElementSelector {
                     isHoveringOnTooltip = false;
 
                     // Remove highlight only if not selected and not moving to a valid element
-                    if (!target.classList.contains('dom-agent-selected')) {
-                        target.classList.remove('dom-agent-highlight');
-                    }
-
-                    if (currentHighlight === target) {
-                        currentHighlight = null;
-                    }
-
+                if (!target.classList.contains('dom-agent-selected')) {
+                    target.classList.remove('dom-agent-highlight');
+                }
+                
+                if (currentHighlight === target) {
+                    currentHighlight = null;
+                }
+                
                     // Only hide if mouse has actually left the element area (not just moving between elements)
                     if (!relatedTarget || (!relatedTarget.closest || !relatedTarget.closest('.dom-agent-hover-info'))) {
-                        console.log('🏃 Mouse left element area, scheduling hide');
-                        // Small delay to allow for element transitions, but respect animation and protection state
+                        console.log('🏃 Mouse left element area, scheduling hide with stickiness delay');
+
+                        // Use stickiness delay to prevent tooltip from disappearing too quickly
                         setTimeout(() => {
                             const now = Date.now();
                             if (!isHoveringOnTooltip && !isTooltipAnimating && now >= tooltipProtectionUntil) {
+                                // Additional check: ensure mouse is still outside the element
+                                if (currentTargetElement) {
+                                    const rect = currentTargetElement.getBoundingClientRect();
+                                    const mouseX = e.clientX;
+                                    const mouseY = e.clientY;
+
+                                    // If mouse is still near the element, don't hide
+                                    const margin = 10; // 10px margin of stickiness
+                                    if (mouseX >= rect.left - margin && mouseX <= rect.right + margin &&
+                                        mouseY >= rect.top - margin && mouseY <= rect.bottom + margin) {
+                                        console.log('🎯 Mouse still near element, keeping tooltip visible');
+                                        return;
+                                    }
+                                }
+
                                 hideHoverInfo();
                             } else {
                                 if (isTooltipAnimating) {
@@ -838,7 +1077,7 @@ export class ElementSelector {
                                     console.log('⏸️ Hide delayed: in protection period, remaining:', tooltipProtectionUntil - now, 'ms');
                                 }
                             }
-                        }, 50);
+                        }, TOOLTIP_STICKINESS_DELAY);
                     }
 
                 }, MOUSEOUT_DEBOUNCE_DELAY);
@@ -847,7 +1086,7 @@ export class ElementSelector {
             // Click event - copy locator to clipboard
             document.addEventListener('click', function(e) {
                 if (!isEnabled) return;
-
+                
                 var target = e.target;
 
                 if (
@@ -871,7 +1110,7 @@ export class ElementSelector {
                 // Add selected state
                 target.classList.remove('dom-agent-highlight');
                 target.classList.add('dom-agent-selected');
-
+                
                 // Generate Playwright locators
                 var locators = PlaywrightLocatorGenerator.generateLocators(target);
                 console.log('📊 Generated Playwright locators:', locators);
@@ -905,7 +1144,7 @@ export class ElementSelector {
                         height: Math.round(rect.height)
                     }
                 };
-
+                
                 // Get attributes
                 for (var k = 0; k < target.attributes.length; k++) {
                     var attr = target.attributes[k];
@@ -915,18 +1154,18 @@ export class ElementSelector {
                 // Send to VS Code
                 if (window.vscode && window.vscode.postMessage) {
                     window.vscode.postMessage({
-                        type: 'element-selected', 
-                        payload: { element: elementInfo }
-                    });
+                            type: 'element-selected',
+                            payload: { element: elementInfo }
+                        });
                 }
 
                 // Element selected - locator copied to clipboard
-
+                
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
             }, true);
-
+            
             console.log('🎯 DOM Agent Playwright Selector Ready!');
 
             } // Close initElementSelector
