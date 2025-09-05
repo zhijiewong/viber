@@ -46,7 +46,7 @@ Search for "Viber" in VS Code Extensions
 
 #### Development Setup
 ```bash
-git clone https://github.com/your-username/viber.git
+git clone https://github.com/zhijiewong/viber.git
 cd viber
 npm install
 npm run compile-dev
