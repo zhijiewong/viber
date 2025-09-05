@@ -18,6 +18,7 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.test
 
 # IDE (keep launch.json and tasks.json for development)
 .vscode/settings.json
@@ -77,18 +78,11 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.test
-
 # Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
 
 # Yarn v2
 .yarn/cache

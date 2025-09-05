@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   target: 'node',
@@ -10,7 +11,10 @@ module.exports = {
     libraryTarget: 'commonjs2'
   },
   externals: {
-    vscode: 'commonjs vscode'
+    vscode: 'commonjs vscode',
+    playwright: 'commonjs playwright',
+    'playwright-core': 'commonjs playwright-core',
+    handlebars: 'commonjs handlebars'
   },
   resolve: {
     extensions: ['.ts', '.js']
@@ -25,6 +29,12 @@ module.exports = {
             loader: 'ts-loader'
           }
         ]
+      },
+      // Exclude browser assets from Playwright that shouldn't be bundled
+      {
+        test: /\.(css|html|svg|ttf|woff|woff2|eot)$/,
+        include: /node_modules\/playwright/,
+        use: 'null-loader'
       }
     ]
   },
@@ -32,4 +42,14 @@ module.exports = {
   infrastructureLogging: {
     level: "log",
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        {
+          from: 'src/webview/libs',
+          to: 'webview/libs'
+        }
+      ]
+    })
+  ]
 };

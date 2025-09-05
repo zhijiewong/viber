@@ -1,185 +1,163 @@
-# DOM Agent 🔍
+<p align="center">
+  <img src="./src/image/DOM_Agent.png" alt="Viber Logo" width="120" height="120">
+</p>
 
-Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code.
+<h1 align="center">Viber 🔍</h1>
 
-## Features
+<p align="center">
+  <strong>Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code</strong>
+</p>
 
-- 🌐 **URL Inspection**: Capture and inspect any webpage DOM structure
-- 🔧 **Dev Server Detection**: Auto-detect and inspect local development servers
-- 🎯 **Interactive Selection**: Click-to-select DOM elements with visual feedback
-- 📋 **Smart Clipboard**: Copy element data in multiple formats (JSON, CSS, XPath)
-- 🤖 **AI Code Generation**: Generate React, Vue, Angular, or vanilla JS components from selected elements
-- 📱 **Cursor Native**: Leverages Cursor's built-in AI for enhanced code suggestions
+<p align="center">
+  <a href="https://github.com/your-username/viber/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
+  <a href="https://code.visualstudio.com/"><img src="https://img.shields.io/badge/vscode-1.73+-blue.svg" alt="VS Code"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18+-green.svg" alt="Node.js"></a>
+</p>
 
-## Quick Start
+<p align="center">
+  Capture any webpage's DOM structure, inspect elements interactively, and generate production-ready code components with AI assistance.
+</p>
+
+<p align="center">
+  <em>This project aims to provide developers and vibe coders with an intuitive way to extract DOM elements from websites they're developing, helping them easily locate where they want AI to program in order to complete projects efficiently. Future updates will include one-click integration with Cursor and other AI programming tools for seamless workflow enhancement.</em>
+</p>
+
+## ✨ Features
+
+- **🌐 DOM Inspection**: Capture and analyze any webpage's DOM structure in real-time
+- **🎯 Interactive Selection**: Click-to-select elements with visual highlighting
+- **🤖 AI Code Generation**: Generate React, Vue, Angular, and vanilla JS components
+- **📋 Multi-format Export**: Copy selectors, XPath, JSON, or HTML data
+- **🔧 Dev Server Detection**: Auto-detect and inspect local development servers
+- **🎨 Cursor Integration**: Seamless integration with Cursor's native AI
+
+## 🚀 Quick Start
 
 ### Prerequisites
+- **VS Code** or **Cursor IDE** 1.73.0+
+- **Node.js** 18+
+- **Git**
 
-- Cursor IDE or VS Code 1.73.0 or higher
-- Node.js 18+ (for Playwright browser automation)
+### Installation
 
-### Installation & Development
+#### From Marketplace (Coming Soon)
+Search for "Viber" in VS Code Extensions
 
-1. **Clone and setup:**
-   ```bash
-   git clone <repository-url>
-   cd dom-agent
-   npm install
-   ```
-
-2. **Build the extension:**
-   ```bash
-   npm run compile-dev
-   ```
-
-3. **Launch development:**
-   - Open the project in Cursor IDE
-   - Press `F5` to launch the Extension Development Host
-   - The extension will be active in the new window
-
-### Testing the Extension
-
-1. **Open a webpage:**
-   - Command Palette: `DOM Agent: Open URL in DOM Agent`
-   - Enter any URL (e.g., `https://github.com`, `localhost:3000`)
-
-2. **Auto-detect dev servers:**
-   - Command Palette: `DOM Agent: Detect Local Dev Server`
-   - Automatically finds running servers on common ports
-
-3. **Inspect elements:**
-   - Click on any element in the captured DOM
-   - View detailed information in the inspector panel
-   - Copy selectors, generate code, or export data
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `DOM Agent: Open URL` | Capture and inspect any webpage |
-| `DOM Agent: Detect Local Dev Server` | Find and inspect running development servers |
-| `DOM Agent: Generate Code from Selection` | Create component code from selected DOM elements |
-
-## Architecture
-
-```
-DOM Agent Extension
-├── Commands (URL input, dev detection, code generation)
-├── Webview (Interactive DOM visualization)
-├── Playwright Capture (DOM snapshots + metadata)
-├── Element Inspector (CSS selectors, XPath, positioning)
-├── AI Integration (Code generation with Cursor native AI)
-└── Clipboard Manager (Multi-format data export)
-```
-
-## Code Generation
-
-Generate production-ready code from DOM elements:
-
-- **React Components**: TSX with TypeScript interfaces
-- **Vue Components**: SFC with Composition API
-- **Angular Components**: Component + template
-- **Vanilla JavaScript**: Pure DOM manipulation
-- **Test Code**: Playwright/Cypress test selectors
-
-## Configuration
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `domAgent.defaultBrowser` | `chromium` | Browser for DOM capture |
-| `domAgent.aiProvider` | `cursor-native` | AI provider for code generation |
-| `domAgent.autoDetectDevServer` | `true` | Auto-detect local servers |
-
-## Development
-
-### Project Structure
-
-```
-src/
-├── commands/           # Extension commands
-├── webview/           # DOM visualization UI
-├── capture/           # Playwright integration
-├── inspector/         # Element analysis
-├── utils/             # Shared utilities
-├── types/             # TypeScript definitions
-└── extension.ts       # Main entry point
-```
-
-### Building
-
+#### Development Setup
 ```bash
-# Development build
+git clone https://github.com/your-username/viber.git
+cd viber
+npm install
 npm run compile-dev
-
-# Production build
-npm run compile
-
-# Watch mode
-npm run watch
-
-# Package extension
-npm run package
+# Press F5 in VS Code to launch
 ```
 
-### Testing
+## 📖 Usage
+
+### Basic Workflow
+1. **Open Command Palette** (`Ctrl+Shift+P`)
+2. **Run** `Viber: Open URL in Viber`
+3. **Enter URL** or run `Viber: Detect Local Dev Server`
+4. **Click elements** to inspect and generate code
+
+### Commands
+- `Viber: Open URL` - Capture webpage DOM
+- `Viber: Detect Local Dev Server` - Find dev servers
+- `Viber: Generate Code from Selection` - Generate components
+
+### Configuration
+```json
+{
+  "viber.defaultBrowser": "chromium",
+  "viber.aiProvider": "cursor-native",
+  "viber.autoDetectDevServer": true
+}
+```
+
+## 🏗️ Architecture
+
+**Built with modern web technologies:**
+- **Playwright** - Browser automation
+- **TypeScript** - Type safety
+- **VS Code API** - Extension framework
+- **Floating UI** - Advanced positioning
+
+## ⚙️ Configuration
+
+**Browser Options:** `chromium`, `firefox`, `webkit`  
+**AI Providers:** `cursor-native`, `openai`, `anthropic`  
+**Settings:** Use `viber.*` instead of `domAgent.*` in your VS Code settings
+
+## 🧪 Development
 
 ```bash
-# Run tests
-npm test
-
-# Lint code
-npm run lint
+npm install          # Install dependencies
+npm run watch        # Development with auto-rebuild
+npm run compile      # Production build
+npm test            # Run tests
+npm run lint        # Code linting
 ```
 
-## Roadmap
+**Tech Stack:** ESLint, Prettier, TypeScript, Jest, Playwright
 
-### Phase 1 ✅ - Core Structure
-- [x] Extension setup and commands
-- [x] TypeScript configuration
-- [x] Basic webview foundation
+## 📈 Roadmap
 
-### Phase 2 🚧 - DOM Capture
-- [ ] Playwright integration
-- [ ] DOM serialization with metadata
-- [ ] Screenshot capture
-- [ ] Error handling and loading states
+- ✅ **Phase 1**: Core extension architecture
+- 🚧 **Phase 2**: Advanced DOM analysis features
+- 📋 **Phase 3**: Enhanced UI and responsiveness
+- 🤖 **Phase 4**: AI integration improvements
+- 🎨 **Phase 5**: Production polish and marketplace
 
-### Phase 3 📋 - Interactive UI
-- [ ] Webview DOM rendering
-- [ ] Element highlighting and selection
-- [ ] Inspector panel with detailed info
-- [ ] Responsive layout
+## 🤝 Contributing
 
-### Phase 4 🤖 - AI Features
-- [ ] Code generation templates
-- [ ] Cursor AI integration
-- [ ] Component extraction
-- [ ] Test generation
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Phase 5 🎨 - Polish
-- [ ] Better error handling
-- [ ] Performance optimization
-- [ ] Documentation and examples
-- [ ] Marketplace publishing
+## 📚 Documentation
 
-## Contributing
+- [📖 **User Guide**](docs/user-guide.md) - Complete usage instructions
+- [📋 **Changelog**](CHANGELOG.md) - Version history
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+## 🐛 Troubleshooting
 
-## License
+### Common Issues
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Extension won't load:**
+- Ensure VS Code/Cursor is version 1.73.0 or higher
+- Check Node.js version (18+ required)
+- Try reloading the window (`Ctrl+Shift+P` → "Developer: Reload Window")
+- Check that you're using the new `viber.*` commands instead of `dom-agent.*`
 
-## Support
+**DOM capture fails:**
+- Verify the URL is accessible
+- Check browser permissions and security settings
+- Ensure Playwright browsers are installed
 
+**AI code generation not working:**
+- Verify Cursor AI is enabled and configured
+- Check API keys for alternative AI providers
+- Ensure internet connectivity
+
+### Getting Help
+
+- 📧 **Email**: support@dom-agent.dev
 - 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/dom-agent/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/your-username/dom-agent/discussions)
-- 📧 **Email**: support@dom-agent.dev
+- 📖 **Documentation**: [Full Documentation](https://dom-agent.dev/docs)
+
+## 📄 License
+
+Licensed under [Apache License 2.0](LICENSE).
+
+## 📞 Support
+
+- 🐛 [Issues](https://github.com/your-username/viber/issues)
+- 💬 [Discussions](https://github.com/your-username/viber/discussions)
+- 📧 contact@viber.dev
 
 ---
 
-Built with ❤️ for the Cursor IDE community
+<p align="center">
+  <strong>Built with ❤️ for the developer community</strong><br>
+  <em>Empowering developers with AI-assisted web development tools</em>
+</p>
