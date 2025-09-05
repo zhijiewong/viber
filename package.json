@@ -4,6 +4,7 @@
   "description": "Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code",
   "version": "0.1.0",
   "publisher": "zhijiewong",
+  "icon": "src/image/logo.png",
   "author": {
     "name": "Viber Team"
   },
