@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/your-username/viber/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
+  <a href="https://github.com/zhijiewong/viber/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
   <a href="https://code.visualstudio.com/"><img src="https://img.shields.io/badge/vscode-1.73+-blue.svg" alt="VS Code"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18+-green.svg" alt="Node.js"></a>
