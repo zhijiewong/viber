@@ -6,8 +6,20 @@ export class ElementSelector {
   /**
    * Generate Playwright-style element selector with clipboard integration
    */
-  public static generateScript(logoUrl?: string): string {
-    return `<script src="https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js"></script>
+  public static generateScript(logoUrl?: string, webviewUri?: string): string {
+    const floatingUiUrl = webviewUri
+      ? `${webviewUri}/src/webview/libs/floating-ui-dom.umd.min.js`
+      : 'vscode-resource:/src/webview/libs/floating-ui-dom.umd.min.js';
+
+    // Escape single quotes in the URL for JavaScript string literal
+    const escapedUrl = floatingUiUrl.replace(/'/g, "\\'");
+
+    return `<script>
+// Load Floating UI from extension resources
+const floatingUiScript = document.createElement('script');
+floatingUiScript.src = '${escapedUrl}';
+document.head.appendChild(floatingUiScript);
+</script>
         <script id="dom-agent-element-selector" data-dom-agent="true">
         (function() {
             // Store logo URL for panel icon
@@ -295,10 +307,15 @@ export class ElementSelector {
                         priority: 8
                     });
 
-                    // Set primary locator
-                    locators.primary = locators.role || locators.testId || locators.placeholder || 
-                                      locators.text || locators.label || locators.altText || 
-                                      locators.title || locators.css;
+                    // Set primary locator - prioritize user-friendly locators
+                    locators.primary = locators.role ||
+                                      locators.testId ||
+                                      locators.text ||
+                                      locators.placeholder ||
+                                      locators.label ||
+                                      locators.altText ||
+                                      locators.title ||
+                                      locators.css;
 
                     return locators;
                 },
@@ -309,10 +326,10 @@ export class ElementSelector {
 
                     var accessibleName = this.getAccessibleName(element);
                     if (accessibleName) {
-                        return 'page.getByRole(\\'' + role + '\\', { name: \\'' + this.escapeString(accessibleName) + '\\' })';
+                        return "page.getByRole('" + role + "', { name: '" + this.escapeString(accessibleName) + "' })";
                     }
 
-                    return 'page.getByRole(\\'' + role + '\\')';
+                    return "page.getByRole('" + role + "')";
                 },
 
                 generateTestIdLocator: function(element) {
@@ -322,7 +339,7 @@ export class ElementSelector {
                                   element.getAttribute('data-test');
                     
                     if (testId) {
-                        return 'page.getByTestId(\\'' + this.escapeString(testId) + '\\')';
+                        return "page.getByTestId('" + this.escapeString(testId) + "')";
                     }
                     return null;
                 },
@@ -331,7 +348,7 @@ export class ElementSelector {
                     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
                         var placeholder = element.getAttribute('placeholder');
                         if (placeholder && placeholder.trim()) {
-                            return 'page.getByPlaceholder(\\'' + this.escapeString(placeholder.trim()) + '\\')';
+                            return "page.getByPlaceholder('" + this.escapeString(placeholder.trim()) + "')";
                         }
                     }
                     return null;
@@ -341,13 +358,13 @@ export class ElementSelector {
                     var text = this.getElementText(element);
                     if (!text || text.length > 50) return null;
 
-                    return 'page.getByText(\\'' + this.escapeString(text) + '\\')';
+                    return "page.getByText('" + this.escapeString(text) + "')";
                 },
 
                 generateLabelLocator: function(element) {
                     var labelText = this.getLabelText(element);
                     if (labelText) {
-                        return 'page.getByLabel(\\'' + this.escapeString(labelText) + '\\')';
+                        return "page.getByLabel('" + this.escapeString(labelText) + "')";
                     }
                     return null;
                 },
@@ -356,7 +373,7 @@ export class ElementSelector {
                     if (element.tagName === 'IMG') {
                         var alt = element.getAttribute('alt');
                         if (alt && alt.trim()) {
-                            return 'page.getByAltText(\\'' + this.escapeString(alt.trim()) + '\\')';
+                            return "page.getByAltText('" + this.escapeString(alt.trim()) + "')";
                         }
                     }
                     return null;
@@ -365,18 +382,18 @@ export class ElementSelector {
                 generateTitleLocator: function(element) {
                     var title = element.getAttribute('title');
                     if (title && title.trim()) {
-                        return 'page.getByTitle(\\'' + this.escapeString(title.trim()) + '\\')';
+                        return "page.getByTitle('" + this.escapeString(title.trim()) + "')";
                     }
                     return null;
                 },
 
                 generateCSSLocator: function(element) {
-                    if (element.id && /^[a-zA-Z][\\\\w-]*$/.test(element.id)) {
-                        return 'page.locator(\\\'#' + element.id + '\\')';
+                    if (element.id && /^[a-zA-Z][\\w-]*$/.test(element.id)) {
+                        return "page.locator('#" + element.id + "')";
                     }
 
                     var path = this.generateCSSPath(element);
-                    return 'page.locator(\\'' + path + '\\')';
+                    return "page.locator('" + path + "')";
                 },
 
                 getImplicitRole: function(element) {
@@ -474,7 +491,7 @@ export class ElementSelector {
                     while (current && current !== document.body) {
                         var selector = current.tagName.toLowerCase();
                         
-                        if (current.id && /^[a-zA-Z][\\\\w-]*$/.test(current.id)) {
+                        if (current.id && /^[a-zA-Z][\\w-]*$/.test(current.id)) {
                             selector = '#' + current.id;
                             path.unshift(selector);
                             break;
@@ -676,7 +693,13 @@ export class ElementSelector {
                 contentHtml += '<div style="font-weight: 600; color: #1a73e8; margin-bottom: 8px; font-size: 14px;">&lt;' + tag + '&gt;</div>';
 
                 // Primary locator
-                contentHtml += '<div class="dom-agent-locator" title="Click to copy">' + locators.primary + '</div>';
+                console.log('🎯 Displaying primary locator in panel:', locators.primary);
+                console.log('🎯 Locator type check:', typeof locators.primary, 'Value:', locators.primary);
+                if (locators.primary && typeof locators.primary === 'string') {
+                    contentHtml += '<div class="dom-agent-locator" title="Click to copy">' + locators.primary + '</div>';
+                } else {
+                    contentHtml += '<div class="dom-agent-locator" style="color: red;">Error: No locator generated</div>';
+                }
 
                 // Alternative locators
                 if (locators.alternatives && locators.alternatives.length > 1) {
@@ -1198,8 +1221,18 @@ export class ElementSelector {
                 target.classList.add('dom-agent-selected');
                 
                 // Generate and copy locator immediately
+                console.log('🎯 Element clicked:', target.tagName, target.id, target.className);
                 var locators = PlaywrightLocatorGenerator.generateLocators(target);
-                console.log('📊 Copying locator:', locators.primary);
+                console.log('📊 Generated locators:', JSON.stringify(locators, null, 2));
+                console.log('📊 Primary locator:', locators.primary);
+
+                if (!locators.primary) {
+                    console.error('❌ No primary locator generated for element:', target);
+                    console.error('❌ Available alternatives:', locators.alternatives);
+                    return;
+                }
+
+                console.log('✅ Copying locator to clipboard:', locators.primary);
                 copyToClipboard(locators.primary, 'Playwright Locator');
 
                 // Update panel with success feedback

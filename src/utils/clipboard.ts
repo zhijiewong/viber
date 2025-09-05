@@ -23,10 +23,12 @@ export class ClipboardManager {
     }
 
     await vscode.env.clipboard.writeText(content);
-    void vscode.window.showInformationMessage(`Element ${format.toUpperCase()} copied to clipboard`);
+    void vscode.window.showInformationMessage(
+      `Element ${format.toUpperCase()} copied to clipboard`
+    );
   }
 
-  public static async copyCustomData(data: any, label: string = 'Data'): Promise<void> {
+  public static async copyCustomData(data: unknown, label: string = 'Data'): Promise<void> {
     const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
     await vscode.env.clipboard.writeText(content);
     void vscode.window.showInformationMessage(`${label} copied to clipboard`);

@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       void vscode.commands.executeCommand('setContext', 'viber.hasSelection', false);
     } catch (error) {
-      logger.warn('Failed to set context for hasSelection', error);
+      logger.warn('Failed to set context for hasSelection', { error });
     }
 
     context.subscriptions.push(...disposables);

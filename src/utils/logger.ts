@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as winston from 'winston';
 
+type LogMeta = Record<string, unknown> | undefined;
+
 export class Logger {
   private static instance: Logger;
   private readonly outputChannel: vscode.OutputChannel;
@@ -33,28 +35,28 @@ export class Logger {
     return Logger.instance;
   }
 
-  public info(message: string, meta?: any): void {
+  public info(message: string, meta?: LogMeta): void {
     this.winstonLogger.info(message, meta);
     this.outputToVSCode('INFO', message, meta);
   }
 
-  public error(message: string, error?: any): void {
+  public error(message: string, error?: unknown): void {
     this.winstonLogger.error(message, { error });
     this.outputToVSCode('ERROR', message, error);
     this.outputChannel.show();
   }
 
-  public warn(message: string, meta?: any): void {
+  public warn(message: string, meta?: LogMeta): void {
     this.winstonLogger.warn(message, meta);
     this.outputToVSCode('WARN', message, meta);
   }
 
-  public debug(message: string, meta?: any): void {
+  public debug(message: string, meta?: LogMeta): void {
     this.winstonLogger.debug(message, meta);
     this.outputToVSCode('DEBUG', message, meta);
   }
 
-  private outputToVSCode(level: string, message: string, meta?: any): void {
+  private outputToVSCode(level: string, message: string, meta?: unknown): void {
     const timestamp = new Date().toISOString();
     const formattedMessage = `[${timestamp}] ${level}: ${message}`;
     this.outputChannel.appendLine(formattedMessage);
@@ -68,7 +70,7 @@ export class Logger {
       } else if (typeof meta === 'object') {
         this.outputChannel.appendLine(`  Meta: ${JSON.stringify(meta, null, 2)}`);
       } else {
-        this.outputChannel.appendLine(`  Meta: ${meta}`);
+        this.outputChannel.appendLine(`  Meta: ${String(meta)}`);
       }
     }
   }

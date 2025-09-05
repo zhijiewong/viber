@@ -17,10 +17,11 @@ export class ContentGenerator {
     return WebviewUI.generateLoadingContent('Capturing webpage...', logoUrl);
   }
 
-  public async generateInteractiveContent(
+  public generateInteractiveContent(
     snapshot: DOMSnapshot,
-    logoUrl?: string
-  ): Promise<string> {
+    logoUrl?: string,
+    webviewUri?: string
+  ): string {
     this.logger.info('Generating interactive webview content');
 
     try {
@@ -33,7 +34,7 @@ export class ContentGenerator {
       });
 
       // 🎯 Use new simplified selector architecture with selector script
-      const selectorScript = ElementSelector.generateScript(logoUrl);
+      const selectorScript = ElementSelector.generateScript(logoUrl, webviewUri);
       const finalContent = WebviewUI.generateInteractiveContent(
         snapshot,
         sanitizedHtml,

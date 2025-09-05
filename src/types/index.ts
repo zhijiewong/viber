@@ -42,9 +42,9 @@ export interface CaptureOptions {
   timeout: number;
 }
 
-export interface WebviewMessage {
+export interface WebviewMessage<T = unknown> {
   type: string;
-  payload: any;
+  payload: T;
 }
 
 export interface ElementSelectionMessage extends WebviewMessage {

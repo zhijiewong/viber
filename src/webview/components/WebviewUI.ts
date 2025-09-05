@@ -178,7 +178,7 @@ export class WebviewUI {
     // Ensure essential styles are preserved in head content
     if (!headContent.includes('<style') && sanitizedHtml.includes('<style')) {
       // Extract all style tags from sanitized HTML if not in head
-      const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || [];
+      const styleMatches = sanitizedHtml.match(/<style[^>]*>[\s\S]*?<\/style>/gi) ?? [];
       if (styleMatches.length > 0) {
         headContent = styleMatches.join('\n') + '\n' + headContent;
       }
@@ -198,7 +198,7 @@ export class WebviewUI {
       bodyContent,
       toolbar: this.generateToolbar(snapshot),
       webviewScripts: this.generateWebviewScripts(),
-      interactivityScript: interactivityScript || '',
+      interactivityScript: interactivityScript ?? '',
     });
   }
 

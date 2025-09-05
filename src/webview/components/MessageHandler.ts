@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Logger } from '../../utils/logger';
-import { ElementInfo, WebviewMessage } from '../../types';
+import { ElementInfo, WebviewMessage, DOMSnapshot } from '../../types';
 import { EventBus } from '../../utils/EventBus';
 
 export class MessageHandler {
@@ -42,8 +42,15 @@ export class MessageHandler {
       this.logger.info('Capture started via EventBus');
     });
 
-    this.eventBus.on('capture:completed', (data: any) => {
-      this.logger.info('Capture completed via EventBus', data);
+    this.eventBus.on('capture:completed', (data: DOMSnapshot) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const snapshot = data;
+      this.logger.info('Capture completed via EventBus', {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        url: snapshot.url,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        elements: snapshot.elements.length,
+      });
     });
 
     this.eventBus.on('error:occurred', (error: Error) => {
@@ -88,15 +95,17 @@ export class MessageHandler {
         break;
 
       case 'element-selected':
-        this.handleElementSelected(message.payload);
+        this.handleElementSelected(message.payload as { element?: ElementInfo });
         break;
 
       case 'open-cursor-chat':
-        await this.handleOpenCursorChat(message.payload);
+        await this.handleOpenCursorChat(
+          message.payload as { element?: ElementInfo; framework?: string; type?: string }
+        );
         break;
 
       case 'copy-to-clipboard':
-        this.handleCopyToClipboard(message.payload);
+        void this.handleCopyToClipboard(message.payload as { text?: string; type?: string });
         break;
 
       default:
@@ -112,8 +121,8 @@ export class MessageHandler {
     }
   }
 
-  private handleElementSelected(payload: any): void {
-    if (payload && payload.element) {
+  private handleElementSelected(payload: { element?: ElementInfo }): void {
+    if (payload?.element) {
       this.logger.info('Element selected', {
         tag: payload.element.tag,
         id: payload.element.id,
@@ -129,16 +138,20 @@ export class MessageHandler {
     }
   }
 
-  private async handleOpenCursorChat(payload: any): Promise<void> {
-    if (!payload || !payload.element) {
+  private async handleOpenCursorChat(payload: {
+    element?: ElementInfo;
+    framework?: string;
+    type?: string;
+  }): Promise<void> {
+    if (!payload?.element) {
       this.logger.warn('Cannot open Cursor Chat - no element provided');
       return;
     }
 
     try {
       const element = payload.element;
-      const framework = payload.framework || 'react';
-      const type = payload.type || 'component';
+      const framework = payload.framework ?? 'react';
+      const type = payload.type ?? 'component';
 
       // Emit cursor chat request to EventBus
       this.eventBus.emit('cursor:chat-requested', { element, framework, type });
@@ -174,30 +187,35 @@ export class MessageHandler {
     }
   }
 
-  private handleCopyToClipboard(payload: any): void {
-    if (payload && payload.text) {
+  private async handleCopyToClipboard(payload: { text?: string; type?: string }): Promise<void> {
+    if (payload?.text) {
       // Emit clipboard request to EventBus
-      this.eventBus.emit('clipboard:copy-requested', { text: payload.text, type: payload.type });
+      this.eventBus.emit('clipboard:copy-requested', {
+        text: payload.text,
+        ...(payload.type ? { type: payload.type } : {}),
+      });
 
       // Copy to clipboard using VS Code API
-      Promise.resolve(vscode.env.clipboard.writeText(payload.text))
-        .then(() => {
-          this.logger.info('Copied to clipboard', { text: payload.text.substring(0, 100) });
-          vscode.window.showInformationMessage(`Copied ${payload.type || 'text'} to clipboard`);
+      try {
+        await vscode.env.clipboard.writeText(payload.text);
+        this.logger.info('Copied to clipboard', { text: payload.text.substring(0, 100) });
+        void vscode.window.showInformationMessage(`Copied ${payload.type ?? 'text'} to clipboard`);
 
-          // Emit success to EventBus
-          this.eventBus.emit('clipboard:copy-completed', {
-            text: payload.text,
-            type: payload.type,
-          });
-        })
-        .catch((error: Error) => {
-          this.logger.error('Failed to copy to clipboard', { error });
-          vscode.window.showErrorMessage('Failed to copy to clipboard');
-
-          // Emit error to EventBus
-          this.eventBus.emit('error:occurred', error);
+        // Emit success to EventBus
+        this.eventBus.emit('clipboard:copy-completed', {
+          text: payload.text,
+          ...(payload.type ? { type: payload.type } : {}),
         });
+      } catch (error) {
+        this.logger.error('Failed to copy to clipboard', { error });
+        void vscode.window.showErrorMessage('Failed to copy to clipboard');
+
+        // Emit error to EventBus
+        this.eventBus.emit(
+          'error:occurred',
+          error instanceof Error ? error : new Error(String(error))
+        );
+      }
     }
   }
 
@@ -254,7 +272,7 @@ Please generate the appropriate ${framework} code for this element, including an
 
   public sendMessage(message: WebviewMessage): void {
     if (this.panel) {
-      this.panel.webview.postMessage(message);
+      void this.panel.webview.postMessage(message);
     }
   }
 }

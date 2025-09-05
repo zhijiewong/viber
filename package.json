@@ -161,6 +161,7 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^2.21.0",
+    "copy-webpack-plugin": "^13.0.1",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -177,7 +178,7 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testEnvironment": "jsdom",
+    "testEnvironment": "node",
     "testMatch": [
       "<rootDir>/test/**/*.test.ts"
     ],
@@ -192,8 +193,12 @@
       "lcov",
       "html"
     ],
-    "moduleNameMapping": {
-      "^@/(.*)$": "<rootDir>/src/$1"
-    }
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^vscode$": "<rootDir>/test/__mocks__/vscode.js"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup.ts"
+    ]
   }
 }

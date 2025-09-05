@@ -203,7 +203,7 @@ export class PlaywrightCapture {
       // CSS will be handled by HTML processor uniformly, only extract raw styles here
       return styles;
     } catch (error) {
-      this.logger.warn('Failed to extract styles', error);
+      this.logger.warn('Failed to extract styles', { error });
       return '';
     }
   }
@@ -281,7 +281,7 @@ export class PlaywrightCapture {
                 (child: Element) => child.tagName === current!.tagName
               );
               if (siblings.length > 1) {
-                const index = siblings.indexOf(current!) + 1;
+                const index = siblings.indexOf(current) + 1;
                 selector += `:nth-child(${index})`;
               }
             }

@@ -53,7 +53,7 @@ export class DomSerializer {
       const validation = this.htmlProcessor.validate(cleanedHTML);
 
       if (validation.warnings.length > 0) {
-        this.logger.warn('HTML processing warnings', validation.warnings);
+        this.logger.warn('HTML processing warnings', { warnings: validation.warnings });
       }
 
       this.logger.info('HTML sanitization completed successfully', {
@@ -511,7 +511,7 @@ export class DomSerializer {
         excludeRegex: /^dom-agent-/,
       });
     } catch (error) {
-      this.logger.warn('unique-selector failed, using fallback', error);
+      this.logger.warn('unique-selector failed, using fallback', { error });
 
       // Fallback to simple ID or tag-based selector
       if (element.id) {
@@ -551,7 +551,7 @@ export class DomSerializer {
 
       return this.generateSimpleXPath(element);
     } catch (error) {
-      this.logger.warn('xpath library failed, using fallback', error);
+      this.logger.warn('xpath library failed, using fallback', { error });
       return this.generateSimpleXPath(element);
     }
   }

@@ -89,9 +89,14 @@ export class WebviewProvider {
         vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
       );
       const panelLogoUrl = panelLogoUri?.toString();
-      const interactiveContent = await this.contentGenerator.generateInteractiveContent(
+      const webviewUri = this.panel?.webview
+        .asWebviewUri(this.context.extensionUri)
+        .toString()
+        .replace(/^vscode-webview:\/\/[^/]+\//, '/');
+      const interactiveContent = this.contentGenerator.generateInteractiveContent(
         snapshot,
-        panelLogoUrl
+        panelLogoUrl,
+        webviewUri
       );
       this.updateWebviewContent(interactiveContent);
 
@@ -126,7 +131,7 @@ export class WebviewProvider {
     }
 
     return {
-      browser: config?.get?.('defaultBrowser') || 'chromium',
+      browser: config?.get?.('defaultBrowser') ?? 'chromium',
       viewport: { width: 1280, height: 720 },
       timeout: 30000,
     };
@@ -140,7 +145,10 @@ export class WebviewProvider {
     this.panel = vscode.window.createWebviewPanel('domAgent', 'DOM Agent', vscode.ViewColumn.One, {
       enableScripts: true,
       retainContextWhenHidden: true,
-      localResourceRoots: [this.context.extensionUri],
+      localResourceRoots: [
+        this.context.extensionUri,
+        vscode.Uri.joinPath(this.context.extensionUri, 'src', 'webview', 'libs'),
+      ],
       portMapping: [],
       enableForms: false,
       enableCommandUris: false,
@@ -210,9 +218,14 @@ export class WebviewProvider {
         vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
       );
       const refreshLogoUrl = refreshLogoUri?.toString();
-      const interactiveContent = await this.contentGenerator.generateInteractiveContent(
+      const webviewUri = this.panel?.webview
+        .asWebviewUri(this.context.extensionUri)
+        .toString()
+        .replace(/^vscode-webview:\/\/[^/]+\//, '/');
+      const interactiveContent = this.contentGenerator.generateInteractiveContent(
         snapshot,
-        refreshLogoUrl
+        refreshLogoUrl,
+        webviewUri
       );
       this.updateWebviewContent(interactiveContent);
 
@@ -267,7 +280,7 @@ export class WebviewProvider {
         </html>`;
 
     this.updateWebviewContent(errorContent);
-    vscode.window.showErrorMessage(`DOM Agent capture failed: ${errorMessage}`);
+    void vscode.window.showErrorMessage(`DOM Agent capture failed: ${errorMessage}`);
   }
 
   public dispose(): void {

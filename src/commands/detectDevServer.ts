@@ -50,7 +50,7 @@ export async function detectDevServerCommand(webviewProvider: WebviewProvider): 
       selectedServer = selection.server;
     }
 
-    logger.info('Selected development server', selectedServer);
+    logger.info('Selected development server', { server: selectedServer });
 
     // Capture the selected server
     await vscode.window.withProgress(

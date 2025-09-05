@@ -226,6 +226,8 @@ export class HTMLProcessor {
             return { tagName, attribs };
           },
         },
+        // Suppress warning about allowing style tags (needed for layout preservation)
+        allowVulnerableTags: true,
       });
 
       // Lightweight post-processing - Only remove the most dangerous content
@@ -383,7 +385,7 @@ ${cleanedBody}
 
       return rebuiltHTML;
     } catch (error) {
-      this.logger.warn('DOM parser rebuild failed, falling back to regex cleanup', error);
+      this.logger.warn('DOM parser rebuild failed, falling back to regex cleanup', { error });
       return this.aggressivePreCleanup(html);
     }
   }
@@ -417,8 +419,8 @@ ${cleanedBody}
 
         // Only add safe attributes
         for (const attr of Array.from(element.attributes)) {
-          const attrName = (attr as any).name.toLowerCase();
-          const attrValue = (attr as any).value;
+          const attrName = attr.name.toLowerCase();
+          const attrValue = attr.value;
 
           // Skip event handlers and dangerous attributes
           if (
@@ -444,7 +446,7 @@ ${cleanedBody}
       // Process text nodes
       else if (nodeType === 3) {
         // Node.TEXT_NODE
-        const textContent = (child as any).textContent || '';
+        const textContent = (child as Text).textContent || '';
         // Remove dangerous content from text
         const cleanText = textContent
           .replace(/document\s*\.\s*write\s*\(/gi, 'void(')
