@@ -2,7 +2,7 @@
   "name": "viber",
   "displayName": "Viber",
   "description": "Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "zhijiewong",
   "icon": "resources/logo.png",
   "author": {
