@@ -25,8 +25,8 @@ export class ContentGenerator {
     this.logger.info('Generating interactive webview content');
 
     try {
-      // 🎯 Use HTML processor directly for secure sanitization
-      const sanitizedHtml = this.htmlProcessor.sanitize(snapshot.html);
+      // 🎯 Use HTML processor with web-friendly mode for better display
+      const sanitizedHtml = this.htmlProcessor.sanitize(snapshot.html, false); // false = not ultra-safe, preserve more content
 
       this.logger.info('🎯 HTML processing completed', {
         originalLength: snapshot.html.length,

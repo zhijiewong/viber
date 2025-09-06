@@ -124,8 +124,6 @@ export class WebviewUI {
             {{{headContent}}}
         </head>
         <body>
-            {{{toolbar}}}
-
             <div id="content" class="dom-agent-content">
                 {{{bodyContent}}}
             </div>
@@ -184,6 +182,19 @@ export class WebviewUI {
       }
     }
 
+    // 🎯 IMPORTANT: Add essential meta tags and base URL for proper rendering
+    const baseTag = `<base href="${snapshot.url}">`;
+    const viewportTag = headContent.includes('viewport')
+      ? ''
+      : '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+
+    // 🎯 IMPORTANT: Add captured CSS styles from snapshot
+    if (snapshot.css?.trim()) {
+      headContent = `${baseTag}\n${viewportTag}\n<style id="captured-styles">\n/* Captured CSS from ${snapshot.url} */\n${snapshot.css}\n</style>\n${headContent}`;
+    } else {
+      headContent = `${baseTag}\n${viewportTag}\n${headContent}`;
+    }
+
     // Safely escape the URL
     const safeUrl = snapshot.url
       .replace(/</g, '&lt;')
@@ -196,7 +207,6 @@ export class WebviewUI {
       baseStyles: this.generateBaseStyles(),
       headContent,
       bodyContent,
-      toolbar: this.generateToolbar(snapshot),
       webviewScripts: this.generateWebviewScripts(),
       interactivityScript: interactivityScript ?? '',
     });
@@ -220,87 +230,12 @@ export class WebviewUI {
                     overflow-x: hidden;
                 }
 
-                /* Toolbar - DevTools Style */
-                .dom-agent-toolbar {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 56px;
-                    background: #ffffff;
-                    color: #202124;
-                    display: flex;
-                    align-items: center;
-                    padding: 0 16px;
-                    z-index: 10001;
-                    border-bottom: 1px solid #e8eaed;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                    font-size: 14px;
-                    font-weight: 500;
-                    gap: 16px;
-                }
-
-                .dom-agent-toolbar .logo {
-                    font-weight: 600;
-                    font-size: 18px;
-                    color: #1a73e8;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-
-                .dom-agent-toolbar .url {
-                    color: #5f6368;
-                    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-                    font-size: 13px;
-                    flex: 1;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    background: #f1f3f4;
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid #dadce0;
-                }
-
-                .dom-agent-toolbar .controls {
-                    display: flex;
-                    gap: 8px;
-                    align-items: center;
-                }
-
-                .dom-agent-toolbar button {
-                    background: #f1f3f4;
-                    border: 1px solid #dadce0;
-                    color: #3c4043;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    font-size: 13px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-weight: 500;
-                }
-
-                .dom-agent-toolbar button:hover {
-                    background: #e8eaed;
-                    border-color: #c4c7c5;
-                }
-
-                .dom-agent-toolbar button.active {
-                    background: #1a73e8;
-                    color: white;
-                    border-color: #1a73e8;
-                }
-
                 /* Content area */
                 .dom-agent-content {
                     position: relative;
                     z-index: 1;
-                    margin-top: 56px;
-                    min-height: calc(100vh - 56px);
+                    margin: 0;
+                    min-height: 100vh;
                     background: transparent;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
@@ -312,6 +247,16 @@ export class WebviewUI {
 
                 .dom-agent-content img {
                     height: auto !important;
+                }
+
+                /* Ensure captured content elements don't overlap toolbar */
+                .dom-agent-content *[style*="position: fixed"],
+                .dom-agent-content *[style*="position:fixed"] {
+                    z-index: 1000 !important;
+                }
+
+                .dom-agent-content *[style*="z-index"] {
+                    z-index: 1000 !important;
                 }
 
                 /* Element highlighting styles */
@@ -377,26 +322,6 @@ export class WebviewUI {
         `;
   }
 
-  private static generateToolbar(snapshot: DOMSnapshot): string {
-    const safeUrl = snapshot.url
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-
-    return `
-            <div class="dom-agent-toolbar">
-                <div class="logo">
-                    🔍 <span>DOM Agent</span>
-                </div>
-                <div class="url" title="${safeUrl}">${safeUrl}</div>
-                <div class="controls">
-                    <button onclick="refreshCapture()" title="Refresh capture">🔄</button>
-                </div>
-            </div>
-        `;
-  }
-
   private static generateWebviewScripts(): string {
     return `
             <script data-dom-agent="true">
@@ -405,10 +330,6 @@ export class WebviewUI {
                     window.vscode = acquireVsCodeApi();
                 }
                 const vscode = window.vscode;
-
-                function refreshCapture() {
-                    vscode.postMessage({ type: 'refresh-capture' });
-                }
 
                 // Listen for messages from extension
                 window.addEventListener('message', event => {

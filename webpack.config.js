@@ -13,8 +13,7 @@ module.exports = {
   externals: {
     vscode: 'commonjs vscode',
     playwright: 'commonjs playwright',
-    'playwright-core': 'commonjs playwright-core',
-    handlebars: 'commonjs handlebars'
+    'playwright-core': 'commonjs playwright-core'
   },
   resolve: {
     extensions: ['.ts', '.js']

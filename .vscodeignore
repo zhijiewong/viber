@@ -9,6 +9,8 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/node_modules/**
+!node_modules/playwright/**
+!node_modules/playwright-core/**
 test/**
 webpack.config.js
 .github/**

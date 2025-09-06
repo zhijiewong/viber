@@ -2,14 +2,14 @@
   "name": "viber",
   "displayName": "Viber",
   "description": "Interactive DOM inspection and AI-powered code generation extension for Cursor IDE and VS Code",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "zhijiewong",
   "icon": "resources/logo.png",
   "author": {
-    "name": "Viber Team"
+    "name": "zhijiewong"
   },
   "license": "Apache-2.0",
-  "homepage": "https://viber.dev",
+  "homepage": "https://heviber.org/",
       "repository": {
     "type": "git",
     "url": "https://github.com/zhijiewong/viber.git"
@@ -39,7 +39,7 @@
     "code-generation"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {

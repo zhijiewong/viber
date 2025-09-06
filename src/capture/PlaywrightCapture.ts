@@ -94,10 +94,11 @@ export class PlaywrightCapture {
     // Set viewport
     await page.setViewportSize(options.viewport);
 
-    // Block unnecessary resources for faster loading
+    // Allow fonts and essential resources, only block heavy media
     await page.route('**/*', async route => {
       const resourceType = route.request().resourceType();
-      if (['font', 'media'].includes(resourceType)) {
+      // Only block heavy video/audio, but allow fonts and images for proper rendering
+      if (['media'].includes(resourceType)) {
         await route.abort();
       } else {
         await route.continue();
@@ -118,6 +119,16 @@ export class PlaywrightCapture {
 
   private async createDOMSnapshot(page: Page, url: string): Promise<DOMSnapshot> {
     this.logger.info('Creating DOM snapshot');
+
+    // Wait for fonts to load for better visual accuracy
+    try {
+      await page.evaluate(() => {
+        const doc = document as Document & { fonts?: { ready: Promise<void> } };
+        return doc.fonts?.ready ?? Promise.resolve();
+      });
+    } catch (e) {
+      // Ignore font loading errors, continue with capture
+    }
 
     // Get the full HTML
     const html = await page.content();
@@ -151,17 +162,28 @@ export class PlaywrightCapture {
   private async extractStyles(page: Page): Promise<string> {
     try {
       // Get all stylesheets and computed styles
-      const styles = await page.evaluate(() => {
+      const styles = await page.evaluate(async () => {
         const styleSheets: string[] = [];
 
-        // Get external stylesheets - preserve link elements
+        // Add base URL handling for relative URLs
+        const baseUrl = document.baseURI || window.location.href;
+        styleSheets.push(`/* Base URL: ${baseUrl} */`);
+
+        // Get external stylesheets - try to fetch content instead of just linking
+        const linkPromises: Promise<string>[] = [];
         Array.from(document.querySelectorAll('link[rel="stylesheet"]')).forEach(
           (linkElement: Element) => {
             const link = linkElement as HTMLLinkElement;
             if (link.href) {
-              // Keep the original link element for proper CSS loading
-              styleSheets.push(
-                `<link rel="stylesheet" href="${link.href}" type="${link.type || 'text/css'}" media="${link.media || 'all'}">`
+              // Try to fetch the CSS content
+              linkPromises.push(
+                fetch(link.href)
+                  .then(response => response.text())
+                  .then(css => `/* External CSS from: ${link.href} */\n${css}`)
+                  .catch(
+                    (error: unknown) =>
+                      `/* Could not load CSS from: ${link.href} - ${error instanceof Error ? error.message : String(error)} */`
+                  )
               );
             }
           }
@@ -196,6 +218,17 @@ export class PlaywrightCapture {
             styleSheets.push(style.textContent.trim());
           }
         });
+
+        // Wait for external CSS to be fetched
+        const externalCss = await Promise.all(linkPromises);
+        styleSheets.push(...externalCss);
+
+        // Add viewport meta tag content if exists
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          const content = (viewport as HTMLMetaElement).content;
+          styleSheets.unshift(`/* Viewport: ${content} */`);
+        }
 
         return styleSheets.join('\n\n');
       });
@@ -277,8 +310,9 @@ export class PlaywrightCapture {
             // Add nth-child if there are siblings
             const parent = current.parentElement;
             if (parent) {
+              const currentElement = current; // TypeScript null check helper
               const siblings = Array.from(parent.children).filter(
-                (child: Element) => child.tagName === current!.tagName
+                (child: Element) => child.tagName === currentElement.tagName
               );
               if (siblings.length > 1) {
                 const index = siblings.indexOf(current) + 1;

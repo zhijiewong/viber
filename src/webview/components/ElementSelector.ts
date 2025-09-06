@@ -8,8 +8,8 @@ export class ElementSelector {
    */
   public static generateScript(logoUrl?: string, webviewUri?: string): string {
     const floatingUiUrl = webviewUri
-      ? `${webviewUri}/src/webview/libs/floating-ui-dom.umd.min.js`
-      : 'vscode-resource:/src/webview/libs/floating-ui-dom.umd.min.js';
+      ? `${webviewUri}/out/webview/libs/floating-ui.dom.umd.min.js`
+      : 'vscode-resource:/out/webview/libs/floating-ui.dom.umd.min.js';
 
     // Escape single quotes in the URL for JavaScript string literal
     const escapedUrl = floatingUiUrl.replace(/'/g, "\\'");
@@ -987,9 +987,9 @@ document.head.appendChild(floatingUiScript);
 
                 // Skip if hovering over our own elements - but don't skip toolbar
                 if (
-                    target.closest('.dom-agent-unified-panel') ||
-                    target.classList.contains('dom-agent-copied-notification') ||
-                    target.closest('.dom-agent-copied-notification')
+                    (target.closest && target.closest('.dom-agent-unified-panel')) ||
+                    (target.classList && target.classList.contains('dom-agent-copied-notification')) ||
+                    (target.closest && target.closest('.dom-agent-copied-notification'))
                 ) {
                     isHoveringOnTooltip = true;
                     return;
@@ -1052,9 +1052,9 @@ document.head.appendChild(floatingUiScript);
 
                 // Skip if hovering over our own elements
                 if (
-                    target.closest('.dom-agent-unified-panel') ||
-                    target.classList.contains('dom-agent-copied-notification') ||
-                    target.closest('.dom-agent-copied-notification')
+                    (target.closest && target.closest('.dom-agent-unified-panel')) ||
+                    (target.classList && target.classList.contains('dom-agent-copied-notification')) ||
+                    (target.closest && target.closest('.dom-agent-copied-notification'))
                 ) {
                     isHoveringOnTooltip = true;
                     return;
@@ -1203,8 +1203,8 @@ document.head.appendChild(floatingUiScript);
                 var target = e.target;
 
                 if (
-                    target.closest('.dom-agent-toolbar') ||
-                    target.classList.contains('dom-agent-copied-notification')) {
+                    (target.closest && target.closest('.dom-agent-toolbar')) ||
+                    (target.classList && target.classList.contains('dom-agent-copied-notification'))) {
                     return;
                 }
 
