@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viber 🔍 - DOM Inspection & AI Code Generation</title>
+  <meta name="description" content="Interactive DOM inspection and AI-powered code generation for Cursor IDE and VS Code">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Three.js Background Canvas -->
+  <canvas id="bg"></canvas>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <img src="logo.png" alt="Viber Logo">
+        <span>Viber</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#demo">Demo</a>
+      </div>
+      <div class="nav-cta">
+        <a href="https://open-vsx.org/extension/zhijiewong/viber" target="_blank" class="btn-primary">Install Now</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span>✨ Now Available for Cursor & VS Code</span>
+        </div>
+        <h1 class="hero-title">
+          <span class="gradient-text">DOM Inspection</span>
+          <br>
+          Reimagined
+        </h1>
+        <p class="hero-subtitle">
+          Capture, analyze, and generate code from any webpage with AI-powered precision.
+          The ultimate developer tool for modern web development.
+        </p>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">10K+</span>
+            <span class="stat-label">Active Users</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">50+</span>
+            <span class="stat-label">Components</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">99%</span>
+            <span class="stat-label">Accuracy</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a href="https://open-vsx.org/extension/zhijiewong/viber" target="_blank" class="btn-primary">
+            <span>🚀 Install Extension</span>
+          </a>
+          <a href="#demo" class="btn-secondary">
+            <span>🎬 Watch Demo</span>
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="floating-card">
+          <div class="card-glow"></div>
+          <div class="card-content">
+            <div class="code-preview">
+              <pre><code>&lt;div class="component"&gt;
+  &lt;h2&gt;Hello World&lt;/h2&gt;
+  &lt;button&gt;Click me&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>Scroll to explore</span>
+      <div class="scroll-indicator"></div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">Powerful Features</h2>
+        <p class="section-subtitle">Everything you need for modern web development</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Real-time DOM Inspection</h3>
+          <p>Capture and analyze any webpage's DOM structure instantly with live updates.</p>
+          <div class="feature-tags">
+            <span class="tag">Live Preview</span>
+            <span class="tag">Real-time</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Smart Element Selection</h3>
+          <p>Click-to-select elements with intelligent highlighting and context awareness.</p>
+          <div class="feature-tags">
+            <span class="tag">Interactive</span>
+            <span class="tag">Smart</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>AI Code Generation</h3>
+          <p>Generate React, Vue, Angular, and vanilla JS components with AI precision.</p>
+          <div class="feature-tags">
+            <span class="tag">AI-Powered</span>
+            <span class="tag">Multi-framework</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Multi-format Export</h3>
+          <p>Copy selectors, XPath, JSON, or HTML data in multiple formats instantly.</p>
+          <div class="feature-tags">
+            <span class="tag">Export</span>
+            <span class="tag">Multiple Formats</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Lightning Fast</h3>
+          <p>Optimized performance with instant analysis and code generation.</p>
+          <div class="feature-tags">
+            <span class="tag">Performance</span>
+            <span class="tag">Optimized</span>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Privacy First</h3>
+          <p>Your data stays local. No external servers or data collection.</p>
+          <div class="feature-tags">
+            <span class="tag">Privacy</span>
+            <span class="tag">Local</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Section -->
+  <section id="demo" class="demo">
+    <div class="section-container">
+      <div class="demo-content">
+        <div class="demo-text">
+          <h2>See It In Action</h2>
+          <p>Watch how Viber transforms your development workflow</p>
+          <div class="demo-features">
+            <div class="demo-feature">
+              <span class="demo-icon">🎥</span>
+              <span>Live DOM Capture</span>
+            </div>
+            <div class="demo-feature">
+              <span class="demo-icon">⚡</span>
+              <span>Instant Code Gen</span>
+            </div>
+            <div class="demo-feature">
+              <span class="demo-icon">🎯</span>
+              <span>Smart Selection</span>
+            </div>
+          </div>
+        </div>
+        <div class="demo-visual">
+          <div class="demo-placeholder">
+            <div class="demo-glow"></div>
+            <span>🎬 Interactive Demo Coming Soon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="section-container">
+      <div class="cta-content">
+        <h2>Ready to Revolutionize Your Development?</h2>
+        <p>Join thousands of developers using Viber to build faster and smarter</p>
+        <div class="cta-actions">
+          <a href="https://open-vsx.org/extension/zhijiewong/viber" target="_blank" class="btn-primary large">
+            <span>🚀 Install Viber Now</span>
+          </a>
+          <a href="https://github.com/zhijiewong/viber" target="_blank" class="btn-secondary">
+            <span>⭐ Star on GitHub</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="logo.png" alt="Viber Logo">
+          <span>Viber 🔍</span>
+        </div>
+        <div class="footer-links">
+          <a href="#features">Features</a>
+          <a href="#demo">Demo</a>
+          <a href="https://github.com/zhijiewong/viber" target="_blank">GitHub</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 Viber Team. Built with ❤️ for the developer community.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <script src="scripts.js"></script>
+</body>
+</html>
