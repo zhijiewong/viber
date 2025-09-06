@@ -226,8 +226,8 @@ export class DomSerializer {
 
                         // Check if this element should be skipped
                         if (
-                            target.closest('.dom-agent-toolbar') ||
-                            target.classList.contains('dom-agent-selected')) {
+                            (target.closest && target.closest('.dom-agent-toolbar')) ||
+                            (target.classList && target.classList.contains('dom-agent-selected'))) {
                             console.log('⏭️ Skipping DOM Agent UI element');
                             isMouseOverHandlerActive = false;
                             return;
@@ -298,7 +298,7 @@ export class DomSerializer {
                         
                         // Skip DOM Agent UI elements
                         if ( 
-                            target.closest('.dom-agent-toolbar')) {
+                            (target.closest && target.closest('.dom-agent-toolbar'))) {
                             return;
                         }
                         
@@ -370,8 +370,8 @@ export class DomSerializer {
                         
                         // Skip DOM Agent UI elements
                         if ( 
-                            target.closest('.dom-agent-toolbar') ||
-                            target.classList.contains('dom-agent-selected') ||
+                            (target.closest && target.closest('.dom-agent-toolbar')) ||
+                            (target.classList && target.classList.contains('dom-agent-selected')) ||
                             target.tagName === 'SCRIPT' || 
                             target.tagName === 'STYLE') {
                             return;

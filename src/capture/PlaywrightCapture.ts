@@ -151,17 +151,21 @@ export class PlaywrightCapture {
   private async extractStyles(page: Page): Promise<string> {
     try {
       // Get all stylesheets and computed styles
-      const styles = await page.evaluate(() => {
+      const styles = await page.evaluate(async () => {
         const styleSheets: string[] = [];
 
-        // Get external stylesheets - preserve link elements
+        // Get external stylesheets - try to fetch content instead of just linking
+        const linkPromises: Promise<string>[] = [];
         Array.from(document.querySelectorAll('link[rel="stylesheet"]')).forEach(
           (linkElement: Element) => {
             const link = linkElement as HTMLLinkElement;
             if (link.href) {
-              // Keep the original link element for proper CSS loading
-              styleSheets.push(
-                `<link rel="stylesheet" href="${link.href}" type="${link.type || 'text/css'}" media="${link.media || 'all'}">`
+              // Try to fetch the CSS content
+              linkPromises.push(
+                fetch(link.href)
+                  .then(response => response.text())
+                  .then(css => `/* External CSS from: ${link.href} */\n${css}`)
+                  .catch(error => `/* Could not load CSS from: ${link.href} - ${error.message} */`)
               );
             }
           }
@@ -196,6 +200,10 @@ export class PlaywrightCapture {
             styleSheets.push(style.textContent.trim());
           }
         });
+
+        // Wait for external CSS to be fetched
+        const externalCss = await Promise.all(linkPromises);
+        styleSheets.push(...externalCss);
 
         return styleSheets.join('\n\n');
       });

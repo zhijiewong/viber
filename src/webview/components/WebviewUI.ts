@@ -184,6 +184,11 @@ export class WebviewUI {
       }
     }
 
+    // 🎯 IMPORTANT: Add captured CSS styles from snapshot
+    if (snapshot.css && snapshot.css.trim()) {
+      headContent = `<style id="captured-styles">\n/* Captured CSS from ${snapshot.url} */\n${snapshot.css}\n</style>\n${headContent}`;
+    }
+
     // Safely escape the URL
     const safeUrl = snapshot.url
       .replace(/</g, '&lt;')

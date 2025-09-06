@@ -75,7 +75,7 @@ export class WebviewProvider {
 
       // Show loading state with logo
       const loadingLogoUri = this.panel?.webview.asWebviewUri(
-        vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+        vscode.Uri.joinPath(this.context.extensionUri, 'resources', 'logo.png')
       );
       const loadingLogoUrl = loadingLogoUri?.toString();
       this.updateWebviewContent(this.contentGenerator.generateLoadingContent(loadingLogoUrl));
@@ -86,13 +86,12 @@ export class WebviewProvider {
 
       // Generate and display interactive content using professional HTML processor
       const panelLogoUri = this.panel?.webview.asWebviewUri(
-        vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+        vscode.Uri.joinPath(this.context.extensionUri, 'resources', 'logo.png')
       );
       const panelLogoUrl = panelLogoUri?.toString();
       const webviewUri = this.panel?.webview
         .asWebviewUri(this.context.extensionUri)
-        .toString()
-        .replace(/^vscode-webview:\/\/[^/]+\//, '/');
+        .toString();
       const interactiveContent = this.contentGenerator.generateInteractiveContent(
         snapshot,
         panelLogoUrl,
