@@ -6,10 +6,10 @@
   "publisher": "zhijiewong",
   "icon": "resources/logo.png",
   "author": {
-    "name": "Viber Team"
+    "name": "zhijiewong"
   },
   "license": "Apache-2.0",
-  "homepage": "https://viber.dev",
+  "homepage": "https://heviber.org/",
       "repository": {
     "type": "git",
     "url": "https://github.com/zhijiewong/viber.git"

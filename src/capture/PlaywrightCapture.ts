@@ -94,10 +94,11 @@ export class PlaywrightCapture {
     // Set viewport
     await page.setViewportSize(options.viewport);
 
-    // Block unnecessary resources for faster loading
+    // Allow fonts and essential resources, only block heavy media
     await page.route('**/*', async route => {
       const resourceType = route.request().resourceType();
-      if (['font', 'media'].includes(resourceType)) {
+      // Only block heavy video/audio, but allow fonts and images for proper rendering
+      if (['media'].includes(resourceType)) {
         await route.abort();
       } else {
         await route.continue();
@@ -118,6 +119,15 @@ export class PlaywrightCapture {
 
   private async createDOMSnapshot(page: Page, url: string): Promise<DOMSnapshot> {
     this.logger.info('Creating DOM snapshot');
+
+    // Wait for fonts to load for better visual accuracy
+    try {
+      await page.evaluate(() => {
+        return (document as any).fonts?.ready || Promise.resolve();
+      });
+    } catch (e) {
+      // Ignore font loading errors, continue with capture
+    }
 
     // Get the full HTML
     const html = await page.content();
@@ -153,6 +163,10 @@ export class PlaywrightCapture {
       // Get all stylesheets and computed styles
       const styles = await page.evaluate(async () => {
         const styleSheets: string[] = [];
+        
+        // Add base URL handling for relative URLs
+        const baseUrl = document.baseURI || window.location.href;
+        styleSheets.push(`/* Base URL: ${baseUrl} */`);
 
         // Get external stylesheets - try to fetch content instead of just linking
         const linkPromises: Promise<string>[] = [];
@@ -204,6 +218,13 @@ export class PlaywrightCapture {
         // Wait for external CSS to be fetched
         const externalCss = await Promise.all(linkPromises);
         styleSheets.push(...externalCss);
+
+        // Add viewport meta tag content if exists
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          const content = (viewport as HTMLMetaElement).content;
+          styleSheets.unshift(`/* Viewport: ${content} */`);
+        }
 
         return styleSheets.join('\n\n');
       });

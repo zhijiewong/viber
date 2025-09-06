@@ -201,7 +201,7 @@ export class WebviewProvider {
     try {
       // Show loading state with logo
       const refreshLoadingLogoUri = this.panel?.webview.asWebviewUri(
-        vscode.Uri.joinPath(this.context.extensionUri, 'src', 'image', 'DOM_Agent.png')
+        vscode.Uri.joinPath(this.context.extensionUri, 'resources', 'logo.png')
       );
       const refreshLoadingLogoUrl = refreshLoadingLogoUri?.toString();
       this.updateWebviewContent(
