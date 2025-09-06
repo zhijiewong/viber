@@ -20,6 +20,10 @@
 </p>
 
 <p align="center">
+  <img src="./resources/viber-demo.gif" alt="Viber Demo" width="600">
+</p>
+
+<p align="center">
   <em>This project aims to provide developers and vibe coders with an intuitive way to extract DOM elements from websites they're developing, helping them easily locate where they want AI to program in order to complete projects efficiently. Future updates will include one-click integration with Cursor and other AI programming tools for seamless workflow enhancement.</em>
 </p>
 
