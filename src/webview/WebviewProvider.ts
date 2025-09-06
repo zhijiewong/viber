@@ -89,9 +89,7 @@ export class WebviewProvider {
         vscode.Uri.joinPath(this.context.extensionUri, 'resources', 'logo.png')
       );
       const panelLogoUrl = panelLogoUri?.toString();
-      const webviewUri = this.panel?.webview
-        .asWebviewUri(this.context.extensionUri)
-        .toString();
+      const webviewUri = this.panel?.webview.asWebviewUri(this.context.extensionUri).toString();
       const interactiveContent = this.contentGenerator.generateInteractiveContent(
         snapshot,
         panelLogoUrl,

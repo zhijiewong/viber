@@ -123,7 +123,8 @@ export class PlaywrightCapture {
     // Wait for fonts to load for better visual accuracy
     try {
       await page.evaluate(() => {
-        return (document as any).fonts?.ready || Promise.resolve();
+        const doc = document as Document & { fonts?: { ready: Promise<void> } };
+        return doc.fonts?.ready ?? Promise.resolve();
       });
     } catch (e) {
       // Ignore font loading errors, continue with capture
@@ -163,7 +164,7 @@ export class PlaywrightCapture {
       // Get all stylesheets and computed styles
       const styles = await page.evaluate(async () => {
         const styleSheets: string[] = [];
-        
+
         // Add base URL handling for relative URLs
         const baseUrl = document.baseURI || window.location.href;
         styleSheets.push(`/* Base URL: ${baseUrl} */`);
@@ -179,7 +180,10 @@ export class PlaywrightCapture {
                 fetch(link.href)
                   .then(response => response.text())
                   .then(css => `/* External CSS from: ${link.href} */\n${css}`)
-                  .catch(error => `/* Could not load CSS from: ${link.href} - ${error.message} */`)
+                  .catch(
+                    (error: unknown) =>
+                      `/* Could not load CSS from: ${link.href} - ${error instanceof Error ? error.message : String(error)} */`
+                  )
               );
             }
           }
@@ -306,8 +310,9 @@ export class PlaywrightCapture {
             // Add nth-child if there are siblings
             const parent = current.parentElement;
             if (parent) {
+              const currentElement = current; // TypeScript null check helper
               const siblings = Array.from(parent.children).filter(
-                (child: Element) => child.tagName === current!.tagName
+                (child: Element) => child.tagName === currentElement.tagName
               );
               if (siblings.length > 1) {
                 const index = siblings.indexOf(current) + 1;

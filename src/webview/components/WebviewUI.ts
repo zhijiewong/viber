@@ -184,10 +184,12 @@ export class WebviewUI {
 
     // 🎯 IMPORTANT: Add essential meta tags and base URL for proper rendering
     const baseTag = `<base href="${snapshot.url}">`;
-    const viewportTag = headContent.includes('viewport') ? '' : '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
-    
+    const viewportTag = headContent.includes('viewport')
+      ? ''
+      : '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+
     // 🎯 IMPORTANT: Add captured CSS styles from snapshot
-    if (snapshot.css && snapshot.css.trim()) {
+    if (snapshot.css?.trim()) {
       headContent = `${baseTag}\n${viewportTag}\n<style id="captured-styles">\n/* Captured CSS from ${snapshot.url} */\n${snapshot.css}\n</style>\n${headContent}`;
     } else {
       headContent = `${baseTag}\n${viewportTag}\n${headContent}`;
@@ -319,7 +321,6 @@ export class WebviewUI {
             </style>
         `;
   }
-
 
   private static generateWebviewScripts(): string {
     return `
