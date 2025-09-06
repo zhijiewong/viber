@@ -543,7 +543,7 @@ p {
 
 .demo-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 4rem;
   align-items: center;
 }
@@ -579,12 +579,9 @@ p {
 }
 
 .demo-placeholder {
-  background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
-  padding: 3rem;
+  padding: 1rem;
   text-align: center;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
 .demo-glow {
@@ -596,6 +593,13 @@ p {
   background: rgba(202, 220, 174, 0.05);
   border-radius: var(--border-radius-xl);
   z-index: -1;
+}
+
+.demo-gif {
+  width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Roadmap */
