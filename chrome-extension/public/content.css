@@ -1,0 +1,89 @@
+/* DOM Agent Content Script Styles */
+
+/* Element highlighting styles */
+.dom-agent-highlight {
+  background-color: rgba(26, 115, 232, 0.1) !important;
+  outline: 2px solid #1a73e8 !important;
+  outline-offset: -2px !important;
+  cursor: crosshair !important;
+  position: relative !important;
+  z-index: 999999 !important;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;
+  transition: all 0.1s ease !important;
+}
+
+.dom-agent-selected {
+  background-color: rgba(234, 67, 53, 0.1) !important;
+  outline: 3px solid #ea4335 !important;
+  outline-offset: -3px !important;
+  position: relative !important;
+  z-index: 999999 !important;
+  box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.2) !important;
+}
+
+/* Hover info tooltip */
+.dom-agent-hover-info {
+  position: fixed !important;
+  background: white !important;
+  color: #202124 !important;
+  border: 1px solid #dadce0 !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  z-index: 1000000 !important;
+  pointer-events: none !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;
+  max-width: 400px !important;
+  min-width: 280px !important;
+  line-height: 1.4 !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Copy notification */
+.dom-agent-copied-notification {
+  position: fixed !important;
+  top: 70px !important;
+  right: 20px !important;
+  background: #1e8e3e !important;
+  color: white !important;
+  padding: 10px 16px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  z-index: 10001 !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure captured content elements don't overlap toolbar */
+.dom-agent-content *[style*="position: fixed"],
+.dom-agent-content *[style*="position:fixed"] {
+  z-index: 1000 !important;
+}
+
+.dom-agent-content *[style*="z-index"] {
+  z-index: 1000 !important;
+}
+
+/* Element inspection overlay */
+.dom-agent-inspection-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  z-index: 999998 !important;
+  cursor: crosshair !important;
+  pointer-events: auto !important;
+}
+
+/* Hide inspection overlay when not inspecting */
+.dom-agent-inspection-overlay:not(.active) {
+  display: none !important;
+}

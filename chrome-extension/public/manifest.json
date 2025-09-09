@@ -1,0 +1,88 @@
+{
+  "manifest_version": 3,
+  "name": "DOM Agent - Client Side Inspector",
+  "version": "0.1.3",
+  "description": "Interactive DOM inspection and AI-powered code generation extension for Chrome",
+  "author": "zhijiewong",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "contextMenus"
+  ],
+
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DOM Agent",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "exclude_matches": ["*://*.google.com/*", "*://google.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "devtools_page": "devtools.html",
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "devtools-panel.html",
+        "devtools-panel.js",
+        "icons/*",
+        "fonts/*"
+      ],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "commands": {
+    "inspect-element": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+I",
+        "mac": "Command+Shift+I"
+      },
+      "description": "Start DOM inspection mode"
+    },
+    "generate-code": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Generate code for selected element"
+    }
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

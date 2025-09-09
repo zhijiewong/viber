@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Agent DevTools</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+
+        .devtools-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .devtools-header {
+            background: #2d3748;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 1px solid #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .devtools-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-tabs {
+            display: flex;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .panel-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .panel-tab.active {
+            background: white;
+            border-bottom-color: #3182ce;
+            color: #3182ce;
+            font-weight: 500;
+        }
+
+        .panel-tab:hover {
+            background: #edf2f7;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .element-tree {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        .element-node {
+            padding: 2px 4px;
+            margin: 1px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.15s;
+        }
+
+        .element-node:hover {
+            background: #edf2f7;
+        }
+
+        .element-node.selected {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .element-tag {
+            color: #e53e3e;
+            font-weight: 500;
+        }
+
+        .element-id {
+            color: #3182ce;
+        }
+
+        .element-class {
+            color: #38a169;
+        }
+
+        .element-text {
+            color: #718096;
+            font-style: italic;
+        }
+
+        .code-preview {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .toolbar-button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-button:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .toolbar-button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .properties-panel {
+            background: #f8f9fa;
+            border-left: 1px solid #e2e8f0;
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .properties-header {
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+
+        .properties-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .property-item {
+            margin-bottom: 12px;
+        }
+
+        .property-label {
+            font-size: 11px;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .property-value {
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            border: 1px solid #e2e8f0;
+            word-break: break-all;
+        }
+
+        .status-bar {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 4px 16px;
+            font-size: 11px;
+            border-top: 1px solid #4a5568;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="devtools-container">
+        <div class="devtools-header">
+            🎯 <span id="page-title">DOM Agent DevTools</span>
+            <span id="page-url" style="margin-left: auto; font-size: 12px; opacity: 0.8;"></span>
+        </div>
+
+        <div class="devtools-content">
+            <div class="sidebar">
+                <div class="toolbar">
+                    <input type="text" class="search-input" placeholder="Search elements..." id="elementSearch">
+                    <button class="toolbar-button" id="refreshTree">🔄</button>
+                    <button class="toolbar-button" id="expandAll">📂</button>
+                    <button class="toolbar-button" id="collapseAll">📁</button>
+                </div>
+
+                <div class="panel-content">
+                    <div class="element-tree" id="elementTree">
+                        <!-- Element tree will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-panel">
+                <div class="panel-tabs">
+                    <button class="panel-tab active" data-panel="inspector">Inspector</button>
+                    <button class="panel-tab" data-panel="code">Code</button>
+                    <button class="panel-tab" data-panel="console">Console</button>
+                    <button class="panel-tab" data-panel="network">Network</button>
+                </div>
+
+                <div class="panel-content">
+                    <div id="inspector-panel">
+                        <h3>Element Inspector</h3>
+                        <p>Select an element from the tree to inspect its properties.</p>
+                        <div id="element-details"></div>
+                    </div>
+
+                    <div id="code-panel" class="hidden">
+                        <div class="toolbar" style="border: none; background: white;">
+                            <select id="codeFramework" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                <option value="react">React</option>
+                                <option value="vue">Vue</option>
+                                <option value="angular">Angular</option>
+                                <option value="vanilla">Vanilla JS</option>
+                            </select>
+                            <select id="codeType" style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                <option value="component">Component</option>
+                                <option value="test">Test</option>
+                                <option value="selector">Selector</option>
+                            </select>
+                            <button class="toolbar-button" id="generateCode">Generate</button>
+                            <button class="toolbar-button" id="copyCode">📋 Copy</button>
+                        </div>
+                        <div id="code-preview" class="code-preview">
+                            // Select an element to generate code
+                        </div>
+                    </div>
+
+                    <div id="console-panel" class="hidden">
+                        <h3>Console</h3>
+                        <div id="console-output" style="background: #1a202c; color: #e2e8f0; padding: 12px; border-radius: 4px; font-family: monospace; font-size: 12px; height: 300px; overflow: auto;">
+                            <!-- Console output will be displayed here -->
+                        </div>
+                    </div>
+
+                    <div id="network-panel" class="hidden">
+                        <h3>Network</h3>
+                        <p>Network monitoring features coming soon...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="properties-panel">
+                <div class="properties-header">Properties</div>
+                <div class="properties-content" id="propertiesContent">
+                    <!-- Element properties will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="status-text">Ready</span>
+            <span style="margin-left: auto;">
+                Elements: <span id="element-count">0</span> |
+                Selected: <span id="selected-element">None</span>
+            </span>
+        </div>
+    </div>
+
+    <script src="devtools.js"></script>
+</body>
+</html>
