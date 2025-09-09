@@ -50,5 +50,13 @@ module.exports = {
         }
       ]
     })
+  ],
+
+  // Suppress handlebars require.extensions warnings
+  ignoreWarnings: [
+    {
+      module: /node_modules\/handlebars\/lib\/index\.js$/,
+      message: /require\.extensions is not supported by webpack/
+    }
   ]
 };
