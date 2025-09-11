@@ -46,15 +46,15 @@ class ContentScript {
       this.registerMessageHandlers();
 
       console.log('🔍 DOM Agent: Setting up element inspector');
-      // Set up element inspector
-      this.elementInspector.initialize();
-
+      // Set up element inspector callback first
       console.log('🎯 DOM Agent: Setting up element selection handler');
-      // Listen for element selection
       this.elementInspector.onElementSelected((element) => {
         console.log('🎯 DOM Agent: Element selected:', element);
         this.handleElementSelected(element);
       });
+
+      // Then initialize the inspector
+      this.elementInspector.initialize();
 
       console.log('👁️ DOM Agent: Setting up DOM mutation observer');
       // Listen for DOM mutations
@@ -395,9 +395,6 @@ class ContentScript {
         </div>
       `;
 
-      (window as any).resetDOMAgent = () => {
-        this.resetDOMAgent();
-      };
     }
   }
 
@@ -589,10 +586,103 @@ class ContentScript {
             gap: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-          " onclick="window.startDOMInspection()">🔍 检查元素</button>
+          " id="dom-agent-start-btn">🔍 检查元素</button>
+        </div>
+      `;
+
+      // Add event listener for the start button
+      setTimeout(() => {
+        const startBtn = document.getElementById('dom-agent-start-btn') as HTMLButtonElement;
+        if (startBtn) {
+          startBtn.addEventListener('click', () => {
+            console.log('▶️ Start button clicked');
+            this.startInspection();
+          });
+        }
+      }, 100);
+    }
+  }
+
+  private testDOMAgent(): void {
+    console.log('🧪 DOM Agent: Running diagnostics...');
+
+    // Test 1: Check if DOM is ready
+    console.log('📄 Test 1 - Document ready state:', document.readyState);
+    console.log('📄 Test 1 - Document body exists:', !!document.body);
+    console.log('📄 Test 1 - Document title:', document.title);
+
+    // Test 2: Check if we can create elements
+    try {
+      const testElement = document.createElement('div');
+      testElement.textContent = 'Test element';
+      document.body.appendChild(testElement);
+      console.log('✅ Test 2 - Element creation: SUCCESS');
+      setTimeout(() => testElement.remove(), 1000);
+    } catch (error) {
+      console.error('❌ Test 2 - Element creation: FAILED', error);
+    }
+
+    // Test 3: Check event listener attachment
+    try {
+      const testHandler = () => console.log('Test event fired');
+      document.addEventListener('click', testHandler, { once: true });
+      console.log('✅ Test 3 - Event listener: SUCCESS');
+    } catch (error) {
+      console.error('❌ Test 3 - Event listener: FAILED', error);
+    }
+
+    // Test 4: Check content script communication
+    try {
+      chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
+        console.log('✅ Test 4 - Runtime messaging: SUCCESS', response);
+      });
+    } catch (error) {
+      console.error('❌ Test 4 - Runtime messaging: FAILED', error);
+    }
+
+    // Test 5: Check element inspector state
+    console.log('🔍 Test 5 - Element inspector state:', {
+      isInspecting: this.isInspecting,
+      overlayExists: !!document.getElementById('dom-agent-element-overlay'),
+      panelExists: !!document.getElementById('dom-agent-panel')
+    });
+
+    // Update panel with test results
+    const content = document.getElementById('dom-agent-content');
+    if (content) {
+      content.innerHTML = `
+        <div style="padding: 10px;">
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #1a73e8;">
+            🧪 诊断结果
+          </div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 15px;">
+            检查控制台查看详细结果
+          </div>
+          <button style="
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+          " id="dom-agent-return-btn">返回</button>
         </div>
       `;
     }
+
+    // Add event listener for the return button
+    setTimeout(() => {
+      const returnBtn = document.getElementById('dom-agent-return-btn') as HTMLButtonElement;
+      if (returnBtn) {
+        returnBtn.addEventListener('click', () => {
+          console.log('↩️ Return button clicked');
+          this.resetDOMAgent();
+        });
+      }
+    }, 100);
+
+    console.log('✅ DOM Agent: Diagnostics completed');
   }
 
   private setupDOMMutationObserver(): void {
@@ -641,6 +731,20 @@ class ContentScript {
       console.log('DOM Agent panel already exists');
       return;
     }
+
+    // First, define global functions BEFORE creating HTML
+    (window as any).startDOMInspection = () => {
+      this.startInspection();
+    };
+
+
+    (window as any).testDOMAgent = () => {
+      this.testDOMAgent();
+    };
+
+    (window as any).resetDOMAgent = () => {
+      this.resetDOMAgent();
+    };
 
     // Create overlay directly in the webpage body
     const overlay = document.createElement('div');
@@ -692,7 +796,7 @@ class ContentScript {
           width: 32px;
           height: 32px;
           background: rgba(255,255,255,0.2);
-          border-radius: 8px;
+        border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -718,7 +822,7 @@ class ContentScript {
             cursor: pointer;
             font-size: 10px;
             color: white;
-          " onclick="this.closest('#dom-agent-overlay').remove()">×</button>
+          " id="dom-agent-close-btn">×</button>
         </div>
 
         <h1 style="
@@ -754,21 +858,34 @@ class ContentScript {
             gap: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-          " onclick="window.startDOMInspection()">🔍 检查元素</button>
+          " id="dom-agent-inspect-btn">🔍 检查元素</button>
         </div>
       </div>
     `;
+
+    // Add event listeners using addEventListener instead of onclick
+    const inspectBtn = panel.querySelector('#dom-agent-inspect-btn') as HTMLButtonElement;
+    const closeBtn = panel.querySelector('#dom-agent-close-btn') as HTMLButtonElement;
+
+    if (inspectBtn) {
+      inspectBtn.addEventListener('click', () => {
+        console.log('🔍 Inspect button clicked');
+        this.startInspection();
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        console.log('❌ Close button clicked');
+        overlay.remove();
+      });
+    }
 
     // Add drag functionality
     this.addDragFunctionality(panel);
 
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
-
-    // Add global functions
-    (window as any).startDOMInspection = () => {
-      this.startInspection();
-    };
 
     console.log('✅ DOM Agent panel injected directly into webpage');
   }
@@ -823,6 +940,8 @@ class ContentScript {
   }
 
   private startInspection(): void {
+    console.log('🚀 DOM Agent: Starting inspection...');
+
     // Start element inspection
     this.isInspecting = true;
 
@@ -842,26 +961,64 @@ class ContentScript {
             color: #5f6368;
             margin-bottom: 16px;
           ">将鼠标悬停在元素上查看信息</div>
+          <div style="display: flex; gap: 8px; justify-content: center;">
           <button style="
             background: #ea4335;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: 500;
             cursor: pointer;
-          " onclick="window.stopDOMInspection()">停止检查</button>
+          " id="dom-agent-stop-btn">停止检查</button>
+            <button style="
+              background: #666;
+              color: white;
+              border: none;
+              padding: 6px 12px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: 500;
+              cursor: pointer;
+            " id="dom-agent-test-btn">测试</button>
+          </div>
         </div>
       `;
 
-      (window as any).stopDOMInspection = () => {
-        this.stopInspection();
-      };
+      // Add event listeners for the new buttons
+      setTimeout(() => {
+        const stopBtn = document.getElementById('dom-agent-stop-btn') as HTMLButtonElement;
+        const testBtn = document.getElementById('dom-agent-test-btn') as HTMLButtonElement;
+
+        if (stopBtn) {
+          stopBtn.addEventListener('click', () => {
+            console.log('🛑 Stop button clicked');
+            this.stopInspection();
+          });
+        }
+
+        if (testBtn) {
+          testBtn.addEventListener('click', () => {
+            console.log('🧪 Test button clicked');
+            this.testDOMAgent();
+          });
+        }
+      }, 100);
     }
 
-    // Start the element inspector
-    this.elementInspector.initialize();
+    // Check if we can attach event listeners
+    try {
+      console.log('🔧 DOM Agent: Checking document ready state:', document.readyState);
+      console.log('🔧 DOM Agent: Document body exists:', !!document.body);
+
+      // Start the element inspector
+      console.log('🎯 DOM Agent: Starting element inspector...');
+      this.elementInspector.startInspection();
+      console.log('✅ DOM Agent: Element inspector started successfully');
+    } catch (error) {
+      console.error('❌ DOM Agent: Failed to start element inspector:', error);
+    }
   }
 
   private stopInspection(): void {
@@ -891,7 +1048,7 @@ class ContentScript {
             gap: 8px;
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-          " onclick="window.startDOMInspection()">🔍 检查元素</button>
+          " id="dom-agent-start-btn">🔍 检查元素</button>
         </div>
       `;
     }
