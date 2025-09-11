@@ -642,27 +642,37 @@ class ContentScript {
             tabBtn.addEventListener('click', () => {
               console.log(`📱 DOM Agent: Tab clicked - ${tab}`);
 
-              // Hide all tab contents
+              // Hide all tab contents with smooth animation
               tabNames.forEach(t => {
                 const content = document.getElementById(`tab-content-${t}`);
                 const btn = document.getElementById(`tab-${t}`);
-                if (content) content.style.display = 'none';
+                if (content) {
+                  content.style.opacity = '0';
+                  setTimeout(() => content.style.display = 'none', 150);
+                }
                 if (btn) {
-                  btn.style.background = '#f8f9fa';
+                  btn.style.background = 'transparent';
                   btn.style.color = '#666';
+                  btn.style.boxShadow = 'none';
+                  btn.style.transform = 'scale(1)';
                 }
               });
 
-              // Show selected tab
+              // Show selected tab with smooth animation
               const selectedContent = document.getElementById(`tab-content-${tab}`);
               console.log(`📱 DOM Agent: Showing content for ${tab}:`, selectedContent);
 
-              if (selectedContent) selectedContent.style.display = 'block';
+              if (selectedContent) {
+                selectedContent.style.display = 'block';
+                setTimeout(() => selectedContent.style.opacity = '1', 150);
+              }
 
-              // Highlight selected tab button
+              // Highlight selected tab button with CSS Peeper style
               if (tabBtn) {
                 tabBtn.style.background = '#1a73e8';
                 tabBtn.style.color = 'white';
+                tabBtn.style.boxShadow = '0 2px 8px rgba(26, 115, 232, 0.3)';
+                tabBtn.style.transform = 'scale(1.02)';
               }
 
               console.log(`✅ DOM Agent: Tab switch to ${tab} completed`);
@@ -1204,7 +1214,7 @@ class ContentScript {
       this.resetDOMAgent();
     };
 
-    // Create overlay directly in the webpage body
+    // Create overlay with CSS Peeper inspired design
     const overlay = document.createElement('div');
     overlay.id = 'dom-agent-overlay';
     overlay.style.cssText = `
@@ -1213,141 +1223,189 @@ class ContentScript {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(26, 115, 232, 0.08);
+      backdrop-filter: blur(2px);
       z-index: 2147483647;
       pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
 
-    // Create the DOM Agent panel
+    // Create the DOM Agent panel with CSS Peeper inspired design
     const panel = document.createElement('div');
     panel.id = 'dom-agent-panel';
     panel.style.cssText = `
-        position: fixed;
+      position: fixed;
       right: 20px;
       top: 20px;
-      width: 380px;
-      min-height: 600px;
-        background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      border: 1px solid #e0e0e0;
+      width: 450px;
+      min-height: 680px;
+      background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+      border-radius: 20px;
+      box-shadow:
+        0 20px 40px rgba(26, 115, 232, 0.15),
+        0 8px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(26, 115, 232, 0.1);
       pointer-events: auto;
       z-index: 2147483647;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      transform: translateY(0);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     `;
 
     // Create panel content
     panel.innerHTML = `
       <div style="
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #34a853 100%);
         color: white;
-        padding: 16px 20px;
-        border-radius: 12px 12px 0 0;
+        padding: 20px 24px;
+        border-radius: 20px 20px 0 0;
         position: relative;
         cursor: grab;
         user-select: none;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
       " class="dom-agent-header">
         <div style="
           position: absolute;
-          top: 12px;
-          left: 16px;
-          width: 32px;
-          height: 32px;
-          background: rgba(255,255,255,0.2);
-        border-radius: 8px;
+          top: 16px;
+          left: 20px;
+          width: 40px;
+          height: 40px;
+          background: rgba(255,255,255,0.15);
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 16px;
+          font-size: 18px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.2);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         ">🎯</div>
 
         <div style="
           position: absolute;
-          top: 12px;
-          right: 16px;
+          top: 16px;
+          right: 20px;
           display: flex;
           gap: 8px;
         ">
           <button style="
-            background: rgba(255,255,255,0.2);
-            border: none;
-            border-radius: 4px;
-            width: 20px;
-            height: 20px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 10px;
             color: white;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
           " id="dom-agent-close-btn">×</button>
         </div>
 
-        <h1 style="
-          font-size: 18px;
-          font-weight: 600;
-          margin: 8px 0 4px 48px;
-        ">DOM Agent</h1>
-        <p style="
-          font-size: 13px;
-          opacity: 0.9;
-          margin: 0 0 0 48px;
-        ">网页内嵌调试工具</p>
+        <div style="
+          margin-left: 60px;
+          margin-right: 60px;
+        ">
+          <h1 style="
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          ">DOM Agent</h1>
+          <p style="
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 400;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          ">专业的网页样式分析工具</p>
+        </div>
       </div>
 
       <div style="padding: 20px;" id="dom-agent-content">
         <div>
-          <!-- Navigation Tabs -->
+          <!-- Navigation Tabs with CSS Peeper inspired design -->
           <div style="
             display: flex;
-            border-bottom: 1px solid #e0e0e0;
-            margin-bottom: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
           ">
             <button id="tab-overview" style="
               flex: 1;
-              padding: 8px 12px;
+              padding: 10px 16px;
               border: none;
               background: #1a73e8;
               color: white;
-              font-size: 12px;
-              font-weight: 500;
+              font-size: 13px;
+              font-weight: 600;
               cursor: pointer;
-              border-radius: 4px 4px 0 0;
-            ">概览</button>
+              border-radius: 8px;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+              position: relative;
+              overflow: hidden;
+            ">
+              <span style="position: relative; z-index: 1;">概览</span>
+            </button>
             <button id="tab-colors" style="
               flex: 1;
-              padding: 8px 12px;
+              padding: 10px 16px;
               border: none;
-              background: #f8f9fa;
+              background: transparent;
               color: #666;
-              font-size: 12px;
+              font-size: 13px;
               font-weight: 500;
               cursor: pointer;
-            ">🎨 颜色</button>
+              border-radius: 8px;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              position: relative;
+            ">
+              <span style="position: relative; z-index: 1;">🎨 颜色</span>
+            </button>
             <button id="tab-typography" style="
               flex: 1;
-              padding: 8px 12px;
+              padding: 10px 16px;
               border: none;
-              background: #f8f9fa;
+              background: transparent;
               color: #666;
-              font-size: 12px;
+              font-size: 13px;
               font-weight: 500;
               cursor: pointer;
-            ">📝 字体</button>
+              border-radius: 8px;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              position: relative;
+            ">
+              <span style="position: relative; z-index: 1;">📝 字体</span>
+            </button>
             <button id="tab-assets" style="
               flex: 1;
-              padding: 8px 12px;
+              padding: 10px 16px;
               border: none;
-              background: #f8f9fa;
+              background: transparent;
               color: #666;
-              font-size: 12px;
+              font-size: 13px;
               font-weight: 500;
               cursor: pointer;
-            ">🖼️ 资源</button>
+              border-radius: 8px;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              position: relative;
+            ">
+              <span style="position: relative; z-index: 1;">🖼️ 资源</span>
+            </button>
           </div>
 
-          <!-- Tab Content -->
-          <div id="tab-content-overview">
+          <!-- Tab Content with CSS Peeper inspired styling -->
+          <div id="tab-content-overview" style="opacity: 1; transition: opacity 0.3s ease;">
             <div style="text-align: center; padding: 40px 20px;">
               <div style="
                 font-size: 18px;
@@ -1388,30 +1446,30 @@ class ContentScript {
             </div>
           </div>
 
-          <!-- Colors Tab -->
-          <div id="tab-content-colors" style="display: none;">
+          <!-- Colors Tab with CSS Peeper styling -->
+          <div id="tab-content-colors" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
             <div style="text-align: center; padding: 40px 20px;">
               <div style="font-size: 48px; margin-bottom: 16px;">🎨</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">颜色调色板</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示颜色信息</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">颜色调色板</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示完整的颜色信息和调色板</div>
             </div>
           </div>
 
-          <!-- Typography Tab -->
-          <div id="tab-content-typography" style="display: none;">
+          <!-- Typography Tab with CSS Peeper styling -->
+          <div id="tab-content-typography" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
             <div style="text-align: center; padding: 40px 20px;">
               <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">字体样式</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示字体信息</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">字体样式</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示字体家族、大小、粗细等详细信息</div>
             </div>
           </div>
 
-          <!-- Assets Tab -->
-          <div id="tab-content-assets" style="display: none;">
+          <!-- Assets Tab with CSS Peeper styling -->
+          <div id="tab-content-assets" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
             <div style="text-align: center; padding: 40px 20px;">
               <div style="font-size: 48px; margin-bottom: 16px;">🖼️</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">资源文件</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示资源信息</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">资源文件</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示背景图片、媒体文件等资源信息</div>
             </div>
           </div>
         </div>
@@ -1441,36 +1499,63 @@ class ContentScript {
       console.log('🔧 DOM Agent: Setting up initial tab switching functionality');
 
       const tabNames = ['overview', 'colors', 'typography', 'assets'];
-      tabNames.forEach(tab => {
-        const tabBtn = document.getElementById(`tab-${tab}`);
-        console.log(`🔧 DOM Agent: Found initial tab button for ${tab}:`, tabBtn);
+        tabNames.forEach(tab => {
+          const tabBtn = document.getElementById(`tab-${tab}`);
+          console.log(`🔧 DOM Agent: Found initial tab button for ${tab}:`, tabBtn);
 
-        if (tabBtn) {
-          tabBtn.addEventListener('click', () => {
-            console.log(`📱 DOM Agent: Initial tab clicked - ${tab}`);
-
-            // Hide all tab contents
-            tabNames.forEach(t => {
-              const content = document.getElementById(`tab-content-${t}`);
-              const btn = document.getElementById(`tab-${t}`);
-              if (content) content.style.display = 'none';
-              if (btn) {
-                btn.style.background = '#f8f9fa';
-                btn.style.color = '#666';
+          if (tabBtn) {
+            // Add hover effects
+            tabBtn.addEventListener('mouseenter', () => {
+              if (tabBtn.style.background !== '#1a73e8') {
+                tabBtn.style.background = 'rgba(26, 115, 232, 0.1)';
+                tabBtn.style.color = '#1a73e8';
+                tabBtn.style.transform = 'scale(1.01)';
               }
             });
 
-            // Show selected tab
-            const selectedContent = document.getElementById(`tab-content-${tab}`);
-            console.log(`📱 DOM Agent: Showing initial content for ${tab}:`, selectedContent);
+            tabBtn.addEventListener('mouseleave', () => {
+              if (tabBtn.style.background !== '#1a73e8') {
+                tabBtn.style.background = 'transparent';
+                tabBtn.style.color = '#666';
+                tabBtn.style.transform = 'scale(1)';
+              }
+            });
 
-            if (selectedContent) selectedContent.style.display = 'block';
+            tabBtn.addEventListener('click', () => {
+            console.log(`📱 DOM Agent: Initial tab clicked - ${tab}`);
 
-            // Highlight selected tab button
-            if (tabBtn) {
-              tabBtn.style.background = '#1a73e8';
-              tabBtn.style.color = 'white';
-            }
+              // Hide all tab contents with smooth animation
+              tabNames.forEach(t => {
+                const content = document.getElementById(`tab-content-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (content) {
+                  content.style.opacity = '0';
+                  setTimeout(() => content.style.display = 'none', 150);
+                }
+                if (btn) {
+                  btn.style.background = 'transparent';
+                  btn.style.color = '#666';
+                  btn.style.boxShadow = 'none';
+                  btn.style.transform = 'scale(1)';
+                }
+              });
+
+              // Show selected tab with smooth animation
+              const selectedContent = document.getElementById(`tab-content-${tab}`);
+              console.log(`📱 DOM Agent: Showing initial content for ${tab}:`, selectedContent);
+
+              if (selectedContent) {
+                selectedContent.style.display = 'block';
+                setTimeout(() => selectedContent.style.opacity = '1', 150);
+              }
+
+              // Highlight selected tab button with CSS Peeper style
+              if (tabBtn) {
+                tabBtn.style.background = '#1a73e8';
+                tabBtn.style.color = 'white';
+                tabBtn.style.boxShadow = '0 2px 8px rgba(26, 115, 232, 0.3)';
+                tabBtn.style.transform = 'scale(1.02)';
+              }
 
             console.log(`✅ DOM Agent: Initial tab switch to ${tab} completed`);
           });
