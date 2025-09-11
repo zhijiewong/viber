@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ElementInfo, DOMSnapshot, Settings } from '../../types';
 import { Logger } from '../../utils/logger';
+import { FloatingPanel } from '../../components/ui/FloatingPanel';
 
 interface DevToolsPanelProps {}
 
@@ -15,6 +16,7 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = () => {
     codeGenerationFramework: 'react'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   const logger = Logger.getInstance();
 
@@ -185,28 +187,28 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = () => {
 
   const renderElementPreview = () => {
     if (!selectedElement) {
-      return <div style={{ color: '#718096', fontStyle: 'italic' }}>No element selected</div>;
+      return <div className="text-gray-500 italic text-sm">No element selected</div>;
     }
 
     return (
-      <div style={{ fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace', fontSize: '13px' }}>
-        <span style={{ color: '#e53e3e', fontWeight: '600' }}>{`<${selectedElement.tag}`}</span>
+      <div className="font-mono text-sm bg-gray-50 p-3 rounded-lg border">
+        <span className="text-red-600 font-semibold">{`<${selectedElement.tag}`}</span>
         {selectedElement.id && (
-          <span style={{ color: '#3182ce' }}>{` id="${selectedElement.id}"`}</span>
+          <span className="text-blue-600">{` id="${selectedElement.id}"`}</span>
         )}
         {selectedElement.classes.length > 0 && (
-          <span style={{ color: '#38a169' }}>{` class="${selectedElement.classes.join(' ')}"`}</span>
+          <span className="text-green-600">{` class="${selectedElement.classes.join(' ')}"`}</span>
         )}
-        <span style={{ color: '#e53e3e', fontWeight: '600' }}>{'>'}</span>
+        <span className="text-red-600 font-semibold">{'>'}</span>
         {selectedElement.textContent && (
-          <span style={{ color: '#718096', fontStyle: 'italic' }}>
+          <span className="text-gray-500 italic">
             {selectedElement.textContent.length > 50
               ? `${selectedElement.textContent.substring(0, 50)}...`
               : selectedElement.textContent
             }
           </span>
         )}
-        <span style={{ color: '#e53e3e', fontWeight: '600' }}>{`</${selectedElement.tag}>`}</span>
+        <span className="text-red-600 font-semibold">{`</${selectedElement.tag}>`}</span>
       </div>
     );
   };
@@ -225,33 +227,13 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = () => {
     ];
 
     return (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '12px',
-        marginTop: '16px'
-      }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
         {properties.map((prop, index) => (
-          <div key={index} style={{
-            background: '#f7fafc',
-            padding: '8px 12px',
-            borderRadius: '4px',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              fontSize: '11px',
-              color: '#718096',
-              textTransform: 'uppercase',
-              fontWeight: '600',
-              marginBottom: '4px'
-            }}>
+          <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+            <div className="text-xs text-gray-500 uppercase font-semibold mb-1">
               {prop.label}
             </div>
-            <div style={{
-              fontSize: '13px',
-              wordBreak: 'break-all',
-              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace'
-            }}>
+            <div className="text-sm break-all font-mono text-gray-800">
               {prop.value}
             </div>
           </div>
@@ -261,178 +243,93 @@ export const DevToolsPanel: React.FC<DevToolsPanelProps> = () => {
   };
 
   return (
-    <div style={{
-      margin: 0,
-      padding: '16px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
-      background: '#f8f9fa',
-      minWidth: '400px',
-      minHeight: '600px'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: '600'
-        }}>
-          🎯 DOM Agent Panel
-        </div>
+    <div className="min-h-screen bg-gray-100">
+      <FloatingPanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
+        title="DOM Agent Panel"
+        size="lg"
+      >
+        {isLoading && (
+          <div className="flex items-center justify-center gap-3 py-16 text-gray-500">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+            <span className="text-sm">Loading...</span>
+          </div>
+        )}
 
-        <div style={{ padding: '20px' }}>
-          {isLoading && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '40px',
-              color: '#718096'
-            }}>
-              <div style={{
-                width: '20px',
-                height: '20px',
-                border: '2px solid #e2e8f0',
-                borderTop: '2px solid #3b82f6',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }} />
-              <span>Loading...</span>
-            </div>
+        <div className={isLoading ? 'hidden' : 'block'}>
+          {/* Element Preview */}
+          <div className="mb-6">
+            {renderElementPreview()}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <button
+              onClick={generateCode}
+              disabled={!selectedElement}
+              className={`px-4 py-2 border border-gray-300 rounded-lg font-medium text-sm transition-all ${
+                selectedElement
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600 cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              🤖 Generate Code
+            </button>
+            <button
+              onClick={copySelector}
+              disabled={!selectedElement}
+              className={`px-4 py-2 border border-gray-300 rounded-lg bg-white font-medium text-sm transition-all ${
+                selectedElement
+                  ? 'hover:bg-gray-50 cursor-pointer'
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              📋 Copy Selector
+            </button>
+            <button
+              onClick={highlightElement}
+              disabled={!selectedElement}
+              className={`px-4 py-2 border border-gray-300 rounded-lg bg-white font-medium text-sm transition-all ${
+                selectedElement
+                  ? 'hover:bg-gray-50 cursor-pointer'
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              🔍 Highlight Element
+            </button>
+            <button
+              onClick={captureScreenshot}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 font-medium text-sm transition-all cursor-pointer"
+            >
+              📸 Capture Screenshot
+            </button>
+          </div>
+
+          {/* Code Output */}
+          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto whitespace-pre min-h-[120px] mb-4">
+            {generatedCode || '// Generated code will appear here'}
+          </div>
+
+          {/* Copy Code Button */}
+          {selectedElement && (
+            <button
+              onClick={copyCode}
+              disabled={!generatedCode}
+              className={`mb-6 px-3 py-2 border border-gray-300 rounded-lg font-medium text-xs transition-all ${
+                generatedCode
+                  ? 'bg-green-500 text-white border-green-500 hover:bg-green-600 cursor-pointer'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              📋 Copy Code
+            </button>
           )}
 
-          <div style={{ display: isLoading ? 'none' : 'block' }}>
-            <div style={{
-              border: '2px solid #e2e8f0',
-              borderRadius: '6px',
-              padding: '12px',
-              marginBottom: '16px',
-              background: '#f7fafc'
-            }}>
-              {renderElementPreview()}
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              marginBottom: '16px',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                onClick={generateCode}
-                disabled={!selectedElement}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  background: selectedElement ? '#3b82f6' : '#f3f4f6',
-                  color: selectedElement ? 'white' : '#9ca3af',
-                  cursor: selectedElement ? 'pointer' : 'not-allowed',
-                  fontSize: '13px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                🤖 Generate Code
-              </button>
-              <button
-                onClick={copySelector}
-                disabled={!selectedElement}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  background: 'white',
-                  cursor: selectedElement ? 'pointer' : 'not-allowed',
-                  fontSize: '13px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                📋 Copy Selector
-              </button>
-              <button
-                onClick={highlightElement}
-                disabled={!selectedElement}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  background: 'white',
-                  cursor: selectedElement ? 'pointer' : 'not-allowed',
-                  fontSize: '13px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                🔍 Highlight Element
-              </button>
-              <button
-                onClick={captureScreenshot}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  background: 'white',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                📸 Capture Screenshot
-              </button>
-            </div>
-
-            <div style={{
-              background: '#2d3748',
-              color: '#e2e8f0',
-              padding: '16px',
-              borderRadius: '6px',
-              fontFamily: 'Monaco, Menlo, Ubuntu Mono, monospace',
-              fontSize: '13px',
-              overflowX: 'auto',
-              whiteSpace: 'pre',
-              marginTop: '16px',
-              minHeight: '100px'
-            }}>
-              {generatedCode || '// Generated code will appear here'}
-            </div>
-
-            {selectedElement && (
-              <button
-                onClick={copyCode}
-                disabled={!generatedCode}
-                style={{
-                  marginTop: '8px',
-                  padding: '6px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  background: generatedCode ? '#10b981' : '#f3f4f6',
-                  color: generatedCode ? 'white' : '#9ca3af',
-                  cursor: generatedCode ? 'pointer' : 'not-allowed',
-                  fontSize: '12px'
-                }}
-              >
-                📋 Copy Code
-              </button>
-            )}
-
-            {renderProperties()}
-          </div>
+          {/* Properties Grid */}
+          {renderProperties()}
         </div>
-      </div>
-
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+      </FloatingPanel>
     </div>
   );
 };

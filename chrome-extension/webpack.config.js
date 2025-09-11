@@ -14,7 +14,7 @@ module.exports = (env, argv) => {
       background: './src/background/index.ts',
       content: './src/content/index.ts',
       popup: './src/popup/index.tsx',
-      'devtools-panel': './src/devtools/panel/index.tsx',
+      'devtools-panel': ['./src/devtools/panel/index.tsx', './src/styles/tailwind.css'],
       devtools: './src/devtools/index.ts'
     },
 
@@ -36,7 +36,8 @@ module.exports = (env, argv) => {
           test: /\.css$/i,
           use: [
             isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
-            'css-loader'
+            'css-loader',
+            'postcss-loader'
           ]
         },
         {

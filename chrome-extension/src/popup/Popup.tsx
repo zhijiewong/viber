@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, StatusMessage } from '../types';
 import { Logger } from '../utils/logger';
+import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react';
 
 // Element information interface matching server-side
 interface ElementInfo {
@@ -56,6 +57,102 @@ export const Popup: React.FC<PopupProps> = () => {
   const [copiedText, setCopiedText] = useState<string>('');
 
   const logger = Logger.getInstance();
+
+  // Floating UI hooks for better positioning
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const tooltip = useFloating({
+    open: isTooltipOpen,
+    onOpenChange: setIsTooltipOpen,
+    middleware: [offset(10), flip(), shift()],
+    whileElementsMounted: autoUpdate,
+  });
+
+  // Drag functionality state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [panelPosition, setPanelPosition] = useState({ x: 20, y: 50 }); // Default right position
+
+  // Drag functionality handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) return; // Only drag on header, not on buttons
+
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - panelPosition.x,
+      y: e.clientY - panelPosition.y
+    });
+
+    // Prevent text selection during drag
+    e.preventDefault();
+  };
+
+  const resetPanelPosition = () => {
+    setPanelPosition({ x: 20, y: 50 });
+  };
+
+  const openInSeparateWindow = async () => {
+    try {
+      // Get current tab
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs[0]?.id) {
+        // Create a separate window
+        const window = await chrome.windows.create({
+          url: chrome.runtime.getURL('popup.html'),
+          type: 'popup',
+          width: 420,
+          height: 700,
+          left: Math.max(0, (screen.width - 420) / 2),
+          top: Math.max(0, (screen.height - 700) / 2),
+          focused: true
+        });
+
+        // Note: We can't close the popup from here
+        // The popup will close automatically when focus moves to the new window
+        showStatus('已在独立窗口中打开', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to open separate window:', error);
+      showStatus('无法打开独立窗口', 'error');
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+
+    // 获取popup窗口的实际可用区域
+    const popupRect = document.body.getBoundingClientRect();
+    const maxX = Math.max(0, popupRect.width - 400);
+    const maxY = Math.max(0, popupRect.height - 650);
+
+    // 计算相对于popup窗口的新位置
+    const newX = Math.max(0, Math.min(e.clientX - dragStart.x, maxX));
+    const newY = Math.max(0, Math.min(e.clientY - dragStart.y, maxY));
+
+    setPanelPosition({ x: newX, y: newY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add global mouse event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none'; // Prevent text selection
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = ''; // Restore text selection
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isDragging, dragStart.x, dragStart.y]);
 
   // Playwright-style locator generator (matching server-side)
   const generateLocators = (element: ElementInfo): LocatorInfo => {
@@ -256,7 +353,8 @@ export const Popup: React.FC<PopupProps> = () => {
   };
 
   useEffect(() => {
-    initializePopup();
+    // Immediately inject DOM Agent into the webpage and close popup
+    injectAndClose();
 
     // Listen for element selection messages from content script
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -268,26 +366,32 @@ export const Popup: React.FC<PopupProps> = () => {
     });
   }, []);
 
-  const initializePopup = async () => {
+  const injectAndClose = async () => {
     try {
       // Get current tab
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tabs[0]) {
-        setCurrentTab(tabs[0]);
+      if (tabs[0]?.id) {
+        // Inject DOM Agent into the webpage
+        await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['content.js']
+        });
+
+        // Send message to inject the panel
+        await chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'INJECT_DOM_AGENT_PANEL'
+        });
+
+        console.log('✅ DOM Agent injected into webpage, closing popup');
       }
-
-      // Load settings
-      await loadSettings();
-
-      // Check if inspection is active
-      await checkInspectionStatus();
-
-      logger.info('Popup initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize popup', error);
-      showStatus('Error initializing popup', 'error');
+      console.error('❌ Failed to inject DOM Agent:', error);
     }
+
+    // Close the popup window
+    window.close();
   };
+
 
   const loadSettings = async () => {
     try {
@@ -339,12 +443,44 @@ export const Popup: React.FC<PopupProps> = () => {
     setTimeout(() => setStatus(null), 3000);
   };
 
+  const isValidUrlForInspection = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+
+      // Check if it's a supported protocol
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        return false;
+      }
+
+      // Check for Chrome internal URLs that cannot have content scripts
+      if (url.startsWith('chrome://') ||
+          url.startsWith('chrome-extension://') ||
+          url.startsWith('about:') ||
+          url.startsWith('data:') ||
+          url.startsWith('file:') ||
+          url.startsWith('view-source:')) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
   const handleInspectElement = async () => {
     try {
       console.log('🔍 Popup: handleInspectElement called');
       if (!currentTab?.id) {
         console.log('❌ Popup: No active tab found');
         showStatus('No active tab found', 'error');
+        return;
+      }
+
+      // Validate URL before attempting inspection
+      if (!currentTab.url || !isValidUrlForInspection(currentTab.url)) {
+        console.log('❌ Popup: URL not supported for inspection:', currentTab.url);
+        showStatus('This page does not support element inspection', 'error');
         return;
       }
 
@@ -388,12 +524,30 @@ export const Popup: React.FC<PopupProps> = () => {
         showStatus('Hover over elements to inspect', 'info');
       } else {
         console.log('❌ Popup: Failed to start inspection, response:', response);
-        throw new Error(response?.error || 'Failed to start inspection');
+        const errorMessage = response?.error || 'Failed to start inspection';
+
+        // Provide more specific error messages
+        if (errorMessage.includes('Content script not supported')) {
+          showStatus('This page does not support element inspection', 'error');
+        } else if (errorMessage.includes('Could not establish connection')) {
+          showStatus('Content script not loaded. Try refreshing the page.', 'warning');
+        } else {
+          showStatus(errorMessage, 'error');
+        }
+
+        setIsInspecting(false);
+        setPanelState('ready');
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('❌ Popup: Failed to start inspection:', error);
       logger.error('Failed to start inspection', error);
-      showStatus('Failed to start inspection', 'error');
+
+      // Only show error if we haven't already shown a specific one
+      if (!status || status.type !== 'error') {
+        showStatus('Failed to start inspection', 'error');
+      }
+
       setIsInspecting(false);
       setPanelState('ready');
     }
@@ -403,6 +557,12 @@ export const Popup: React.FC<PopupProps> = () => {
     try {
       if (!currentTab?.id) {
         showStatus('No active tab found', 'error');
+        return;
+      }
+
+      // Validate URL before attempting DOM capture
+      if (!currentTab.url || !isValidUrlForInspection(currentTab.url)) {
+        showStatus('This page does not support DOM capture', 'error');
         return;
       }
 
@@ -422,7 +582,12 @@ export const Popup: React.FC<PopupProps> = () => {
           payload: { snapshot: response.data }
         });
       } else {
-        showStatus('Failed to capture DOM', 'error');
+        const errorMessage = response?.error || 'Failed to capture DOM';
+        if (errorMessage.includes('Content script not supported')) {
+          showStatus('This page does not support DOM capture', 'error');
+        } else {
+          showStatus(errorMessage, 'error');
+        }
       }
     } catch (error) {
       logger.error('Failed to capture DOM', error);
@@ -437,6 +602,12 @@ export const Popup: React.FC<PopupProps> = () => {
         return;
       }
 
+      // Validate URL before attempting code generation
+      if (!currentTab.url || !isValidUrlForInspection(currentTab.url)) {
+        showStatus('This page does not support code generation', 'error');
+        return;
+      }
+
       showStatus('Generating code...', 'info');
 
       const response = await chrome.tabs.sendMessage(currentTab.id, {
@@ -446,11 +617,20 @@ export const Popup: React.FC<PopupProps> = () => {
       if (response?.success) {
         showStatus('Code generated successfully', 'success');
       } else {
-        showStatus('No element selected', 'warning');
+        const errorMessage = response?.error || 'No element selected';
+        if (errorMessage.includes('Could not establish connection')) {
+          showStatus('Content script not loaded. Try refreshing the page.', 'warning');
+        } else {
+          showStatus(errorMessage, 'warning');
+        }
       }
     } catch (error) {
       logger.error('Failed to generate code', error);
-      showStatus('Failed to generate code', 'error');
+      if (error instanceof Error && error.message.includes('Could not establish connection')) {
+        showStatus('Content script not loaded. Try refreshing the page.', 'warning');
+      } else {
+        showStatus('Failed to generate code', 'error');
+      }
     }
   };
 
@@ -461,14 +641,33 @@ export const Popup: React.FC<PopupProps> = () => {
         return;
       }
 
-      await chrome.tabs.sendMessage(currentTab.id, {
+      // Validate URL before attempting to open devtools
+      if (!currentTab.url || !isValidUrlForInspection(currentTab.url)) {
+        showStatus('This page does not support DevTools panel', 'error');
+        return;
+      }
+
+      const response = await chrome.tabs.sendMessage(currentTab.id, {
         type: 'OPEN_DEVTOOLS_PANEL'
       });
 
-      showStatus('DevTools panel opened', 'success');
+      if (response?.success) {
+        showStatus('DevTools panel opened', 'success');
+      } else {
+        const errorMessage = response?.error || 'Failed to open devtools panel';
+        if (errorMessage.includes('Could not establish connection')) {
+          showStatus('Content script not loaded. Try refreshing the page.', 'warning');
+        } else {
+          showStatus(errorMessage, 'error');
+        }
+      }
     } catch (error) {
       logger.error('Failed to open devtools panel', error);
-      showStatus('Failed to open devtools panel', 'error');
+      if (error instanceof Error && error.message.includes('Could not establish connection')) {
+        showStatus('Content script not loaded. Try refreshing the page.', 'warning');
+      } else {
+        showStatus('Failed to open devtools panel', 'error');
+      }
     }
   };
 
@@ -497,23 +696,35 @@ export const Popup: React.FC<PopupProps> = () => {
 
   return (
     <div style={{
+      position: 'fixed',
+      left: `${panelPosition.x}px`,
+      top: `${panelPosition.y}px`,
       width: '380px',
       minHeight: '600px',
+      maxHeight: '80vh',
+      overflowY: 'auto',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       background: '#f8f9fa',
       color: '#333',
       borderRadius: '12px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-      overflow: 'hidden'
+      boxShadow: isDragging ? '0 12px 48px rgba(0,0,0,0.2)' : '0 8px 32px rgba(0,0,0,0.1)',
+      zIndex: 9999,
+      cursor: isDragging ? 'grabbing' : 'default',
+      transition: isDragging ? 'none' : 'box-shadow 0.2s ease'
     }}>
-      {/* Professional Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        padding: '24px 20px',
-        textAlign: 'center',
-        position: 'relative'
-      }}>
+      {/* Professional Header with Drag Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          padding: '24px 20px',
+          textAlign: 'center',
+          position: 'relative',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: 'none'
+        }}
+      >
         <div style={{
           position: 'absolute',
           top: '12px',
@@ -529,6 +740,66 @@ export const Popup: React.FC<PopupProps> = () => {
         }}>
           🎯
         </div>
+
+        {/* Drag indicator and reset button */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          {/* Reset position button */}
+          <button
+            onClick={resetPanelPosition}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              borderRadius: '4px',
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '10px',
+              color: 'white',
+              opacity: 0.8,
+              transition: 'opacity 0.2s ease'
+            }}
+            title="重置位置"
+          >
+            ↻
+          </button>
+
+          {/* Drag indicator */}
+          <div style={{
+            display: 'flex',
+            gap: '2px',
+            opacity: 0.7
+          }}>
+            <div style={{
+              width: '3px',
+              height: '3px',
+              background: 'white',
+              borderRadius: '50%'
+            }}></div>
+            <div style={{
+              width: '3px',
+              height: '3px',
+              background: 'white',
+              borderRadius: '50%'
+            }}></div>
+            <div style={{
+              width: '3px',
+              height: '3px',
+              background: 'white',
+              borderRadius: '50%'
+            }}></div>
+          </div>
+        </div>
+
         <h1 style={{
           fontSize: '18px',
           fontWeight: '600',
@@ -540,6 +811,41 @@ export const Popup: React.FC<PopupProps> = () => {
           opacity: 0.9,
           margin: 0
         }}>Chrome Extension</p>
+
+        {/* Drag hint and window mode toggle */}
+        <div style={{
+          position: 'absolute',
+          bottom: '8px',
+          right: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <div style={{
+            fontSize: '10px',
+            opacity: 0.6,
+            fontWeight: '400'
+          }}>
+            {isDragging ? '拖拽中...' : '可拖拽'}
+          </div>
+          <button
+            onClick={openInSeparateWindow}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '4px',
+              padding: '2px 6px',
+              fontSize: '9px',
+              color: 'white',
+              cursor: 'pointer',
+              opacity: 0.7,
+              transition: 'opacity 0.2s ease'
+            }}
+            title="在独立窗口中打开（更好的拖拽体验）"
+          >
+            🪟 全屏
+          </button>
+        </div>
       </div>
 
       {/* Professional Content Area */}
@@ -637,26 +943,54 @@ export const Popup: React.FC<PopupProps> = () => {
                 }}>
                   Click "Inspect Element" to start
                 </div>
-                <button
-                  onClick={handleInspectElement}
-                  style={{
-                    background: '#1a73e8',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(26, 115, 232, 0.3)'
-                  }}
-                >
-                  🔍 Inspect Element
-                </button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    ref={tooltip.refs.setReference}
+                    onClick={handleInspectElement}
+                    onMouseEnter={() => setIsTooltipOpen(true)}
+                    onMouseLeave={() => setIsTooltipOpen(false)}
+                    style={{
+                      background: '#1a73e8',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 8px rgba(26, 115, 232, 0.3)'
+                    }}
+                  >
+                    🔍 Inspect Element
+                  </button>
+
+                  {/* Floating UI Tooltip */}
+                  {isTooltipOpen && (
+                    <div
+                      ref={tooltip.refs.setFloating}
+                      style={{
+                        position: tooltip.strategy ?? 'absolute',
+                        top: tooltip.y ?? 0,
+                        left: tooltip.x ?? 0,
+                        background: '#333',
+                        color: 'white',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        whiteSpace: 'nowrap',
+                        zIndex: 10000,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      Click to start inspecting web elements
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -8,7 +8,9 @@ const App: React.FC = () => {
 
 // Initialize the devtools panel when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const container = document.body;
-  const root = createRoot(container);
-  root.render(<App />);
+  const container = document.getElementById('root');
+  if (container) {
+    const root = createRoot(container);
+    root.render(<App />);
+  }
 });

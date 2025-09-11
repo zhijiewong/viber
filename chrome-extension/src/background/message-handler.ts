@@ -4,6 +4,7 @@ export interface ExtensionMessage {
   type: string;
   payload?: any;
   tabId?: number;
+  windowId?: number;
 }
 
 export class MessageHandler {
@@ -77,6 +78,14 @@ export class MessageHandler {
         case 'OPEN_DEVTOOLS_PANEL':
           console.log('🛠️ Background: Handling OPEN_DEVTOOLS_PANEL message');
           await this.handleContentScriptMessage(message, sender, sendResponse);
+          break;
+        case 'LOG_ERROR':
+          console.log('📝 Background: Handling LOG_ERROR message');
+          await this.handleLogError(message, sender, sendResponse);
+          break;
+        case 'ELEMENT_SELECTED':
+          console.log('🎯 Background: Handling ELEMENT_SELECTED message');
+          await this.handleElementSelected(message, sender, sendResponse);
           break;
         default:
           this.logger.warn('Unknown message type', { type: message.type });
@@ -221,6 +230,52 @@ export class MessageHandler {
     }
   }
 
+  private async handleLogError(
+    message: ExtensionMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: any) => void
+  ): Promise<void> {
+    try {
+      // Log the error received from content script or other parts
+      console.log('📝 Background: Received LOG_ERROR:', message.payload);
+      this.logger.error('Received error from extension component', message.payload);
+
+      // Could potentially store errors for debugging or send to external logging service
+      // For now, just acknowledge receipt
+      sendResponse({ success: true });
+    } catch (error) {
+      this.logger.error('Failed to handle log error', error);
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to handle log error'
+      });
+    }
+  }
+
+  private async handleElementSelected(
+    message: ExtensionMessage,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response?: any) => void
+  ): Promise<void> {
+    try {
+      console.log('🎯 Background: Element selected:', message.payload);
+
+      // Forward element selection to devtools if available
+      if (sender.tab?.id) {
+        // Could forward to devtools panel here
+        this.logger.debug('Element selected in tab', { tabId: sender.tab.id, element: message.payload });
+      }
+
+      sendResponse({ success: true });
+    } catch (error) {
+      this.logger.error('Failed to handle element selection', error);
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to handle element selection'
+      });
+    }
+  }
+
   public async sendMessageToTab(tabId: number, message: ExtensionMessage): Promise<any> {
     return new Promise((resolve, reject) => {
       console.log(`📤 Background: Sending ${message.type} to tab ${tabId}`);
@@ -266,8 +321,8 @@ export class MessageHandler {
           return;
         }
 
-        // Check if URL is supported (content scripts only work on http/https)
-        if (!tab.url || (!tab.url.startsWith('http://') && !tab.url.startsWith('https://'))) {
+        // Check if URL is supported for content script injection
+        if (!tab.url || !this.isValidUrlForInjection(tab.url)) {
           console.log(`🚫 Background: Content script not supported on URL: ${tab.url}`);
           sendResponse({ success: false, error: 'Content script not supported on this URL' });
           return;
@@ -303,5 +358,41 @@ export class MessageHandler {
         }
       });
     });
+  }
+
+  private isValidUrlForInjection(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+
+      // Check if it's a supported protocol
+      if (!['http:', 'https:'].includes(urlObj.protocol)) {
+        console.log(`🚫 Background: Unsupported protocol: ${urlObj.protocol}`);
+        return false;
+      }
+
+      // Check for Chrome internal URLs that cannot have content scripts
+      if (url.startsWith('chrome://') ||
+          url.startsWith('chrome-extension://') ||
+          url.startsWith('about:') ||
+          url.startsWith('data:') ||
+          url.startsWith('file:') ||
+          url.startsWith('view-source:')) {
+        console.log(`🚫 Background: Chrome internal URL not supported: ${url}`);
+        return false;
+      }
+
+      // Check for other restricted schemes
+      if (urlObj.protocol === 'javascript:' ||
+          urlObj.protocol === 'vbscript:' ||
+          urlObj.protocol === 'data:') {
+        console.log(`🚫 Background: Restricted protocol: ${urlObj.protocol}`);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.log(`🚫 Background: Invalid URL format: ${url}`, error);
+      return false;
+    }
   }
 }
