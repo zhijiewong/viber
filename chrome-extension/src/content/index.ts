@@ -1217,7 +1217,7 @@ class ContentScript {
     // Create overlay with improved Tailwind CSS
     const overlay = document.createElement('div');
     overlay.id = 'dom-agent-overlay';
-    overlay.className = 'fixed inset-0 bg-slate-900/40 backdrop-blur-[4px] pointer-events-none transition-all duration-300 ease-out z-[2147483647]';
+    overlay.className = 'fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] pointer-events-none transition-all duration-300 ease-out z-[2147483647]';
 
     // Create the DOM Agent panel with improved Tailwind CSS
     const panel = document.createElement('div');
@@ -1478,6 +1478,19 @@ class ContentScript {
 
       e.preventDefault();
 
+      // Temporarily disable backdrop-blur during drag to prevent page blurring
+      const overlay = document.getElementById('dom-agent-overlay');
+      if (overlay) {
+        const originalBackdrop = overlay.style.backdropFilter || '';
+        const originalTransition = overlay.style.transition || '';
+
+        overlay.style.backdropFilter = 'none';
+        overlay.style.transition = 'none'; // Disable overlay transition during drag
+
+        overlay.dataset.originalBackdrop = originalBackdrop;
+        overlay.dataset.originalTransition = originalTransition;
+      }
+
       // Add drag shadow for better visual feedback
       const originalBoxShadow = panel.style.boxShadow || '0 20px 40px rgba(26,115,232,0.15), 0 8px 16px rgba(0,0,0,0.08)';
       panel.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2)';
@@ -1529,7 +1542,21 @@ class ContentScript {
         // Restore original shadow with smooth transition
         const originalShadow = panel.dataset.originalShadow || '';
         panel.style.boxShadow = originalShadow;
-        panel.style.transition = 'box-shadow 0.3s ease-out';
+
+        // Restore backdrop-blur effect and overlay transition
+        const overlay = document.getElementById('dom-agent-overlay');
+        if (overlay) {
+          if (overlay.dataset.originalBackdrop) {
+            overlay.style.backdropFilter = overlay.dataset.originalBackdrop;
+          }
+          if (overlay.dataset.originalTransition) {
+            overlay.style.transition = overlay.dataset.originalTransition;
+          }
+        }
+
+        // Restore all transitions properly
+        panel.style.transition = 'box-shadow 0.3s ease-out, transform 0.3s ease-out';
+        header.style.transition = 'transform 0.3s ease-out';
       }
 
       if (rafId) {
