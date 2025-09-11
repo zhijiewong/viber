@@ -371,14 +371,33 @@ export const Popup: React.FC<PopupProps> = () => {
       // Get current tab
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tabs[0]?.id) {
+        const tabId = tabs[0].id;
+
+        try {
+          // First, try to check if DOM Agent panel already exists
+          const response = await chrome.tabs.sendMessage(tabId, {
+            type: 'CHECK_DOM_AGENT_STATUS'
+          });
+
+          if (response && response.panelExists) {
+            console.log('✅ DOM Agent panel already exists, focusing on it');
+            // Panel exists, just close popup
+            window.close();
+            return;
+          }
+        } catch (error) {
+          // Panel doesn't exist or content script not loaded, continue with injection
+          console.log('ℹ️ DOM Agent not detected, proceeding with injection');
+        }
+
         // Inject DOM Agent into the webpage
         await chrome.scripting.executeScript({
-          target: { tabId: tabs[0].id },
+          target: { tabId: tabId },
           files: ['content.js']
         });
 
         // Send message to inject the panel
-        await chrome.tabs.sendMessage(tabs[0].id, {
+        await chrome.tabs.sendMessage(tabId, {
           type: 'INJECT_DOM_AGENT_PANEL'
         });
 

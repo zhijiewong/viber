@@ -107,6 +107,11 @@ class ContentScript {
       this.handleInjectDOMAgentPanel(message, sender, sendResponse);
     });
 
+    this.messageHandler.registerHandler('CHECK_DOM_AGENT_STATUS', (message, sender, sendResponse) => {
+      console.log('📝 DOM Agent: CHECK_DOM_AGENT_STATUS handler called');
+      this.handleCheckDOMAgentStatus(message, sender, sendResponse);
+    });
+
     console.log('✅ DOM Agent: All message handlers registered');
     this.logger.info('Content script message handlers registered');
   }
@@ -277,6 +282,36 @@ class ContentScript {
     }
   }
 
+  private handleCheckDOMAgentStatus(
+    message: any,
+    sender: any,
+    sendResponse: (response?: any) => void
+  ): void {
+    try {
+      // Check if DOM Agent panel already exists
+      const panelExists = !!document.getElementById('dom-agent-panel');
+      const overlayExists = !!document.getElementById('dom-agent-overlay');
+
+      console.log('🔍 DOM Agent status check:', {
+        panelExists,
+        overlayExists,
+        isInspecting: this.isInspecting
+      });
+
+      sendResponse({
+        success: true,
+        panelExists: panelExists && overlayExists,
+        isInspecting: this.isInspecting
+      });
+    } catch (error) {
+      console.error('❌ Failed to check DOM Agent status:', error);
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to check DOM Agent status'
+      });
+    }
+  }
+
   private handleElementSelected(element: any): void {
     // Send element selection to background script
     chrome.runtime.sendMessage({
@@ -289,79 +324,278 @@ class ContentScript {
     // Update injected DOM Agent panel if it exists
     const content = document.getElementById('dom-agent-content');
     if (content && this.isInspecting) {
+      console.log('🎯 DOM Agent: Updating panel with new element data');
+      console.log('🔍 DOM Agent: Element selected:', element.tag, element.id, element.classes);
+
       // Generate locator information
       const locators = this.generateLocators(element);
 
+      console.log('🎨 DOM Agent: Generated rich locators:', {
+        colors: locators.colors.length,
+        typography: Object.keys(locators.typography).length,
+        assets: locators.assets.length,
+        contrastRatio: locators.accessibility.contrastRatio
+      });
+
+      // Debug: Check if content element exists and log its current content
+      console.log('🔧 DOM Agent: Content element exists:', !!content);
+      console.log('🔧 DOM Agent: Content element current HTML length:', content.innerHTML.length);
+
       content.innerHTML = `
         <div>
-          <!-- Element Info -->
-          <div style="margin-bottom: 16px;">
-            <div style="
-              font-size: 14px;
-              font-weight: 600;
-              color: #1a73e8;
-              margin-bottom: 8px;
-            ">&lt;${element.tag}&gt;
-            ${element.id ? '<span style="color: #ea4335;">#' + element.id + '</span>' : ''}
-            ${element.classes.length > 0 ? '<span style="color: #22c55e;">.' + element.classes.slice(0, 2).join('.') + (element.classes.length > 2 ? '...' : '') + '</span>' : ''}
+          <!-- Navigation Tabs -->
+          <div style="
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 16px;
+          ">
+            <button id="tab-overview" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #1a73e8;
+              color: white;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+              border-radius: 4px 4px 0 0;
+            ">概览</button>
+            <button id="tab-colors" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">🎨 颜色</button>
+            <button id="tab-typography" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">📝 字体</button>
+            <button id="tab-assets" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">🖼️ 资源</button>
+          </div>
+
+          <!-- Tab Content -->
+          <div id="tab-content-overview">
+            <!-- Element Info -->
+            <div style="margin-bottom: 16px;">
+              <div style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #1a73e8;
+                margin-bottom: 8px;
+              ">&lt;${element.tag}&gt;
+              ${element.id ? '<span style="color: #ea4335;">#' + element.id + '</span>' : ''}
+              ${element.classes.length > 0 ? '<span style="color: #22c55e;">.' + element.classes.slice(0, 2).join('.') + (element.classes.length > 2 ? '...' : '') + '</span>' : ''}
+              </div>
+
+              <div style="
+                font-size: 11px;
+                color: #5f6368;
+                background: #f8f9fa;
+                padding: 6px 10px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+              ">${Math.round(element.boundingBox.width)}px × ${Math.round(element.boundingBox.height)}px</div>
             </div>
 
-            <div style="
-              font-size: 11px;
-              color: #5f6368;
-              background: #f8f9fa;
-              padding: 6px 10px;
-              border-radius: 4px;
-              margin-bottom: 8px;
-              font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-            ">${Math.round(element.boundingBox.width)}px × ${Math.round(element.boundingBox.height)}px</div>
-          </div>
-
-          <!-- Primary Locator -->
-          <div style="margin-bottom: 16px;">
-            <div style="
-              font-size: 12px;
-              font-weight: 600;
-              color: #202124;
-              margin-bottom: 8px;
-            ">主要定位器:</div>
-            <div style="
-              background: #f8f9fa;
-              border: 1px solid #e8eaed;
-              border-radius: 6px;
-              padding: 8px 12px;
-              font-size: 11px;
-              font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-              color: #202124;
-              cursor: pointer;
-              word-break: break-all;
-            " onclick="navigator.clipboard.writeText('${locators.primary.replace(/'/g, "\\'")}')">${locators.primary}</div>
-          </div>
-
-          <!-- Alternative Locators -->
-          ${locators.alternatives.length > 1 ? `
+            <!-- Primary Locator -->
             <div style="margin-bottom: 16px;">
               <div style="
                 font-size: 12px;
                 font-weight: 600;
                 color: #202124;
                 margin-bottom: 8px;
-              ">其他定位器:</div>
-              ${locators.alternatives.slice(1, 4).map((alt: any, index: number) => `
-                <div style="
-                  background: #f8f9fa;
-                  border: 1px solid #e8eaed;
-                  border-radius: 4px;
-                  padding: 6px 10px;
-                  font-size: 10px;
-                  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-                  color: #5f6368;
-                  cursor: pointer;
-                  margin-bottom: 4px;
-                " onclick="navigator.clipboard.writeText('${alt.locator.replace(/'/g, "\\'")}')">${alt.locator}</div>
-              `).join('')}
+              ">主要定位器:</div>
+              <div style="
+                background: #f8f9fa;
+                border: 1px solid #e8eaed;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 11px;
+                font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+                color: #202124;
+                cursor: pointer;
+                word-break: break-all;
+              " onclick="navigator.clipboard.writeText('${locators.primary.replace(/'/g, "\\'")}')">${locators.primary}</div>
             </div>
-          ` : ''}
+
+            <!-- Quick Stats -->
+            <div style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 8px;
+              margin-bottom: 16px;
+            ">
+              <div style="
+                background: #e8f5e8;
+                padding: 8px;
+                border-radius: 4px;
+                text-align: center;
+              ">
+                <div style="font-size: 10px; color: #666;">颜色</div>
+                <div style="font-size: 12px; font-weight: 600; color: #22c55e;">${locators.colors.length}</div>
+              </div>
+              <div style="
+                background: #f0f8ff;
+                padding: 8px;
+                border-radius: 4px;
+                text-align: center;
+              ">
+                <div style="font-size: 10px; color: #666;">资源</div>
+                <div style="font-size: 12px; font-weight: 600; color: #1a73e8;">${locators.assets.length}</div>
+              </div>
+              <div style="
+                background: ${locators.accessibility.contrastRatio > 4.5 ? '#e8f5e8' : '#ffeaea'};
+                padding: 8px;
+                border-radius: 4px;
+                text-align: center;
+              ">
+                <div style="font-size: 10px; color: #666;">对比度</div>
+                <div style="font-size: 12px; font-weight: 600; color: ${locators.accessibility.contrastRatio > 4.5 ? '#22c55e' : '#ea4335'};">${locators.accessibility.contrastRatio.toFixed(1)}:1</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colors Tab -->
+          <div id="tab-content-colors" style="display: none;">
+            <div style="
+              font-size: 14px;
+              font-weight: 600;
+              color: #202124;
+              margin-bottom: 12px;
+            ">🎨 颜色调色板</div>
+            ${locators.colors.length > 0 ? `
+              <div style="display: grid; gap: 8px;">
+                ${locators.colors.map((color: any, index: number) => `
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px;
+                    background: #f8f9fa;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  " onclick="navigator.clipboard.writeText('${color.hex}')">
+                    <div style="
+                      width: 24px;
+                      height: 24px;
+                      background: ${color.value};
+                      border: 1px solid #ddd;
+                      border-radius: 4px;
+                    "></div>
+                    <div style="flex: 1;">
+                      <div style="font-size: 11px; font-weight: 500;">${color.property}</div>
+                      <div style="font-size: 10px; color: #666; font-family: monospace;">${color.hex}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : '<div style="color: #666; font-style: italic;">无颜色信息</div>'}
+          </div>
+
+          <!-- Typography Tab -->
+          <div id="tab-content-typography" style="display: none;">
+            <div style="
+              font-size: 14px;
+              font-weight: 600;
+              color: #202124;
+              margin-bottom: 12px;
+            ">📝 字体样式</div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #666;">字体家族:</span>
+                <span style="font-size: 11px; font-family: monospace;">${locators.typography.fontFamily || 'inherit'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #666;">字体大小:</span>
+                <span style="font-size: 11px; font-family: monospace;">${locators.typography.fontSize || 'inherit'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #666;">字体粗细:</span>
+                <span style="font-size: 11px; font-family: monospace;">${locators.typography.fontWeight || 'normal'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #666;">行高:</span>
+                <span style="font-size: 11px; font-family: monospace;">${locators.typography.lineHeight || 'normal'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 11px; color: #666;">对齐:</span>
+                <span style="font-size: 11px; font-family: monospace;">${locators.typography.textAlign || 'left'}</span>
+              </div>
+            </div>
+            <div style="
+              margin-top: 12px;
+              padding: 8px;
+              background: #f8f9fa;
+              border-radius: 4px;
+              font-family: ${locators.typography.fontFamily || 'inherit'};
+              font-size: ${locators.typography.fontSize || '14px'};
+              font-weight: ${locators.typography.fontWeight || 'normal'};
+              color: #333;
+            ">
+              示例文本：The quick brown fox jumps over the lazy dog
+            </div>
+          </div>
+
+          <!-- Assets Tab -->
+          <div id="tab-content-assets" style="display: none;">
+            <div style="
+              font-size: 14px;
+              font-weight: 600;
+              color: #202124;
+              margin-bottom: 12px;
+            ">🖼️ 资源文件</div>
+            ${locators.assets.length > 0 ? `
+              <div style="display: grid; gap: 8px;">
+                ${locators.assets.map((asset: any, index: number) => `
+                  <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px;
+                    background: #f8f9fa;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  " onclick="navigator.clipboard.writeText('${asset.url}')">
+                    <div style="
+                      width: 24px;
+                      height: 24px;
+                      background: #666;
+                      border-radius: 4px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 12px;
+                      color: white;
+                    ">${asset.type === 'img' ? '🖼️' : asset.type === 'background-image' ? '🎨' : '📁'}</div>
+                    <div style="flex: 1;">
+                      <div style="font-size: 11px; font-weight: 500; word-break: break-all;">${asset.url.split('/').pop()}</div>
+                      <div style="font-size: 10px; color: #666;">${asset.type} ${asset.dimensions ? `• ${asset.dimensions}` : ''}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : '<div style="color: #666; font-style: italic;">无资源文件</div>'}
+          </div>
 
           <!-- Action Buttons -->
           <div style="
@@ -379,7 +613,7 @@ class ContentScript {
               font-size: 12px;
               font-weight: 500;
               cursor: pointer;
-            " onclick="window.resetDOMAgent()">新检查</button>
+            " id="dom-agent-reset-btn">新检查</button>
             <button style="
               flex: 1;
               background: #ea4335;
@@ -395,13 +629,73 @@ class ContentScript {
         </div>
       `;
 
+      // Add tab switching functionality
+      setTimeout(() => {
+        console.log('🔧 DOM Agent: Setting up tab switching functionality');
+
+        const tabNames = ['overview', 'colors', 'typography', 'assets'];
+        tabNames.forEach(tab => {
+          const tabBtn = document.getElementById(`tab-${tab}`);
+          console.log(`🔧 DOM Agent: Found tab button for ${tab}:`, tabBtn);
+
+          if (tabBtn) {
+            tabBtn.addEventListener('click', () => {
+              console.log(`📱 DOM Agent: Tab clicked - ${tab}`);
+
+              // Hide all tab contents
+              tabNames.forEach(t => {
+                const content = document.getElementById(`tab-content-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (content) content.style.display = 'none';
+                if (btn) {
+                  btn.style.background = '#f8f9fa';
+                  btn.style.color = '#666';
+                }
+              });
+
+              // Show selected tab
+              const selectedContent = document.getElementById(`tab-content-${tab}`);
+              console.log(`📱 DOM Agent: Showing content for ${tab}:`, selectedContent);
+
+              if (selectedContent) selectedContent.style.display = 'block';
+
+              // Highlight selected tab button
+              if (tabBtn) {
+                tabBtn.style.background = '#1a73e8';
+                tabBtn.style.color = 'white';
+              }
+
+              console.log(`✅ DOM Agent: Tab switch to ${tab} completed`);
+            });
+          }
+        });
+
+        console.log('✅ DOM Agent: Tab switching functionality setup complete');
+
+        // Debug: Verify tab elements exist
+        const debugTabs = ['overview', 'colors', 'typography', 'assets'];
+        debugTabs.forEach(tab => {
+          const tabBtn = document.getElementById(`tab-${tab}`);
+          const tabContent = document.getElementById(`tab-content-${tab}`);
+          console.log(`🔧 DOM Agent: Tab ${tab} - Button: ${!!tabBtn}, Content: ${!!tabContent}`);
+        });
+
+        (window as any).resetDOMAgent = () => {
+          this.resetDOMAgent();
+        };
+      }, 100);
+
     }
   }
 
   private generateLocators(element: any): any {
     const locators: any = {
       alternatives: [],
-      primary: ''
+      primary: '',
+      colors: [],
+      typography: {},
+      assets: [],
+      accessibility: {}
     };
 
     // Priority 1: getByRole
@@ -468,7 +762,158 @@ class ContentScript {
     // Set primary locator
     locators.primary = (locators.role || locators.testId || locators.text || locators.placeholder || locators.css) || '';
 
+    // Extract colors (CSS Peeper style)
+    locators.colors = this.extractColors(element);
+
+    // Extract typography (CSS Peeper style)
+    locators.typography = this.extractTypography(element);
+
+    // Extract assets (CSS Peeper style)
+    locators.assets = this.extractAssets(element);
+
+    // Extract accessibility info (CSS Peeper style)
+    locators.accessibility = this.extractAccessibility(element);
+
     return locators;
+  }
+
+  private extractColors(element: any): any[] {
+    const colors: any[] = [];
+    const computedStyle = window.getComputedStyle(element);
+
+    // Common color properties
+    const colorProps = [
+      'color', 'background-color', 'border-color', 'border-top-color',
+      'border-right-color', 'border-bottom-color', 'border-left-color',
+      'text-decoration-color', 'outline-color', 'box-shadow'
+    ];
+
+    colorProps.forEach(prop => {
+      const value = computedStyle.getPropertyValue(prop);
+      if (value && value !== 'none' && value !== 'transparent' && value !== 'rgba(0, 0, 0, 0)') {
+        const colorMatch = value.match(/#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)/g);
+        if (colorMatch) {
+          colorMatch.forEach(color => {
+            colors.push({
+              property: prop,
+              value: color,
+              hex: this.rgbToHex(color)
+            });
+          });
+        }
+      }
+    });
+
+    return colors;
+  }
+
+  private rgbToHex(color: string): string {
+    // Convert RGB/RGBA/HSL to hex
+    if (color.startsWith('#')) return color;
+
+    const ctx = document.createElement('canvas').getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = color;
+      return ctx.fillStyle;
+    }
+    return color;
+  }
+
+  private extractTypography(element: any): any {
+    const computedStyle = window.getComputedStyle(element);
+
+    return {
+      fontFamily: computedStyle.getPropertyValue('font-family'),
+      fontSize: computedStyle.getPropertyValue('font-size'),
+      fontWeight: computedStyle.getPropertyValue('font-weight'),
+      lineHeight: computedStyle.getPropertyValue('line-height'),
+      letterSpacing: computedStyle.getPropertyValue('letter-spacing'),
+      textAlign: computedStyle.getPropertyValue('text-align'),
+      textTransform: computedStyle.getPropertyValue('text-transform'),
+      textDecoration: computedStyle.getPropertyValue('text-decoration')
+    };
+  }
+
+  private extractAssets(element: any): any[] {
+    const assets: any[] = [];
+
+    // Extract background images
+    const computedStyle = window.getComputedStyle(element);
+    const backgroundImage = computedStyle.getPropertyValue('background-image');
+
+    if (backgroundImage && backgroundImage !== 'none') {
+      const urlMatch = backgroundImage.match(/url\(["']?([^"']+)["']?\)/g);
+      if (urlMatch) {
+        urlMatch.forEach(url => {
+          const cleanUrl = url.replace(/url\(["']?([^"']+)["']?\)/, '$1');
+          assets.push({
+            type: 'background-image',
+            url: cleanUrl,
+            size: computedStyle.getPropertyValue('background-size')
+          });
+        });
+      }
+    }
+
+    // Extract src attributes for img, video, audio, etc.
+    const mediaElements = element.querySelectorAll('img, video, audio, source');
+    mediaElements.forEach((mediaEl: any) => {
+      const src = mediaEl.src || mediaEl.currentSrc;
+      if (src) {
+        assets.push({
+          type: mediaEl.tagName.toLowerCase(),
+          url: src,
+          alt: mediaEl.alt || '',
+          dimensions: mediaEl.tagName === 'IMG' ?
+            `${mediaEl.naturalWidth}x${mediaEl.naturalHeight}` : ''
+        });
+      }
+    });
+
+    return assets;
+  }
+
+  private extractAccessibility(element: any): any {
+    const computedStyle = window.getComputedStyle(element);
+    const textColor = computedStyle.getPropertyValue('color');
+    const backgroundColor = computedStyle.getPropertyValue('background-color');
+
+    return {
+      textColor: textColor,
+      backgroundColor: backgroundColor,
+      contrastRatio: this.calculateContrastRatio(textColor, backgroundColor),
+      ariaLabel: element.getAttribute('aria-label'),
+      ariaDescribedBy: element.getAttribute('aria-describedby'),
+      role: element.getAttribute('role'),
+      tabIndex: element.getAttribute('tabindex')
+    };
+  }
+
+  private calculateContrastRatio(color1: string, color2: string): number {
+    // Simple contrast calculation (simplified version)
+    // In a real implementation, you'd use proper WCAG contrast formulas
+    try {
+      const getLuminance = (color: string) => {
+        // Convert to RGB and calculate relative luminance
+        if (color.startsWith('#')) {
+          const r = parseInt(color.slice(1, 3), 16) / 255;
+          const g = parseInt(color.slice(3, 5), 16) / 255;
+          const b = parseInt(color.slice(5, 7), 16) / 255;
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+        return 0.5; // Default medium luminance
+      };
+
+      const l1 = getLuminance(color1);
+      const l2 = getLuminance(color2);
+
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+
+      return (lighter + 0.05) / (darker + 0.05);
+    } catch (error) {
+      return 1;
+    }
   }
 
   private generateRoleLocator(element: any): string | null {
@@ -590,13 +1035,22 @@ class ContentScript {
         </div>
       `;
 
-      // Add event listener for the start button
+      // Add event listeners for buttons
       setTimeout(() => {
         const startBtn = document.getElementById('dom-agent-start-btn') as HTMLButtonElement;
+        const resetBtn = document.getElementById('dom-agent-reset-btn') as HTMLButtonElement;
+
         if (startBtn) {
           startBtn.addEventListener('click', () => {
             console.log('▶️ Start button clicked');
             this.startInspection();
+          });
+        }
+
+        if (resetBtn) {
+          resetBtn.addEventListener('click', () => {
+            console.log('🔄 Reset button clicked');
+            this.resetDOMAgent();
           });
         }
       }, 100);
@@ -726,11 +1180,15 @@ class ContentScript {
   }
 
   private injectDevToolsPanel(): void {
+    console.log('🔧 DOM Agent: Starting panel injection process');
+
     // Check if panel already exists
     if (document.getElementById('dom-agent-overlay')) {
       console.log('DOM Agent panel already exists');
       return;
     }
+
+    console.log('🔧 DOM Agent: Panel does not exist, creating new panel');
 
     // First, define global functions BEFORE creating HTML
     (window as any).startDOMInspection = () => {
@@ -764,12 +1222,12 @@ class ContentScript {
     const panel = document.createElement('div');
     panel.id = 'dom-agent-panel';
     panel.style.cssText = `
-      position: fixed;
+        position: fixed;
       right: 20px;
       top: 20px;
       width: 380px;
       min-height: 600px;
-      background: white;
+        background: white;
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.15);
       border: 1px solid #e0e0e0;
@@ -838,27 +1296,124 @@ class ContentScript {
       </div>
 
       <div style="padding: 20px;" id="dom-agent-content">
-        <div style="text-align: center; padding: 20px 0;">
+        <div>
+          <!-- Navigation Tabs -->
           <div style="
-            font-size: 16px;
-            color: #5f6368;
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
             margin-bottom: 16px;
-          ">点击开始检查网页元素</div>
-          <button style="
-            background: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-          " id="dom-agent-inspect-btn">🔍 检查元素</button>
+          ">
+            <button id="tab-overview" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #1a73e8;
+              color: white;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+              border-radius: 4px 4px 0 0;
+            ">概览</button>
+            <button id="tab-colors" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">🎨 颜色</button>
+            <button id="tab-typography" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">📝 字体</button>
+            <button id="tab-assets" style="
+              flex: 1;
+              padding: 8px 12px;
+              border: none;
+              background: #f8f9fa;
+              color: #666;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+            ">🖼️ 资源</button>
+          </div>
+
+          <!-- Tab Content -->
+          <div id="tab-content-overview">
+            <div style="text-align: center; padding: 40px 20px;">
+              <div style="
+                font-size: 18px;
+                color: #1a73e8;
+                margin-bottom: 16px;
+                font-weight: 600;
+              ">🎯 欢迎使用DOM Agent</div>
+              <div style="
+                font-size: 14px;
+                color: #5f6368;
+                margin-bottom: 24px;
+                line-height: 1.5;
+              ">点击下方按钮开始检查网页元素，体验全新的CSS Peeper风格功能！</div>
+              <button style="
+                background: linear-gradient(135deg, #1a73e8, #4285f4);
+                color: white;
+                border: none;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+                transform: scale(1);
+              " id="dom-agent-inspect-btn">
+                🔍 开始检查元素
+              </button>
+              <div style="
+                margin-top: 20px;
+                font-size: 12px;
+                color: #666;
+                opacity: 0.8;
+              ">选择元素后将显示详细的样式信息和定位器</div>
+            </div>
+          </div>
+
+          <!-- Colors Tab -->
+          <div id="tab-content-colors" style="display: none;">
+            <div style="text-align: center; padding: 40px 20px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🎨</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">颜色调色板</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示颜色信息</div>
+            </div>
+          </div>
+
+          <!-- Typography Tab -->
+          <div id="tab-content-typography" style="display: none;">
+            <div style="text-align: center; padding: 40px 20px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">字体样式</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示字体信息</div>
+            </div>
+          </div>
+
+          <!-- Assets Tab -->
+          <div id="tab-content-assets" style="display: none;">
+            <div style="text-align: center; padding: 40px 20px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🖼️</div>
+              <div style="font-size: 16px; color: #666; margin-bottom: 8px;">资源文件</div>
+              <div style="font-size: 14px; color: #999;">选择元素后显示资源信息</div>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -869,7 +1424,7 @@ class ContentScript {
 
     if (inspectBtn) {
       inspectBtn.addEventListener('click', () => {
-        console.log('🔍 Inspect button clicked');
+        console.log('🔍 Inspect button clicked - starting element inspection');
         this.startInspection();
       });
     }
@@ -881,13 +1436,103 @@ class ContentScript {
       });
     }
 
+    // Add initial tab switching functionality
+    setTimeout(() => {
+      console.log('🔧 DOM Agent: Setting up initial tab switching functionality');
+
+      const tabNames = ['overview', 'colors', 'typography', 'assets'];
+      tabNames.forEach(tab => {
+        const tabBtn = document.getElementById(`tab-${tab}`);
+        console.log(`🔧 DOM Agent: Found initial tab button for ${tab}:`, tabBtn);
+
+        if (tabBtn) {
+          tabBtn.addEventListener('click', () => {
+            console.log(`📱 DOM Agent: Initial tab clicked - ${tab}`);
+
+            // Hide all tab contents
+            tabNames.forEach(t => {
+              const content = document.getElementById(`tab-content-${t}`);
+              const btn = document.getElementById(`tab-${t}`);
+              if (content) content.style.display = 'none';
+              if (btn) {
+                btn.style.background = '#f8f9fa';
+                btn.style.color = '#666';
+              }
+            });
+
+            // Show selected tab
+            const selectedContent = document.getElementById(`tab-content-${tab}`);
+            console.log(`📱 DOM Agent: Showing initial content for ${tab}:`, selectedContent);
+
+            if (selectedContent) selectedContent.style.display = 'block';
+
+            // Highlight selected tab button
+            if (tabBtn) {
+              tabBtn.style.background = '#1a73e8';
+              tabBtn.style.color = 'white';
+            }
+
+            console.log(`✅ DOM Agent: Initial tab switch to ${tab} completed`);
+          });
+        }
+      });
+
+      console.log('✅ DOM Agent: Initial tab switching functionality setup complete');
+    }, 100);
+
     // Add drag functionality
     this.addDragFunctionality(panel);
 
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
 
-    console.log('✅ DOM Agent panel injected directly into webpage');
+    console.log('✅ DOM Agent panel injected directly into webpage - NEW CSS PEEPER FEATURES READY!');
+
+    // Add visual indicator that new features are ready
+    const indicator = document.createElement('div');
+    indicator.id = 'dom-agent-ready-indicator';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #4caf50, #45a049);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+      z-index: 2147483647;
+      animation: dom-agent-bounce 0.6s ease-out;
+      border: 2px solid rgba(255,255,255,0.2);
+    `;
+    indicator.innerHTML = '🎨 <strong>新功能就绪！</strong> 点击"检查元素"开始体验';
+    document.body.appendChild(indicator);
+
+    // Add CSS animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes dom-agent-bounce {
+        0% { transform: scale(0.3); opacity: 0; }
+        50% { transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes dom-agent-fade {
+        0% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Remove indicator after 5 seconds
+    setTimeout(() => {
+      const indicator = document.getElementById('dom-agent-ready-indicator');
+      if (indicator) {
+        indicator.style.animation = 'dom-agent-fade 0.5s ease-out';
+        setTimeout(() => indicator.remove(), 500);
+      }
+    }, 5000);
   }
 
   private addDragFunctionality(panel: HTMLElement): void {

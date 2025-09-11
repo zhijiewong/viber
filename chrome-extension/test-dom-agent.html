@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Agent 测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            border-left: 4px solid #1a73e8;
+            padding-left: 20px;
+        }
+
+        .test-section h2 {
+            color: #1a73e8;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .color-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+        }
+
+        .typography-demo {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .typography-demo h3 {
+            font-family: 'Georgia', serif;
+            color: #d32f2f;
+            margin: 0 0 10px 0;
+        }
+
+        .typography-demo p {
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #424242;
+        }
+
+        .interactive-elements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .element-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: box-shadow 0.3s;
+        }
+
+        .element-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #1a73e8, #4285f4);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.3);
+        }
+
+        input[type="text"], input[type="email"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        .media-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .contrast-test {
+            background: #fff;
+            color: #000;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .contrast-test.high {
+            background: #000;
+            color: #fff;
+        }
+
+        .contrast-test.low {
+            background: #666;
+            color: #999;
+        }
+
+        .instruction-box {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #f0c674;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instruction-box h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 DOM Agent 测试页面</h1>
+            <p>测试新的CSS Peeper风格功能</p>
+        </div>
+
+        <div class="content">
+            <div class="instruction-box">
+                <h3>📋 测试说明</h3>
+                <p>1. 点击Chrome扩展图标启动DOM Agent</p>
+                <p>2. 点击"检查元素"开始元素检查</p>
+                <p>3. 将鼠标悬停在下面的元素上查看新功能</p>
+                <p>4. 点击不同标签页查看颜色、字体、资源信息</p>
+                <p>5. 查看控制台日志了解功能执行情况</p>
+            </div>
+
+            <div class="test-section">
+                <h2>🎨 颜色调色板测试</h2>
+                <div class="color-palette">
+                    <div class="color-box" style="background: linear-gradient(135deg, #667eea, #764ba2);" title="#667eea to #764ba2"></div>
+                    <div class="color-box" style="background: #1a73e8;" title="#1a73e8"></div>
+                    <div class="color-box" style="background: #ea4335;" title="#ea4335"></div>
+                    <div class="color-box" style="background: #34a853;" title="#34a853"></div>
+                    <div class="color-box" style="background: #fbbc04;" title="#fbbc04"></div>
+                    <div class="color-box" style="background: #ff6d01;" title="#ff6d01"></div>
+                    <div class="color-box" style="background: linear-gradient(45deg, #ff9a9e, #fecfef);" title="Gradient Pink"></div>
+                    <div class="color-box" style="background: rgba(26, 115, 232, 0.8);" title="Semi-transparent Blue"></div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>📝 字体样式测试</h2>
+                <div class="typography-demo">
+                    <h3>Georgia Serif Heading</h3>
+                    <p>This is a paragraph with Arial font family. It demonstrates the typography extraction capabilities of DOM Agent. The line height and letter spacing should be properly detected.</p>
+                    <p style="font-weight: bold;">This is bold text to test font-weight detection.</p>
+                    <p style="font-style: italic;">This is italic text to test font-style detection.</p>
+                    <p style="text-transform: uppercase;">This is uppercase text to test text-transform.</p>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>🖼️ 资源文件测试</h2>
+                <div class="media-section">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNjY3ZWVhIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UZXN0IEltYWdlPC90ZXh0Pgo8L3N2Zz4K" alt="测试图片" width="200" height="200">
+                    <video controls width="300" height="200" poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZmJiYzA0Ii8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5WaWRlbyBQb3N0ZXI8L3RleHQ+Cjwvc3ZnPg==">
+                        <source src="" type="video/mp4">
+                        测试视频
+                    </video>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>🎯 交互元素测试</h2>
+                <div class="interactive-elements">
+                    <div class="element-card">
+                        <h3>按钮测试</h3>
+                        <button onclick="alert('按钮被点击！')">测试按钮</button>
+                        <button disabled>禁用按钮</button>
+                    </div>
+
+                    <div class="element-card">
+                        <h3>表单元素</h3>
+                        <input type="text" placeholder="输入框测试" value="">
+                        <br><br>
+                        <select>
+                            <option>选项1</option>
+                            <option>选项2</option>
+                            <option>选项3</option>
+                        </select>
+                    </div>
+
+                    <div class="element-card">
+                        <h3>链接测试</h3>
+                        <a href="#" style="color: #1a73e8; text-decoration: none;">测试链接</a>
+                        <br><br>
+                        <a href="#" style="color: #ea4335;">红色链接</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h2>♿ 无障碍性测试</h2>
+                <div class="contrast-test">正常对比度文本 (应该通过WCAG测试)</div>
+                <div class="contrast-test high">高对比度文本 (黑色背景)</div>
+                <div class="contrast-test low">低对比度文本 (可能失败WCAG测试)</div>
+                <div class="contrast-test" style="background: #fff; color: #888;">另一个对比度测试</div>
+
+                <div style="margin-top: 20px;">
+                    <label for="accessible-input">无障碍输入框:</label>
+                    <input type="text" id="accessible-input" aria-label="这是一个有完整无障碍属性的输入框">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加一些动态样式来测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 测试页面加载完成 - DOM Agent可以在这里测试新功能');
+
+            // 动态添加一些样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .dynamic-element {
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    margin: 20px 0;
+                    font-family: 'Helvetica Neue', sans-serif;
+                    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 动态添加元素
+            setTimeout(() => {
+                const dynamicEl = document.createElement('div');
+                dynamicEl.className = 'dynamic-element';
+                dynamicEl.textContent = '🎨 动态添加的元素 - 测试DOM Agent对新元素的检测能力';
+                dynamicEl.style.cssText += '; border: 2px solid #ff6b6b;';
+                document.querySelector('.content').appendChild(dynamicEl);
+            }, 2000);
+        });
+
+        // 测试事件监听
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') {
+                console.log('🎯 按钮被点击:', e.target.textContent);
+            }
+        });
+    </script>
+</body>
+</html>
