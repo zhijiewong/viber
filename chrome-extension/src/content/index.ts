@@ -1214,85 +1214,85 @@ class ContentScript {
       this.resetDOMAgent();
     };
 
-    // Create overlay with Tailwind CSS
+    // Create overlay with improved Tailwind CSS
     const overlay = document.createElement('div');
     overlay.id = 'dom-agent-overlay';
-    overlay.className = 'fixed inset-0 bg-blue-500/8 backdrop-blur-[2px] pointer-events-none transition-all duration-300 ease-out z-[2147483647]';
+    overlay.className = 'fixed inset-0 bg-slate-900/40 backdrop-blur-[4px] pointer-events-none transition-all duration-300 ease-out z-[2147483647]';
 
-    // Create the DOM Agent panel with Tailwind CSS
+    // Create the DOM Agent panel with improved Tailwind CSS
     const panel = document.createElement('div');
     panel.id = 'dom-agent-panel';
-    panel.className = 'fixed top-5 right-5 w-[450px] min-h-[680px] bg-gradient-to-br from-white to-gray-50 rounded-[20px] shadow-[0_20px_40px_rgba(26,115,232,0.15),0_8px_16px_rgba(0,0,0,0.08)] shadow-inner border border-blue-500/10 pointer-events-auto z-[2147483647] font-sans overflow-hidden transform translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]';
+    panel.className = 'fixed top-5 right-5 w-[450px] min-h-[680px] bg-white rounded-[20px] shadow-[0_25px_50px_rgba(0,0,0,0.25),0_10px_20px_rgba(0,0,0,0.1)] border border-slate-200/50 pointer-events-auto z-[2147483647] font-sans overflow-hidden transform translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]';
 
-    // Create panel content with Tailwind CSS
+    // Create panel content with improved Tailwind CSS
     panel.innerHTML = `
-      <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-green-600 text-white px-6 py-5 rounded-t-[20px] relative cursor-grab select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dom-agent-header">
-        <div class="absolute top-4 left-5 w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center text-lg backdrop-blur-[10px] border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">🎯</div>
+      <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-emerald-600 text-white px-6 py-5 rounded-t-[20px] relative cursor-grab select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] dom-agent-header">
+        <div class="absolute top-4 left-5 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center text-lg shadow-lg border-2 border-white/50">🎯</div>
 
         <div class="absolute top-4 right-5 flex gap-2">
-          <button class="bg-white/15 border border-white/20 rounded-lg w-7 h-7 flex items-center justify-center cursor-pointer text-white text-sm font-medium transition-all duration-200 backdrop-blur-[10px] hover:bg-white/25 hover:scale-105" id="dom-agent-close-btn">×</button>
+          <button class="bg-white/90 hover:bg-white text-gray-700 hover:text-gray-900 border-2 border-white/50 hover:border-white rounded-lg w-7 h-7 flex items-center justify-center cursor-pointer text-sm font-bold transition-all duration-200 hover:scale-105 shadow-md" id="dom-agent-close-btn">×</button>
         </div>
 
         <div class="ml-[60px] mr-[60px]">
-          <h1 class="text-xl font-bold m-0 mb-1 tracking-[-0.5px] [text-shadow:0_1px_2px_rgba(0,0,0,0.1)]">DOM Agent</h1>
-          <p class="text-sm opacity-90 m-0 font-normal [text-shadow:0_1px_2px_rgba(0,0,0,0.1)]">专业的网页样式分析工具</p>
+          <h1 class="text-xl font-bold m-0 mb-1 tracking-[-0.5px] drop-shadow-lg">DOM Agent</h1>
+          <p class="text-sm opacity-95 m-0 font-medium drop-shadow-md">专业的网页样式分析工具</p>
         </div>
       </div>
 
       <div class="p-5" id="dom-agent-content">
         <div>
-          <!-- Navigation Tabs with Tailwind CSS -->
-          <div class="flex bg-gray-100 rounded-xl p-1 mb-5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
-            <button id="tab-overview" class="flex-1 py-2.5 px-4 bg-blue-600 text-white text-sm font-semibold cursor-pointer rounded-lg transition-all duration-300 ease-out shadow-[0_2px_8px_rgba(26,115,232,0.3)] relative overflow-hidden hover:scale-[1.02]">
-              <span class="relative z-10">概览</span>
+          <!-- Navigation Tabs with improved Tailwind CSS -->
+          <div class="flex bg-slate-100 rounded-xl p-1 mb-6 shadow-md border border-slate-200/50">
+            <button id="tab-overview" class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold cursor-pointer rounded-lg transition-all duration-300 ease-out shadow-lg relative overflow-hidden hover:scale-[1.02] border border-blue-500/30">
+              <span class="relative z-10 drop-shadow-sm">概览</span>
             </button>
-            <button id="tab-colors" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+            <button id="tab-colors" class="flex-1 py-3 px-4 bg-transparent hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:scale-[1.01] border border-transparent hover:border-blue-200/50">
               <span class="relative z-10">🎨 颜色</span>
             </button>
-            <button id="tab-typography" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+            <button id="tab-typography" class="flex-1 py-3 px-4 bg-transparent hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:scale-[1.01] border border-transparent hover:border-blue-200/50">
               <span class="relative z-10">📝 字体</span>
             </button>
-            <button id="tab-assets" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+            <button id="tab-assets" class="flex-1 py-3 px-4 bg-transparent hover:bg-blue-50 text-slate-600 hover:text-blue-700 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:scale-[1.01] border border-transparent hover:border-blue-200/50">
               <span class="relative z-10">🖼️ 资源</span>
             </button>
           </div>
 
-          <!-- Tab Content with Tailwind CSS -->
+          <!-- Tab Content with improved Tailwind CSS -->
           <div id="tab-content-overview" class="opacity-100 transition-opacity duration-300 ease-out">
             <div class="text-center py-10 px-5">
-              <div class="text-lg text-blue-600 mb-4 font-semibold">🎯 欢迎使用DOM Agent</div>
-              <div class="text-sm text-gray-600 mb-6 leading-relaxed">点击下方按钮开始检查网页元素，体验全新的CSS Peeper风格功能！</div>
-              <button class="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-none py-3.5 px-7 rounded-lg text-base font-semibold cursor-pointer inline-flex items-center gap-2 transition-all duration-300 ease-out shadow-[0_4px_12px_rgba(26,115,232,0.4)] transform scale-100 hover:scale-105 hover:shadow-[0_6px_20px_rgba(26,115,232,0.6)]" id="dom-agent-inspect-btn">
+              <div class="text-xl text-blue-700 mb-4 font-bold drop-shadow-sm">🎯 欢迎使用DOM Agent</div>
+              <div class="text-sm text-slate-600 mb-6 leading-relaxed font-medium">点击下方按钮开始检查网页元素，体验全新的CSS Peeper风格功能！</div>
+              <button class="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white border-2 border-blue-500/30 hover:border-blue-400 py-4 px-8 rounded-xl text-base font-bold cursor-pointer inline-flex items-center gap-3 transition-all duration-300 ease-out shadow-xl hover:shadow-2xl transform scale-100 hover:scale-105" id="dom-agent-inspect-btn">
                 🔍 开始检查元素
               </button>
-              <div class="mt-5 text-xs text-gray-500 opacity-80">选择元素后将显示详细的样式信息和定位器</div>
+              <div class="mt-6 text-xs text-slate-500 font-medium bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/50">选择元素后将显示详细的样式信息和定位器</div>
             </div>
           </div>
 
-          <!-- Colors Tab with Tailwind CSS -->
+          <!-- Colors Tab with improved Tailwind CSS -->
           <div id="tab-content-colors" class="hidden opacity-0 transition-opacity duration-300 ease-out">
-            <div class="text-center py-10 px-5">
-              <div class="text-5xl mb-4">🎨</div>
-              <div class="text-base text-gray-600 mb-2 font-medium">颜色调色板</div>
-              <div class="text-sm text-gray-400">选择元素后显示完整的颜色信息和调色板</div>
+            <div class="text-center py-12 px-6">
+              <div class="text-6xl mb-6 drop-shadow-lg">🎨</div>
+              <div class="text-lg text-slate-700 mb-3 font-bold">颜色调色板</div>
+              <div class="text-sm text-slate-500 bg-slate-50 py-3 px-4 rounded-lg border border-slate-200/50 font-medium">选择元素后显示完整的颜色信息和调色板</div>
             </div>
           </div>
 
-          <!-- Typography Tab with Tailwind CSS -->
+          <!-- Typography Tab with improved Tailwind CSS -->
           <div id="tab-content-typography" class="hidden opacity-0 transition-opacity duration-300 ease-out">
-            <div class="text-center py-10 px-5">
-              <div class="text-5xl mb-4">📝</div>
-              <div class="text-base text-gray-600 mb-2 font-medium">字体样式</div>
-              <div class="text-sm text-gray-400">选择元素后显示字体家族、大小、粗细等详细信息</div>
+            <div class="text-center py-12 px-6">
+              <div class="text-6xl mb-6 drop-shadow-lg">📝</div>
+              <div class="text-lg text-slate-700 mb-3 font-bold">字体样式</div>
+              <div class="text-sm text-slate-500 bg-slate-50 py-3 px-4 rounded-lg border border-slate-200/50 font-medium">选择元素后显示字体家族、大小、粗细等详细信息</div>
             </div>
           </div>
 
-          <!-- Assets Tab with Tailwind CSS -->
+          <!-- Assets Tab with improved Tailwind CSS -->
           <div id="tab-content-assets" class="hidden opacity-0 transition-opacity duration-300 ease-out">
-            <div class="text-center py-10 px-5">
-              <div class="text-5xl mb-4">🖼️</div>
-              <div class="text-base text-gray-600 mb-2 font-medium">资源文件</div>
-              <div class="text-sm text-gray-400">选择元素后显示背景图片、媒体文件等资源信息</div>
+            <div class="text-center py-12 px-6">
+              <div class="text-6xl mb-6 drop-shadow-lg">🖼️</div>
+              <div class="text-lg text-slate-700 mb-3 font-bold">资源文件</div>
+              <div class="text-sm text-slate-500 bg-slate-50 py-3 px-4 rounded-lg border border-slate-200/50 font-medium">选择元素后显示背景图片、媒体文件等资源信息</div>
             </div>
           </div>
         </div>
@@ -1327,18 +1327,18 @@ class ContentScript {
           console.log(`🔧 DOM Agent: Found initial tab button for ${tab}:`, tabBtn);
 
           if (tabBtn) {
-            // Add hover effects using Tailwind classes
+            // Add hover effects using improved Tailwind classes
             tabBtn.addEventListener('mouseenter', () => {
               if (!tabBtn.classList.contains('bg-blue-600')) {
-                tabBtn.classList.add('bg-blue-500/10', 'text-blue-600', 'scale-[1.01]');
-                tabBtn.classList.remove('text-gray-600');
+                tabBtn.classList.add('bg-blue-50', 'text-blue-700', 'scale-[1.01]');
+                tabBtn.classList.remove('text-slate-600');
               }
             });
 
             tabBtn.addEventListener('mouseleave', () => {
               if (!tabBtn.classList.contains('bg-blue-600')) {
-                tabBtn.classList.remove('bg-blue-500/10', 'text-blue-600', 'scale-[1.01]');
-                tabBtn.classList.add('text-gray-600');
+                tabBtn.classList.remove('bg-blue-50', 'text-blue-700', 'scale-[1.01]');
+                tabBtn.classList.add('text-slate-600');
               }
             });
 
@@ -1358,8 +1358,8 @@ class ContentScript {
                   }, 150);
                 }
                 if (btn) {
-                  btn.classList.remove('bg-blue-600', 'text-white', 'shadow-[0_2px_8px_rgba(26,115,232,0.3)]', 'scale-[1.02]');
-                  btn.classList.add('bg-transparent', 'text-gray-600', 'scale-100');
+                  btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'scale-[1.02]', 'border-blue-500/30');
+                  btn.classList.add('bg-transparent', 'text-slate-600', 'scale-100', 'border-transparent');
                 }
               });
 
@@ -1376,10 +1376,10 @@ class ContentScript {
                 }, 150);
               }
 
-              // Highlight selected tab button with Tailwind CSS
+              // Highlight selected tab button with improved Tailwind CSS
               if (tabBtn) {
-                tabBtn.classList.remove('bg-transparent', 'text-gray-600', 'scale-100');
-                tabBtn.classList.add('bg-blue-600', 'text-white', 'shadow-[0_2px_8px_rgba(26,115,232,0.3)]', 'scale-[1.02]');
+                tabBtn.classList.remove('bg-transparent', 'text-slate-600', 'scale-100', 'border-transparent');
+                tabBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'scale-[1.02]', 'border-blue-500/30');
               }
 
             console.log(`✅ DOM Agent: Initial tab switch to ${tab} completed`);
@@ -1452,6 +1452,13 @@ class ContentScript {
     let startY = 0;
     let initialX = 0;
     let initialY = 0;
+    let lastUpdateTime = 0;
+    const updateInterval = 16; // ~60fps
+
+    // Set initial position
+    panel.style.position = 'fixed';
+    panel.style.left = panel.offsetLeft + 'px';
+    panel.style.top = panel.offsetTop + 'px';
 
     header.addEventListener('mousedown', (e) => {
       isDragging = true;
@@ -1462,36 +1469,77 @@ class ContentScript {
       initialY = rect.top;
 
       header.style.cursor = 'grabbing';
+      panel.style.userSelect = 'none';
+
+      // Add visual feedback with smooth transition
+      header.style.transform = 'scale(1.02)';
+      header.style.transition = 'transform 0.15s ease-out';
+      panel.style.transition = 'none'; // Disable transition during drag
+
       e.preventDefault();
+
+      // Add drag shadow for better visual feedback
+      const originalBoxShadow = panel.style.boxShadow || '0 20px 40px rgba(26,115,232,0.15), 0 8px 16px rgba(0,0,0,0.08)';
+      panel.style.boxShadow = '0 25px 50px rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2)';
+      panel.dataset.originalShadow = originalBoxShadow;
     });
 
-    document.addEventListener('mousemove', (e) => {
+    // Throttled mousemove handler using requestAnimationFrame
+    let rafId: number | null = null;
+    const throttledMove = (e: MouseEvent) => {
       if (!isDragging) return;
 
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
+      const currentTime = Date.now();
+      if (currentTime - lastUpdateTime < updateInterval) return;
 
-      let newX = initialX + dx;
-      let newY = initialY + dy;
+      lastUpdateTime = currentTime;
 
-      // Keep panel within viewport
-      const maxX = window.innerWidth - panel.offsetWidth;
-      const maxY = window.innerHeight - panel.offsetHeight;
+      if (rafId) cancelAnimationFrame(rafId);
 
-      newX = Math.max(0, Math.min(newX, maxX));
-      newY = Math.max(0, Math.min(newY, maxY));
+      rafId = requestAnimationFrame(() => {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
 
-      panel.style.left = `${newX}px`;
-      panel.style.top = `${newY}px`;
-      panel.style.right = 'auto'; // Clear right positioning when dragging
-    });
+        let newX = initialX + dx;
+        let newY = initialY + dy;
 
-    document.addEventListener('mouseup', () => {
+        // Keep panel within viewport with padding
+        const padding = 10;
+        const maxX = window.innerWidth - panel.offsetWidth - padding;
+        const maxY = window.innerHeight - panel.offsetHeight - padding;
+
+        newX = Math.max(padding, Math.min(newX, maxX));
+        newY = Math.max(padding, Math.min(newY, maxY));
+
+        // Update position directly for smooth movement
+        panel.style.left = `${newX}px`;
+        panel.style.top = `${newY}px`;
+      });
+    };
+
+    document.addEventListener('mousemove', throttledMove, { passive: true });
+
+    const handleMouseUp = () => {
       if (isDragging) {
         isDragging = false;
         header.style.cursor = 'grab';
+        header.style.transform = 'scale(1)';
+        panel.style.userSelect = 'auto';
+
+        // Restore original shadow with smooth transition
+        const originalShadow = panel.dataset.originalShadow || '';
+        panel.style.boxShadow = originalShadow;
+        panel.style.transition = 'box-shadow 0.3s ease-out';
       }
-    });
+
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseUp); // Handle mouse leaving window
   }
 
   private startInspection(): void {
