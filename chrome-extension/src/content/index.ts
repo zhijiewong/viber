@@ -1214,262 +1214,85 @@ class ContentScript {
       this.resetDOMAgent();
     };
 
-    // Create overlay with CSS Peeper inspired design
+    // Create overlay with Tailwind CSS
     const overlay = document.createElement('div');
     overlay.id = 'dom-agent-overlay';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(26, 115, 232, 0.08);
-      backdrop-filter: blur(2px);
-      z-index: 2147483647;
-      pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    `;
+    overlay.className = 'fixed inset-0 bg-blue-500/8 backdrop-blur-[2px] pointer-events-none transition-all duration-300 ease-out z-[2147483647]';
 
-    // Create the DOM Agent panel with CSS Peeper inspired design
+    // Create the DOM Agent panel with Tailwind CSS
     const panel = document.createElement('div');
     panel.id = 'dom-agent-panel';
-    panel.style.cssText = `
-      position: fixed;
-      right: 20px;
-      top: 20px;
-      width: 450px;
-      min-height: 680px;
-      background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
-      border-radius: 20px;
-      box-shadow:
-        0 20px 40px rgba(26, 115, 232, 0.15),
-        0 8px 16px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(26, 115, 232, 0.1);
-      pointer-events: auto;
-      z-index: 2147483647;
-      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overflow: hidden;
-      transform: translateY(0);
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    `;
+    panel.className = 'fixed top-5 right-5 w-[450px] min-h-[680px] bg-gradient-to-br from-white to-gray-50 rounded-[20px] shadow-[0_20px_40px_rgba(26,115,232,0.15),0_8px_16px_rgba(0,0,0,0.08)] shadow-inner border border-blue-500/10 pointer-events-auto z-[2147483647] font-sans overflow-hidden transform translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]';
 
-    // Create panel content
+    // Create panel content with Tailwind CSS
     panel.innerHTML = `
-      <div style="
-        background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #34a853 100%);
-        color: white;
-        padding: 20px 24px;
-        border-radius: 20px 20px 0 0;
-        position: relative;
-        cursor: grab;
-        user-select: none;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      " class="dom-agent-header">
-        <div style="
-          position: absolute;
-          top: 16px;
-          left: 20px;
-          width: 40px;
-          height: 40px;
-          background: rgba(255,255,255,0.15);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.2);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        ">🎯</div>
+      <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-green-600 text-white px-6 py-5 rounded-t-[20px] relative cursor-grab select-none shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] dom-agent-header">
+        <div class="absolute top-4 left-5 w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center text-lg backdrop-blur-[10px] border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">🎯</div>
 
-        <div style="
-          position: absolute;
-          top: 16px;
-          right: 20px;
-          display: flex;
-          gap: 8px;
-        ">
-          <button style="
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-          " id="dom-agent-close-btn">×</button>
+        <div class="absolute top-4 right-5 flex gap-2">
+          <button class="bg-white/15 border border-white/20 rounded-lg w-7 h-7 flex items-center justify-center cursor-pointer text-white text-sm font-medium transition-all duration-200 backdrop-blur-[10px] hover:bg-white/25 hover:scale-105" id="dom-agent-close-btn">×</button>
         </div>
 
-        <div style="
-          margin-left: 60px;
-          margin-right: 60px;
-        ">
-          <h1 style="
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0 0 4px 0;
-            letter-spacing: -0.5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          ">DOM Agent</h1>
-          <p style="
-            font-size: 14px;
-            opacity: 0.9;
-            margin: 0;
-            font-weight: 400;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-          ">专业的网页样式分析工具</p>
+        <div class="ml-[60px] mr-[60px]">
+          <h1 class="text-xl font-bold m-0 mb-1 tracking-[-0.5px] [text-shadow:0_1px_2px_rgba(0,0,0,0.1)]">DOM Agent</h1>
+          <p class="text-sm opacity-90 m-0 font-normal [text-shadow:0_1px_2px_rgba(0,0,0,0.1)]">专业的网页样式分析工具</p>
         </div>
       </div>
 
-      <div style="padding: 20px;" id="dom-agent-content">
+      <div class="p-5" id="dom-agent-content">
         <div>
-          <!-- Navigation Tabs with CSS Peeper inspired design -->
-          <div style="
-            display: flex;
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-          ">
-            <button id="tab-overview" style="
-              flex: 1;
-              padding: 10px 16px;
-              border: none;
-              background: #1a73e8;
-              color: white;
-              font-size: 13px;
-              font-weight: 600;
-              cursor: pointer;
-              border-radius: 8px;
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
-              position: relative;
-              overflow: hidden;
-            ">
-              <span style="position: relative; z-index: 1;">概览</span>
+          <!-- Navigation Tabs with Tailwind CSS -->
+          <div class="flex bg-gray-100 rounded-xl p-1 mb-5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
+            <button id="tab-overview" class="flex-1 py-2.5 px-4 bg-blue-600 text-white text-sm font-semibold cursor-pointer rounded-lg transition-all duration-300 ease-out shadow-[0_2px_8px_rgba(26,115,232,0.3)] relative overflow-hidden hover:scale-[1.02]">
+              <span class="relative z-10">概览</span>
             </button>
-            <button id="tab-colors" style="
-              flex: 1;
-              padding: 10px 16px;
-              border: none;
-              background: transparent;
-              color: #666;
-              font-size: 13px;
-              font-weight: 500;
-              cursor: pointer;
-              border-radius: 8px;
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              position: relative;
-            ">
-              <span style="position: relative; z-index: 1;">🎨 颜色</span>
+            <button id="tab-colors" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+              <span class="relative z-10">🎨 颜色</span>
             </button>
-            <button id="tab-typography" style="
-              flex: 1;
-              padding: 10px 16px;
-              border: none;
-              background: transparent;
-              color: #666;
-              font-size: 13px;
-              font-weight: 500;
-              cursor: pointer;
-              border-radius: 8px;
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              position: relative;
-            ">
-              <span style="position: relative; z-index: 1;">📝 字体</span>
+            <button id="tab-typography" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+              <span class="relative z-10">📝 字体</span>
             </button>
-            <button id="tab-assets" style="
-              flex: 1;
-              padding: 10px 16px;
-              border: none;
-              background: transparent;
-              color: #666;
-              font-size: 13px;
-              font-weight: 500;
-              cursor: pointer;
-              border-radius: 8px;
-              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-              position: relative;
-            ">
-              <span style="position: relative; z-index: 1;">🖼️ 资源</span>
+            <button id="tab-assets" class="flex-1 py-2.5 px-4 bg-transparent text-gray-600 text-sm font-medium cursor-pointer rounded-lg transition-all duration-300 ease-out relative hover:bg-blue-500/10 hover:text-blue-600 hover:scale-[1.01]">
+              <span class="relative z-10">🖼️ 资源</span>
             </button>
           </div>
 
-          <!-- Tab Content with CSS Peeper inspired styling -->
-          <div id="tab-content-overview" style="opacity: 1; transition: opacity 0.3s ease;">
-            <div style="text-align: center; padding: 40px 20px;">
-              <div style="
-                font-size: 18px;
-                color: #1a73e8;
-                margin-bottom: 16px;
-                font-weight: 600;
-              ">🎯 欢迎使用DOM Agent</div>
-              <div style="
-                font-size: 14px;
-                color: #5f6368;
-                margin-bottom: 24px;
-                line-height: 1.5;
-              ">点击下方按钮开始检查网页元素，体验全新的CSS Peeper风格功能！</div>
-              <button style="
-                background: linear-gradient(135deg, #1a73e8, #4285f4);
-                color: white;
-                border: none;
-                padding: 14px 28px;
-                border-radius: 8px;
-                font-size: 15px;
-                font-weight: 600;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
-                transform: scale(1);
-              " id="dom-agent-inspect-btn">
+          <!-- Tab Content with Tailwind CSS -->
+          <div id="tab-content-overview" class="opacity-100 transition-opacity duration-300 ease-out">
+            <div class="text-center py-10 px-5">
+              <div class="text-lg text-blue-600 mb-4 font-semibold">🎯 欢迎使用DOM Agent</div>
+              <div class="text-sm text-gray-600 mb-6 leading-relaxed">点击下方按钮开始检查网页元素，体验全新的CSS Peeper风格功能！</div>
+              <button class="bg-gradient-to-r from-blue-600 to-blue-700 text-white border-none py-3.5 px-7 rounded-lg text-base font-semibold cursor-pointer inline-flex items-center gap-2 transition-all duration-300 ease-out shadow-[0_4px_12px_rgba(26,115,232,0.4)] transform scale-100 hover:scale-105 hover:shadow-[0_6px_20px_rgba(26,115,232,0.6)]" id="dom-agent-inspect-btn">
                 🔍 开始检查元素
               </button>
-              <div style="
-                margin-top: 20px;
-                font-size: 12px;
-                color: #666;
-                opacity: 0.8;
-              ">选择元素后将显示详细的样式信息和定位器</div>
+              <div class="mt-5 text-xs text-gray-500 opacity-80">选择元素后将显示详细的样式信息和定位器</div>
             </div>
           </div>
 
-          <!-- Colors Tab with CSS Peeper styling -->
-          <div id="tab-content-colors" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
-            <div style="text-align: center; padding: 40px 20px;">
-              <div style="font-size: 48px; margin-bottom: 16px;">🎨</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">颜色调色板</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示完整的颜色信息和调色板</div>
+          <!-- Colors Tab with Tailwind CSS -->
+          <div id="tab-content-colors" class="hidden opacity-0 transition-opacity duration-300 ease-out">
+            <div class="text-center py-10 px-5">
+              <div class="text-5xl mb-4">🎨</div>
+              <div class="text-base text-gray-600 mb-2 font-medium">颜色调色板</div>
+              <div class="text-sm text-gray-400">选择元素后显示完整的颜色信息和调色板</div>
             </div>
           </div>
 
-          <!-- Typography Tab with CSS Peeper styling -->
-          <div id="tab-content-typography" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
-            <div style="text-align: center; padding: 40px 20px;">
-              <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">字体样式</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示字体家族、大小、粗细等详细信息</div>
+          <!-- Typography Tab with Tailwind CSS -->
+          <div id="tab-content-typography" class="hidden opacity-0 transition-opacity duration-300 ease-out">
+            <div class="text-center py-10 px-5">
+              <div class="text-5xl mb-4">📝</div>
+              <div class="text-base text-gray-600 mb-2 font-medium">字体样式</div>
+              <div class="text-sm text-gray-400">选择元素后显示字体家族、大小、粗细等详细信息</div>
             </div>
           </div>
 
-          <!-- Assets Tab with CSS Peeper styling -->
-          <div id="tab-content-assets" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
-            <div style="text-align: center; padding: 40px 20px;">
-              <div style="font-size: 48px; margin-bottom: 16px;">🖼️</div>
-              <div style="font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500;">资源文件</div>
-              <div style="font-size: 14px; color: #999;">选择元素后显示背景图片、媒体文件等资源信息</div>
+          <!-- Assets Tab with Tailwind CSS -->
+          <div id="tab-content-assets" class="hidden opacity-0 transition-opacity duration-300 ease-out">
+            <div class="text-center py-10 px-5">
+              <div class="text-5xl mb-4">🖼️</div>
+              <div class="text-base text-gray-600 mb-2 font-medium">资源文件</div>
+              <div class="text-sm text-gray-400">选择元素后显示背景图片、媒体文件等资源信息</div>
             </div>
           </div>
         </div>
@@ -1504,20 +1327,18 @@ class ContentScript {
           console.log(`🔧 DOM Agent: Found initial tab button for ${tab}:`, tabBtn);
 
           if (tabBtn) {
-            // Add hover effects
+            // Add hover effects using Tailwind classes
             tabBtn.addEventListener('mouseenter', () => {
-              if (tabBtn.style.background !== '#1a73e8') {
-                tabBtn.style.background = 'rgba(26, 115, 232, 0.1)';
-                tabBtn.style.color = '#1a73e8';
-                tabBtn.style.transform = 'scale(1.01)';
+              if (!tabBtn.classList.contains('bg-blue-600')) {
+                tabBtn.classList.add('bg-blue-500/10', 'text-blue-600', 'scale-[1.01]');
+                tabBtn.classList.remove('text-gray-600');
               }
             });
 
             tabBtn.addEventListener('mouseleave', () => {
-              if (tabBtn.style.background !== '#1a73e8') {
-                tabBtn.style.background = 'transparent';
-                tabBtn.style.color = '#666';
-                tabBtn.style.transform = 'scale(1)';
+              if (!tabBtn.classList.contains('bg-blue-600')) {
+                tabBtn.classList.remove('bg-blue-500/10', 'text-blue-600', 'scale-[1.01]');
+                tabBtn.classList.add('text-gray-600');
               }
             });
 
@@ -1529,14 +1350,16 @@ class ContentScript {
                 const content = document.getElementById(`tab-content-${t}`);
                 const btn = document.getElementById(`tab-${t}`);
                 if (content) {
-                  content.style.opacity = '0';
-                  setTimeout(() => content.style.display = 'none', 150);
+                  content.classList.add('opacity-0');
+                  content.classList.remove('opacity-100');
+                  setTimeout(() => {
+                    content.classList.add('hidden');
+                    content.classList.remove('block');
+                  }, 150);
                 }
                 if (btn) {
-                  btn.style.background = 'transparent';
-                  btn.style.color = '#666';
-                  btn.style.boxShadow = 'none';
-                  btn.style.transform = 'scale(1)';
+                  btn.classList.remove('bg-blue-600', 'text-white', 'shadow-[0_2px_8px_rgba(26,115,232,0.3)]', 'scale-[1.02]');
+                  btn.classList.add('bg-transparent', 'text-gray-600', 'scale-100');
                 }
               });
 
@@ -1545,16 +1368,18 @@ class ContentScript {
               console.log(`📱 DOM Agent: Showing initial content for ${tab}:`, selectedContent);
 
               if (selectedContent) {
-                selectedContent.style.display = 'block';
-                setTimeout(() => selectedContent.style.opacity = '1', 150);
+                selectedContent.classList.remove('hidden', 'opacity-0');
+                selectedContent.classList.add('block');
+                setTimeout(() => {
+                  selectedContent.classList.add('opacity-100');
+                  selectedContent.classList.remove('opacity-0');
+                }, 150);
               }
 
-              // Highlight selected tab button with CSS Peeper style
+              // Highlight selected tab button with Tailwind CSS
               if (tabBtn) {
-                tabBtn.style.background = '#1a73e8';
-                tabBtn.style.color = 'white';
-                tabBtn.style.boxShadow = '0 2px 8px rgba(26, 115, 232, 0.3)';
-                tabBtn.style.transform = 'scale(1.02)';
+                tabBtn.classList.remove('bg-transparent', 'text-gray-600', 'scale-100');
+                tabBtn.classList.add('bg-blue-600', 'text-white', 'shadow-[0_2px_8px_rgba(26,115,232,0.3)]', 'scale-[1.02]');
               }
 
             console.log(`✅ DOM Agent: Initial tab switch to ${tab} completed`);
@@ -1577,7 +1402,7 @@ class ContentScript {
     const indicator = document.createElement('div');
     indicator.id = 'dom-agent-ready-indicator';
     indicator.style.cssText = `
-      position: fixed;
+        position: fixed;
       top: 20px;
       right: 20px;
       background: linear-gradient(135deg, #4caf50, #45a049);
@@ -1712,7 +1537,7 @@ class ContentScript {
               font-weight: 500;
               cursor: pointer;
             " id="dom-agent-test-btn">测试</button>
-          </div>
+        </div>
         </div>
       `;
 
@@ -1779,8 +1604,8 @@ class ContentScript {
             transition: all 0.2s ease;
             box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
           " id="dom-agent-start-btn">🔍 检查元素</button>
-        </div>
-      `;
+      </div>
+    `;
     }
 
     // Stop the element inspector

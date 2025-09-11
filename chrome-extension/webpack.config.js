@@ -12,7 +12,7 @@ module.exports = (env, argv) => {
 
     entry: {
       background: './src/background/index.ts',
-      content: './src/content/index.ts',
+      content: ['./src/content/index.ts', './src/styles/tailwind.css'],
       popup: './src/popup/index.tsx',
       'devtools-panel': ['./src/devtools/panel/index.tsx', './src/styles/tailwind.css'],
       devtools: './src/devtools/index.ts'
